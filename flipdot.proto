@@ -57,12 +57,12 @@ message StopTestResponse {
  */
 
 message LightRequest {
-    enum STATUS {
+    enum Status {
         UNSPECIFIED = 0;
         ON = 1;
         OFF = 2;
     }
-    STATUS status = 1;
+    Status status = 1;
 }
 
 message LightResponse {
