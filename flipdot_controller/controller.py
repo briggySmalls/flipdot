@@ -2,7 +2,7 @@
 
 """Main module."""
 from typing import Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 
 from serial import Serial
 from pyflipdot.pyflipdot import HanoverController
@@ -36,14 +36,17 @@ class FlipdotController:
 
         # Create signs
         for sign_config in signs:
-            sign = HanoverSign(**sign_config)
+            sign = HanoverSign(**asdict(sign_config))
             self.sign_controller.add_sign(sign)
 
         # Create a power manager
         self.power_manager = PowerManager(power)
 
     def get_info(self) -> Sequence[SignConfig]:
-        pass
+        info = []
+        for sign in self.sign_controller._signs.values():
+            info.append(SignInfo(name=sign.name, width=sign.width, height=sign.height))
+        return info
 
     def draw(self, sign: str, image: np.ndarray):
         """Draw the image on the sign
