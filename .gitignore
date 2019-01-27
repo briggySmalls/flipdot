@@ -1,3 +1,6 @@
+# gRPC
+flipdot_controller/protos
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
