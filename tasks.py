@@ -15,7 +15,7 @@ import webbrowser
 
 
 ROOT_DIR = Path(__file__).parent
-SETUP_FILE = Path(__file__).joinpath("setup.py")
+SETUP_FILE = ROOT_DIR.joinpath("setup.py")
 TEST_DIR = ROOT_DIR.joinpath("tests")
 SOURCE_DIR = ROOT_DIR.joinpath("pyflipdot")
 COVERAGE_DIR = ROOT_DIR.joinpath("htmlcov")
