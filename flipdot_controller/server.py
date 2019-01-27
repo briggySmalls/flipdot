@@ -9,7 +9,7 @@ from pyflipdot.sign import HanoverSign
 
 from flipdot_controller.controller import FlipdotController, PinConfig, SignConfig
 from flipdot_controller.protos.flipdot_pb2_grpc import FlipdotServicer
-from flipdot_controller.protos.flipdot_pb2 import StartTestResponse, StopTestResponse, LightResponse, DrawResponse, Status
+from flipdot_controller.protos.flipdot_pb2 import StartTestResponse, StopTestResponse, LightRequest, LightResponse, DrawResponse
 
 
 class FlipdotServer(FlipdotServicer):
@@ -33,5 +33,5 @@ class FlipdotServer(FlipdotServicer):
         return StartTestResponse()
 
     def Light(self, request, context):
-        self.controller.light(request.status == Status.ON)
+        self.controller.light(request.status == LightRequest.Status.ON)
         return LightResponse()
