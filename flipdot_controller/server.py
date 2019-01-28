@@ -1,15 +1,10 @@
 # -*- coding: utf-8 -*-
 """Main module."""
 from concurrent import futures
-from typing import Sequence
 
 import grpc
-from pyflipdot.pyflipdot import HanoverController
-from pyflipdot.sign import HanoverSign
-from serial import Serial
 
-from flipdot_controller.controller import (FlipdotController, PinConfig,
-                                           SignConfig)
+from flipdot_controller.controller import FlipdotController
 from flipdot_controller.protos.flipdot_pb2 import (DrawResponse, LightRequest,
                                                    LightResponse,
                                                    StartTestResponse,
@@ -55,7 +50,7 @@ class Servicer(FlipdotServicer):
 
     def StopTest(self, request, context):
         self.controller.stop_test()
-        return StartTestResponse()
+        return StopTestResponse()
 
     def Light(self, request, context):
         self.controller.light(request.status == LightRequest.Status.ON)
