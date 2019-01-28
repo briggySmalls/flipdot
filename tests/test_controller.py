@@ -34,7 +34,7 @@ def controller(pins, port):
     sign_config = SignConfig(
         name='mysign', address=1, width=10, height=8, flip=True)
     # Create the controller
-    return FlipdotController(port=port, signs=[sign_config], power=pins)
+    return FlipdotController(port=port, signs=[sign_config], pins=pins)
 
 
 def test_get_info(controller):

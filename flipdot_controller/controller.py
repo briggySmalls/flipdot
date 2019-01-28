@@ -29,7 +29,7 @@ class SignInfo:
 
 class FlipdotController:
     def __init__(self, port: Serial, signs: Sequence[SignConfig],
-                 power: PinConfig):
+                 pins: PinConfig):
         # Create a controller
         self.port = port
         self.sign_controller = HanoverController(self.port)
@@ -40,7 +40,7 @@ class FlipdotController:
             self.sign_controller.add_sign(sign)
 
         # Create a power manager
-        self.power_manager = PowerManager(power)
+        self.power_manager = PowerManager(pins)
 
     def get_info(self) -> Sequence[SignConfig]:
         info = []
