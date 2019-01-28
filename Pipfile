@@ -1,4 +1,9 @@
 [[source]]
+url = "https://www.piwheels.org/simple"
+verify_ssl = true
+name = "piwheels"
+
+[[source]]
 url = "https://pypi.org/simple"
 verify_ssl = true
 name = "pypi"
