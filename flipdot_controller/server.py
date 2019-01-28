@@ -6,8 +6,9 @@ import grpc
 import numpy as np
 
 from flipdot_controller.controller import FlipdotController
-from flipdot_controller.protos.flipdot_pb2 import (DrawResponse, LightRequest,
-                                                   LightResponse,
+from flipdot_controller.protos.flipdot_pb2 import (DrawResponse,
+                                                   GetInfoResponse,
+                                                   LightRequest, LightResponse,
                                                    StartTestResponse,
                                                    StopTestResponse)
 from flipdot_controller.protos.flipdot_pb2_grpc import (FlipdotServicer,
@@ -39,7 +40,16 @@ class Servicer(FlipdotServicer):
         self.controller = controller
 
     def GetInfo(self, request, context) -> GetInfoResponse:
-        pass
+        # Get the sign info
+        info = self.controller.get_info()
+        # Build a response
+        response = GetInfoResponse()
+        for sign_info in info:
+            sign = response.signs.add()
+            sign.name = sign_info.name
+            sign.width = sign_info.width
+            sign.height = sign_info.height
+        return response
 
     def Draw(self, request, context) -> DrawResponse:
         # Determine sign's shape
@@ -47,6 +57,7 @@ class Servicer(FlipdotServicer):
         # Reconstruct image
         image = np.frombuffer(request.image).reshape((sign_info.height,
                                                       sign_info.width))
+        # Send the command
         self.controller.draw(request.sign, image)
         return DrawResponse()
 
