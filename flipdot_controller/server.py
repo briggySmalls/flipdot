@@ -19,7 +19,10 @@ from flipdot_controller.protos.flipdot_pb2_grpc import (FlipdotServicer,
 
 
 class Server:
-    def __init__(self, controller: FlipdotController, max_workers=10, port=50051):
+    def __init__(self,
+                 controller: FlipdotController,
+                 max_workers=10,
+                 port=50051):
         # Create a servicer
         self.servicer = FlipdotServicer(controller)
         # Create gRPC server
