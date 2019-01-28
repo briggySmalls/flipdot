@@ -17,7 +17,7 @@ import webbrowser
 ROOT_DIR = Path(__file__).parent
 SETUP_FILE = ROOT_DIR.joinpath("setup.py")
 TEST_DIR = ROOT_DIR.joinpath("tests")
-SOURCE_DIR = ROOT_DIR.joinpath("pyflipdot")
+SOURCE_DIR = ROOT_DIR.joinpath("flipdot_controller")
 COVERAGE_DIR = ROOT_DIR.joinpath("htmlcov")
 COVERAGE_REPORT = COVERAGE_DIR.joinpath("index.html")
 DOCS_DIR = ROOT_DIR.joinpath("docs")
