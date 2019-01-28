@@ -5,10 +5,6 @@ from unittest import mock
 
 import pytest
 
-from dataclasses import asdict
-from flipdot_controller.controller import FlipdotController, SignConfig
-from flipdot_controller.power import PinConfig
-
 mock_rpi = mock.MagicMock()
 modules = {
     "RPi": mock_rpi,
@@ -16,6 +12,10 @@ modules = {
 }
 patcher = mock.patch.dict("sys.modules", modules)
 patcher.start()
+
+# Skip these imports (we have to mock RPi.GPIO first)
+from flipdot_controller.controller import FlipdotController, SignConfig  # isort:skip
+from flipdot_controller.power import PinConfig  # isort:skip
 
 
 @pytest.fixture
