@@ -52,8 +52,19 @@ def test_start_test(controller, port):
     # Assert that something was written over serial
     port.write.assert_called_once()
 
+
 def test_stop_test(controller, port):
     # Send the start command
     controller.stop_test()
     # Assert that something was written over serial
     port.write.assert_called_once()
+
+
+def test_light(controller, pins):
+    # Turn on the lights
+    controller.light(True)
+    mock_rpi.GPIO.output.assert_called_once_with(pins.light, False)
+    mock_rpi.GPIO.reset_mock()
+    # Turn off the lights
+    controller.light(False)
+    mock_rpi.GPIO.output.assert_called_once_with(pins.light, True)
