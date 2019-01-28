@@ -18,11 +18,26 @@ from flipdot_controller.protos.flipdot_pb2_grpc import (FlipdotServicer,
                                                         add_FlipdotServicer_to_server)
 
 
-class FlipdotServer(FlipdotServicer):
-    def __init__(self, port: Serial, signs: Sequence[SignConfig],
-                 power: PinConfig):
-        # Create a controller
-        self.controller = FlipdotController(port, signs, power)
+class Server:
+    def __init__(self, controller: FlipdotController, max_workers=10, port=50051):
+        # Create a servicer
+        self.servicer = FlipdotServicer(controller)
+        # Create gRPC server
+        self.server = grpc.server(
+            futures.ThreadPoolExecutor(max_workers=max_workers))
+        add_FlipdotServicer_to_server(self, self.server)
+        self.server.add_insecure_port('[::]:{}'.format(port))
+
+    def start(self):
+        self.server.start()
+
+    def stop(self):
+        self.server.stop()
+
+
+class Servicer(FlipdotServicer):
+    def __init__(self, controller: FlipdotController):
+        self.controller = controller
 
     def GetInfo(self, request, context):
         pass
