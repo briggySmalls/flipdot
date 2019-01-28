@@ -56,9 +56,9 @@ class FlipdotController:
     def get_info(self, sign=None) -> Sequence[SignConfig]:
         info = {}
         for s in self.sign_controller._signs.values():
-            info[sign.name] = SignInfo(
+            info[s.name] = SignInfo(
                 name=s.name, width=s.width, height=s.height)
-        return info.values() if sign is None else info[sign]
+        return list(info.values()) if sign is None else [info[sign]]
 
     def draw(self, sign: str, image: np.ndarray):
         """Draw the image on the sign
