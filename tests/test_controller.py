@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
 """Tests for `flipdot_controller` package."""
 from unittest import mock
-from dataclasses import asdict
 
 import pytest
+
+from dataclasses import asdict
+from flipdot_controller.controller import FlipdotController, SignConfig
+from flipdot_controller.power import PinConfig
 
 mock_rpi = mock.MagicMock()
 modules = {
@@ -14,9 +16,6 @@ modules = {
 }
 patcher = mock.patch.dict("sys.modules", modules)
 patcher.start()
-
-from flipdot_controller.power import PinConfig
-from flipdot_controller.controller import FlipdotController, SignConfig
 
 
 @pytest.fixture
@@ -32,7 +31,8 @@ def pins():
 @pytest.fixture
 def controller(pins, port):
     # Create config for a sign
-    sign_config = SignConfig(name='mysign', address=1, width=10, height=8, flip=True)
+    sign_config = SignConfig(
+        name='mysign', address=1, width=10, height=8, flip=True)
     # Create the controller
     return FlipdotController(port=port, signs=[sign_config], power=pins)
 

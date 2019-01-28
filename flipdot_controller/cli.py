@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-
 """Console script for flipdot_controller."""
 import sys
+
 import click
 
 

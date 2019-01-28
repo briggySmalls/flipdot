@@ -1,15 +1,14 @@
 # -*- coding: utf-8 -*-
-
 """Main module."""
 from typing import Sequence
-from dataclasses import dataclass, asdict
 
-from serial import Serial
+import numpy as np
 from pyflipdot.pyflipdot import HanoverController
 from pyflipdot.sign import HanoverSign
-import numpy as np
+from serial import Serial
 
-from flipdot_controller.power import PowerManager, PinConfig
+from dataclasses import asdict, dataclass
+from flipdot_controller.power import PinConfig, PowerManager
 
 
 @dataclass
@@ -29,7 +28,8 @@ class SignInfo:
 
 
 class FlipdotController:
-    def __init__(self, port: Serial, signs: Sequence[SignConfig], power: PinConfig):
+    def __init__(self, port: Serial, signs: Sequence[SignConfig],
+                 power: PinConfig):
         # Create a controller
         self.port = port
         self.sign_controller = HanoverController(self.port)
@@ -45,7 +45,8 @@ class FlipdotController:
     def get_info(self) -> Sequence[SignConfig]:
         info = []
         for sign in self.sign_controller._signs.values():
-            info.append(SignInfo(name=sign.name, width=sign.width, height=sign.height))
+            info.append(
+                SignInfo(name=sign.name, width=sign.width, height=sign.height))
         return info
 
     def draw(self, sign: str, image: np.ndarray):

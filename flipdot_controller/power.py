@@ -1,6 +1,5 @@
-from dataclasses import dataclass
-
 import RPi.GPIO as GPIO
+from dataclasses import dataclass
 
 
 @dataclass
