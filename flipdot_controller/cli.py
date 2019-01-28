@@ -2,16 +2,32 @@
 """Console script for flipdot_controller."""
 import sys
 
+from serial import Serial
 import click
+
+from flipdot_controller.power import PinConfig
+from flipdot_controller.controller import FlipdotController, SignConfig
+from flipdot_controller.server import Server
+
+
+SIGNS = [
+    SignConfig(
+        name="top", address=1, width=84, height=7, flip=True)
+]
+
+PINS = PinConfig(sign=38, light=40)
 
 
 @click.command()
-def main(args=None):
+@click.option('--port', help="Name of serial port")
+def main(port):
     """Console script for flipdot_controller."""
-    click.echo("Replace this message by putting your code into "
-               "flipdot_controller.cli.main")
-    click.echo("See click documentation at http://click.pocoo.org/")
-    return 0
+    with Serial(port) as ser, FlipdotController(port=ser, signs=SIGNS, pins=PINS) as controller:
+        server = Server(controller)
+        try:
+            server.start()
+        except KeyboardInterrupt:
+            server.stop()
 
 
 if __name__ == "__main__":

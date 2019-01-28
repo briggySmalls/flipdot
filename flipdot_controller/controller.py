@@ -42,6 +42,17 @@ class FlipdotController:
         # Create a power manager
         self.power_manager = PowerManager(pins)
 
+    def __enter__(self):
+        # Turn on the sign
+        self.power_manager.sign(True)
+        return self
+
+    def __exit__(self, *args, **kwargs):
+        # Turn off the sign
+        self.power_manager.sign(False)
+        # Cleanup GPIOs
+        self.power_manager.__exit__(*args, **kwargs)
+
     def get_info(self) -> Sequence[SignConfig]:
         info = []
         for sign in self.sign_controller._signs.values():
