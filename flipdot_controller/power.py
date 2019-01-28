@@ -1,11 +1,8 @@
+from collections import namedtuple
+
 import RPi.GPIO as GPIO
-from dataclasses import dataclass
 
-
-@dataclass
-class PinConfig:
-    sign: int
-    light: int
+PinConfig = namedtuple("PinConfig", ['sign', 'light'])
 
 
 class PowerManager(object):

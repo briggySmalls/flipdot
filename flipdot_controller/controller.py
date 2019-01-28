@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """Main module."""
+from collections import namedtuple
 from typing import Sequence
 
 import numpy as np
@@ -7,24 +8,12 @@ from pyflipdot.pyflipdot import HanoverController
 from pyflipdot.sign import HanoverSign
 from serial import Serial
 
-from dataclasses import asdict, dataclass
 from flipdot_controller.power import PinConfig, PowerManager
 
+SignConfig = namedtuple("SignConfig",
+                        ['name', 'address', 'width', 'height', 'flip'])
 
-@dataclass
-class SignConfig:
-    name: str
-    address: int
-    width: int
-    height: int
-    flip: bool
-
-
-@dataclass
-class SignInfo:
-    name: str
-    width: int
-    height: int
+SignInfo = namedtuple("SignInfo", ['name', 'width', 'height'])
 
 
 class FlipdotController:
@@ -36,7 +25,7 @@ class FlipdotController:
 
         # Create signs
         for sign_config in signs:
-            sign = HanoverSign(**asdict(sign_config))
+            sign = HanoverSign(**sign_config._asdict())
             self.sign_controller.add_sign(sign)
 
         # Create a power manager
