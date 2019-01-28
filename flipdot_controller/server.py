@@ -3,6 +3,7 @@
 from concurrent import futures
 
 import grpc
+import numpy as np
 
 from flipdot_controller.controller import FlipdotController
 from flipdot_controller.protos.flipdot_pb2 import (DrawResponse, LightRequest,
@@ -37,18 +38,23 @@ class Servicer(FlipdotServicer):
     def __init__(self, controller: FlipdotController):
         self.controller = controller
 
-    def GetInfo(self, request, context):
+    def GetInfo(self, request, context) -> GetInfoResponse:
         pass
 
-    def Draw(self, request, context):
-        self.controller.draw(request.sign, request.image)
+    def Draw(self, request, context) -> DrawResponse:
+        # Determine sign's shape
+        sign_info = self.controller.get_info(request.sign)
+        # Reconstruct image
+        image = np.frombuffer(request.image).reshape((sign_info.height,
+                                                      sign_info.width))
+        self.controller.draw(request.sign, image)
         return DrawResponse()
 
-    def StartTest(self, request, context):
+    def StartTest(self, request, context) -> StartTestResponse:
         self.controller.start_test()
         return StartTestResponse()
 
-    def StopTest(self, request, context):
+    def StopTest(self, request, context) -> StopTestResponse:
         self.controller.stop_test()
         return StopTestResponse()
 

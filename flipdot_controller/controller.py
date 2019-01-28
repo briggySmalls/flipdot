@@ -53,12 +53,12 @@ class FlipdotController:
         # Cleanup GPIOs
         self.power_manager.__exit__(*args, **kwargs)
 
-    def get_info(self) -> Sequence[SignConfig]:
-        info = []
-        for sign in self.sign_controller._signs.values():
-            info.append(
-                SignInfo(name=sign.name, width=sign.width, height=sign.height))
-        return info
+    def get_info(self, sign=None) -> Sequence[SignConfig]:
+        info = {}
+        for s in self.sign_controller._signs.values():
+            info[sign.name] = SignInfo(
+                name=s.name, width=s.width, height=s.height)
+        return info.values() if sign is None else info[sign]
 
     def draw(self, sign: str, image: np.ndarray):
         """Draw the image on the sign

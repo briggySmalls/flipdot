@@ -12,7 +12,7 @@ service Flipdot {
 
 message GetInfoResponse {
     message SignInfo {
-        int32 id = 1;
+        string name = 1;
         int32 width = 2;
         int32 height = 3;
     }
