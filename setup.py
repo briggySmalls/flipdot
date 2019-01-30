@@ -3,7 +3,7 @@
 
 """The setup script."""
 
-from setuptools import setup, find_packages
+from setuptools import setup
 
 with open('README.rst') as readme_file:
     readme = readme_file.read()
@@ -45,7 +45,7 @@ setup(
     include_package_data=True,
     keywords='flipdot_controller',
     name='flipdot_controller',
-    packages=find_packages(include=['flipdot_controller']),
+    packages=['flipdot_controller', 'flipdot_controller.protos'],
     setup_requires=setup_requirements,
     test_suite='tests',
     tests_require=test_requirements,
