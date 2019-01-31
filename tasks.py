@@ -28,7 +28,7 @@ PROTO_DIR = ROOT_DIR.joinpath("flipdot_controller/protos")
 PROTOBUF_SPEC = ROOT_DIR.joinpath("flipdot.proto")
 
 
-@task
+@task(help={'check': "Checks if source is formatted without applying changes"})
 def format(c, check=False):
     """
     Format code
@@ -60,7 +60,7 @@ def test(c):
     c.run("python {} test".format(SETUP_FILE), pty=True)
 
 
-@task
+@task(help={'publish': "Publish the result via coveralls"})
 def coverage(c, publish=False):
     """
     Create coverage report
@@ -143,7 +143,7 @@ def clean(c):
 
 
 @task(pre=[clean_proto])
-def proto(c, shell='/bin/bash'):
+def proto(c):
     PROTO_DIR.mkdir()
     # Create an init file
     PROTO_DIR.joinpath("__init__.py").touch()
@@ -159,8 +159,7 @@ def proto(c, shell='/bin/bash'):
             ROOT_DIR,
             ROOT_DIR,
             ROOT_DIR,
-            moved_protobuf_spec),
-        shell=shell)
+            moved_protobuf_spec))
     # Remove the protobuf now we've generated the source
     moved_protobuf_spec.unlink()
 
