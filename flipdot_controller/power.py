@@ -11,8 +11,8 @@ class PowerManager(object):
         self.pins = pins
 
         # Configure the pins as outputs
-        GPIO.setup(self.pins.sign, GPIO.OUT, initial=GPIO.HIGH)
-        GPIO.setup(self.pins.light, GPIO.OUT, initial=GPIO.HIGH)
+        GPIO.setup(self.pins.sign, GPIO.OUT, initial=GPIO.LOW)
+        GPIO.setup(self.pins.light, GPIO.OUT, initial=GPIO.LOW)
 
     def __enter__(self):
         return self
@@ -29,4 +29,4 @@ class PowerManager(object):
 
     @staticmethod
     def _write_pin(pin: int, status: bool):
-        GPIO.output(pin, not status)
+        GPIO.output(pin, status)
