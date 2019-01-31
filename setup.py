@@ -3,7 +3,7 @@
 
 """The setup script."""
 
-from setuptools import setup, find_packages
+from setuptools import setup
 
 with open('README.rst') as readme_file:
     readme = readme_file.read()
@@ -11,7 +11,7 @@ with open('README.rst') as readme_file:
 with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
-requirements = ['Click>=6.0', 'pyflipdot>=0.1.0', 'pyserial>=3.4' , 'RPi.GPIO>=0.6.5', 'grpcio>=1.9.0', 'numpy>=1.9.3']
+requirements = ['Click>=6.0', 'pyflipdot>=0.1.0', 'pyserial>=3.4' , 'RPi.GPIO>=0.6.5', 'grpcio>=1.9.0', 'numpy>=1.9.3', 'protobuf>=3.6.0']
 
 setup_requirements = ['pytest-runner', ]
 
@@ -45,7 +45,7 @@ setup(
     include_package_data=True,
     keywords='flipdot_controller',
     name='flipdot_controller',
-    packages=find_packages(include=['flipdot_controller']),
+    packages=['flipdot_controller', 'flipdot_controller.protos'],
     setup_requires=setup_requirements,
     test_suite='tests',
     tests_require=test_requirements,
