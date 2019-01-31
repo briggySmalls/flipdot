@@ -17,9 +17,14 @@ RUN apt-get install libatlas3-base python3 python3-pip python3-setuptools
 # Make piwheels available
 RUN printf "[global]\nextra-index-url=https://www.piwheels.org/simple\n" > /etc/pip.conf
 
+# Ensure we can compile an efficient package installation
+RUN pip3 install wheel
+
 # Copy build package into a new image
 COPY --from=0 /package/dist/flipdot_controller*.tar.gz /app/
 WORKDIR /app/
 
 # Install the package
 RUN pip3 install flipdot_controller*.tar.gz
+
+CMD []
