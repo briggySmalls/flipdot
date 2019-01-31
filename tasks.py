@@ -5,7 +5,7 @@ Execute 'invoke --list' for guidance on using Invoke
 """
 import shutil
 
-from invoke import task
+from invoke import task, tasks
 try:
     from pathlib import Path
     Path().expanduser()
@@ -164,16 +164,17 @@ def proto(c):
     moved_protobuf_spec.unlink()
 
 
-@task(pre=[proto])
-def dist(c):
+@task(pre=[proto], help={'wheel': "Build a wheel distribution"})
+def dist(c, wheel=False):
     """
     Build source and wheel packages
     """
     c.run("python setup.py sdist")
-    c.run("python setup.py bdist_wheel")
+    if wheel:
+        c.run("python setup.py bdist_wheel")
 
 
-@task(pre=[clean, dist])
+@task(pre=[clean, tasks.call(dist, wheel=True)])
 def release(c):
     """
     Make a release of the python package to pypi
