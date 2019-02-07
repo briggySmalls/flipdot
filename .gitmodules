@@ -1,0 +1,3 @@
+[submodule "flipdot_controller"]
+	path = flipdot_controller
+	url = https://github.com/briggySmalls/flipdot_controller.git
