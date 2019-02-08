@@ -1,0 +1,70 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+
+service Flipdot {
+    rpc GetInfo (google.protobuf.Empty) returns (GetInfoResponse);
+    rpc Draw (DrawRequest) returns (DrawResponse);
+    rpc StartTest (StartTestRequest) returns (StartTestResponse);
+    rpc StopTest (google.protobuf.Empty) returns (StopTestResponse);
+    rpc Light (LightRequest) returns (LightResponse);
+}
+
+message GetInfoResponse {
+    message SignInfo {
+        string name = 1;
+        int32 width = 2;
+        int32 height = 3;
+    }
+    repeated SignInfo signs = 1;
+}
+
+message Error {
+    int32 code = 1; // Error code. 0 means success
+    string message = 2;
+}
+
+/*
+ * Draw
+ */
+
+message DrawRequest {
+    int32 sign = 1; // ID of the sign to draw on
+    bytes image = 2; // Flattened image array
+}
+
+message DrawResponse {
+    Error error = 1;
+}
+
+/*
+ * Test
+ */
+
+message StartTestRequest {
+}
+
+message StartTestResponse {
+    Error error = 1;
+}
+
+message StopTestResponse {
+    Error error = 1;
+}
+
+/*
+ * Light
+ */
+
+message LightRequest {
+    enum Status {
+        UNSPECIFIED = 0;
+        ON = 1;
+        OFF = 2;
+    }
+    Status status = 1;
+}
+
+message LightResponse {
+    Error error = 1;
+}
