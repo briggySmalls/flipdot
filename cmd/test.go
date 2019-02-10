@@ -36,13 +36,18 @@ var startCmd = &cobra.Command{
 	Short: "Start test signs",
 	Long:  `Sends the start test signs instruction to all connected signs`,
 	Run: func(cmd *cobra.Command, args []string) {
+		if flipClient == nil {
+			return
+		}
 		// Create timed context for request
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 		// Send request
 		response, err := flipClient.StartTest(ctx, &flipdot.StartTestRequest{})
-		ErrorHandler(err)
-		FlipdotErrorHandler(response.Error)
+		errorHandler(err)
+		if response != nil {
+			flipdotErrorHandler(*response.Error)
+		}
 	},
 }
 
@@ -52,11 +57,17 @@ var stopCmd = &cobra.Command{
 	Long:  `Sends the stop test signs instruction to all connected signs`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// Create timed context for request
+		if flipClient == nil {
+			return
+		}
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 		// Send request
 		response, err := flipClient.StopTest(ctx, &empty.Empty{})
-		ErrorHandler(err)
+		errorHandler(err)
+		if response != nil {
+			flipdotErrorHandler(*response.Error)
+		}
 	},
 }
 
@@ -64,14 +75,4 @@ func init() {
 	rootCmd.AddCommand(testCmd)
 	testCmd.AddCommand(startCmd)
 	testCmd.AddCommand(stopCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// testCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// testCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }

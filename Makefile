@@ -21,7 +21,7 @@ test: mocks
 
 mocks: protobuf
 	mkdir -p $(MOCK_DIR)
-	mockgen -source flipdot.pb.go -mock_names FlipdotClient=MockFlipdotClient > $(MOCK_FILE)
+	mockgen -source $(PROTO_OUT) -mock_names FlipdotClient=MockFlipdotClient > $(MOCK_FILE)
 
 format:
 	gofmt -w .

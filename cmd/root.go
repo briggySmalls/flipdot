@@ -23,47 +23,49 @@ import (
 	"google.golang.org/grpc"
 )
 
-var connection grpc.ClientConn
+var port *uint
+var clientFactory func(uint) (flipdot.FlipdotClient, *grpc.ClientConn, error)
 var flipClient flipdot.FlipdotClient
-var serverAddr *uint
+var connection *grpc.ClientConn
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "flipcli",
 	Short: "Simple CLI for testing the flipdriver service",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		// Get a gRPC connection
-		serverAddr := rootCmd.PersistentFlags().Arg(0)
-		connection, err := grpc.Dial(serverAddr)
-		ErrorHandler(err)
-		// Create the gRPC client for subcommands to use
-		flipClient = flipdot.NewFlipdotClient(connection)
+		// Create the client, with the specified connection
+		var err error
+		flipClient, connection, err = clientFactory(*port)
+		errorHandler(err)
 	},
 	PersistentPostRun: func(cmd *cobra.Command, args []string) {
-		// Teardown connection
-		connection.Close()
+		if connection != nil {
+			// Close the connection if it was ever created
+			connection.Close()
+		}
 	},
 }
 
 func init() {
-	serverAddr = rootCmd.PersistentFlags().Uint("port", 5001, "Port of the gRPC server")
+	port = rootCmd.PersistentFlags().Uint("port", 5001, "Port of the gRPC server")
 }
 
-func ErrorHandler(err error) {
+func errorHandler(err error) {
 	if err != nil {
 		fmt.Println(err)
 	}
 }
 
-func FlipdotErrorHandler(err flipdot.Error) {
+func flipdotErrorHandler(err flipdot.Error) {
 	if err.Code != 0 {
 		fmt.Println(err.Message)
 	}
 }
 
-// Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
-func Execute() {
+func Execute(cf func(uint) (flipdot.FlipdotClient, *grpc.ClientConn, error)) {
+	// Keep hold of the factory method
+	clientFactory = cf
+	// Execute adds all child commands to the root command and sets flags appropriately.
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
