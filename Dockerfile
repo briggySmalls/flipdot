@@ -27,4 +27,5 @@ WORKDIR /app/
 # Install the package
 RUN pip3 install flipdot_controller*.tar.gz
 
-CMD []
+ENV GRPC_PORT=5001
+CMD flipdot_controller --serial-port $SERIAL_PORT --grpc-port $GRPC_PORT
