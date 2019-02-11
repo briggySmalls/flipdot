@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Console script for flipdot_controller."""
 import sys
+import time
 
 import click
 from serial import Serial
@@ -27,6 +28,8 @@ def main(serial_port, grpc_port):
         server = Server(controller, port=grpc_port)
         try:
             server.start()
+            while True:
+                time.sleep(1)
         except KeyboardInterrupt:
             server.stop()
 
