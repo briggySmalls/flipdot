@@ -11,7 +11,31 @@ import (
 
 // Mock used to test the cli
 var mock *mock_flipdot.MockFlipdotClient
-var no_error = flipdot.Error{Code: 0}
+var noError = flipdot.Error{Code: 0}
+
+type testAction struct{ action flipdot.TestRequest_Action }
+
+func RequestTestAction(action flipdot.TestRequest_Action) gomock.Matcher {
+	return &testAction{action}
+}
+func (ta *testAction) Matches(x interface{}) bool {
+	return x.(*flipdot.TestRequest).Action == ta.action
+}
+func (ta *testAction) String() string {
+	return "Checks request for provided action"
+}
+
+type lightStatus struct{ status flipdot.LightRequest_Status }
+
+func RequestLightStatus(status flipdot.LightRequest_Status) gomock.Matcher {
+	return &lightStatus{status}
+}
+func (ls *lightStatus) Matches(x interface{}) bool {
+	return x.(*flipdot.LightRequest).Status == ls.status
+}
+func (ls *lightStatus) String() string {
+	return "Checks request for provided status"
+}
 
 func createMock(t *testing.T) (*gomock.Controller, *mock_flipdot.MockFlipdotClient) {
 	// Create a mock
@@ -24,9 +48,8 @@ func TestTestStart(t *testing.T) {
 	ctrl, mock := createMock(t)
 	defer ctrl.Finish()
 	// Configure the mock
-	response := flipdot.TestResponse{Error: &no_error}
-	request := flipdot.TestRequest{Action: flipdot.TestRequest_START}
-	mock.EXPECT().Test(gomock.Any(), gomock.Eq(&request)).Return(&response, nil)
+	response := flipdot.TestResponse{Error: &noError}
+	mock.EXPECT().Test(gomock.Any(), RequestTestAction(flipdot.TestRequest_START)).Return(&response, nil)
 	// Run the command
 	rootCmd.SetArgs([]string{"test", "start"})
 	Execute(mockFactory)
@@ -36,9 +59,8 @@ func TestTestStop(t *testing.T) {
 	ctrl, mock := createMock(t)
 	defer ctrl.Finish()
 	// Configure the mock
-	response := flipdot.TestResponse{Error: &no_error}
-	request := flipdot.TestRequest{Action: flipdot.TestRequest_STOP}
-	mock.EXPECT().Test(gomock.Any(), gomock.Eq(request)).Return(&response, nil)
+	response := flipdot.TestResponse{Error: &noError}
+	mock.EXPECT().Test(gomock.Any(), RequestTestAction(flipdot.TestRequest_STOP)).Return(&response, nil)
 	// Run the command
 	rootCmd.SetArgs([]string{"test", "stop"})
 	Execute(mockFactory)
@@ -48,9 +70,8 @@ func TestLightsOn(t *testing.T) {
 	ctrl, mock := createMock(t)
 	defer ctrl.Finish()
 	// 'On' command
-	response := flipdot.LightResponse{Error: &no_error}
-	request := flipdot.LightRequest{Status: flipdot.LightRequest_ON}
-	mock.EXPECT().Light(gomock.Any(), gomock.Eq(request)).Return(&response, nil)
+	response := flipdot.LightResponse{Error: &noError}
+	mock.EXPECT().Light(gomock.Any(), RequestLightStatus(flipdot.LightRequest_ON)).Return(&response, nil)
 	// Run the command
 	rootCmd.SetArgs([]string{"light", "on"})
 	Execute(mockFactory)
@@ -60,9 +81,8 @@ func TestLightsOff(t *testing.T) {
 	ctrl, mock := createMock(t)
 	defer ctrl.Finish()
 	// 'Off' command
-	request := flipdot.LightRequest{Status: flipdot.LightRequest_OFF}
-	response := flipdot.LightResponse{Error: &no_error}
-	mock.EXPECT().Light(gomock.Any(), gomock.Eq(request)).Return(&response, nil)
+	response := flipdot.LightResponse{Error: &noError}
+	mock.EXPECT().Light(gomock.Any(), RequestLightStatus(flipdot.LightRequest_OFF)).Return(&response, nil)
 	// Run the command
 	rootCmd.SetArgs([]string{"light", "off"})
 	Execute(mockFactory)
