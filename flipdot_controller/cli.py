@@ -18,8 +18,8 @@ PINS = PinConfig(sign=38, light=40)
 
 
 @click.command()
-@click.option('--serial-port', help="Name of serial port")
-@click.option('--grpc-port', type=int, help="Number of gRPC port")
+@click.option('--serial-port', required=True, help="Name of serial port")
+@click.option('--grpc-port', required=True, type=int, help="Number of gRPC port")
 def main(serial_port, grpc_port):
     """Console script for flipdot_controller."""
     with Serial(serial_port) as ser, FlipdotController(
