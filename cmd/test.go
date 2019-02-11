@@ -18,8 +18,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/golang/protobuf/ptypes/empty"
-
 	"github.com/briggySmalls/flipcli/flipdot"
 	"github.com/spf13/cobra"
 )
@@ -43,7 +41,8 @@ var startCmd = &cobra.Command{
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 		// Send request
-		response, err := flipClient.StartTest(ctx, &flipdot.StartTestRequest{})
+		response, err := flipClient.Test(ctx, &flipdot.TestRequest{Action: flipdot.TestRequest_START})
+		// Handle response
 		errorHandler(err)
 		if response != nil {
 			flipdotErrorHandler(*response.Error)
@@ -63,7 +62,8 @@ var stopCmd = &cobra.Command{
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 		// Send request
-		response, err := flipClient.StopTest(ctx, &empty.Empty{})
+		response, err := flipClient.Test(ctx, &flipdot.TestRequest{Action: flipdot.TestRequest_STOP})
+		// Handle response
 		errorHandler(err)
 		if response != nil {
 			flipdotErrorHandler(*response.Error)
