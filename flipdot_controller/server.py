@@ -24,7 +24,7 @@ class Server:
         # Create gRPC server
         self.server = grpc.server(
             futures.ThreadPoolExecutor(max_workers=max_workers))
-        add_FlipdotServicer_to_server(self, self.server)
+        add_FlipdotServicer_to_server(self.servicer, self.server)
         self.server.add_insecure_port('[::]:{}'.format(port))
 
     def start(self):
@@ -61,15 +61,15 @@ class Servicer(FlipdotServicer):
         return DrawResponse()
 
     def Test(self, request, context) -> TestResponse:
-        if (request.action != TestRequest.Action.Start
-                and request.action != TestRequest.Action.Stop):
+        if (request.action != TestRequest.START
+                and request.action != TestRequest.STOP):
             err = Error(
                 code=1, message="Unexpected action {}".format(request.action))
             return TestResponse(error=err)
 
-        self.controller.test(request.action == TestRequest.Action.Start)
+        self.controller.test(request.action == TestRequest.START)
         return TestResponse()
 
     def Light(self, request, context):
-        self.controller.light(request.status == LightRequest.Status.ON)
+        self.controller.light(request.status == LightRequest.ON)
         return LightResponse()
