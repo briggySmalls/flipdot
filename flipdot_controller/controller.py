@@ -58,15 +58,13 @@ class FlipdotController:
         """
         self.sign_controller.draw_image(image, sign)
 
-    def start_test(self):
+    def test(self, is_start: bool):
         """Start the test mode on all signs
         """
-        self.sign_controller.start_test_signs()
-
-    def stop_test(self):
-        """Stop the test mode on all signs
-        """
-        self.sign_controller.stop_test_signs()
+        if is_start:
+            self.sign_controller.start_test_signs()
+        else:
+            self.sign_controller.stop_test_signs()
 
     def light(self, status: bool):
         """Turn on/off light

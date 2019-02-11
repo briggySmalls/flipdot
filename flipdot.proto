@@ -5,8 +5,7 @@ import "google/protobuf/empty.proto";
 service Flipdot {
     rpc GetInfo (google.protobuf.Empty) returns (GetInfoResponse);
     rpc Draw (DrawRequest) returns (DrawResponse);
-    rpc StartTest (StartTestRequest) returns (StartTestResponse);
-    rpc StopTest (google.protobuf.Empty) returns (StopTestResponse);
+    rpc Test (TestRequest) returns (TestResponse);
     rpc Light (LightRequest) returns (LightResponse);
 }
 
@@ -41,14 +40,16 @@ message DrawResponse {
  * Test
  */
 
-message StartTestRequest {
+message TestRequest {
+    enum Action {
+        UNSPECIFIED = 0;
+        START = 1;
+        STOP = 2;
+    }
+    Action action = 1;
 }
 
-message StartTestResponse {
-    Error error = 1;
-}
-
-message StopTestResponse {
+message TestResponse {
     Error error = 1;
 }
 

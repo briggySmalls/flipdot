@@ -6,11 +6,10 @@ import grpc
 import numpy as np
 
 from flipdot_controller.controller import FlipdotController
-from flipdot_controller.protos.flipdot_pb2 import (DrawResponse,
+from flipdot_controller.protos.flipdot_pb2 import (DrawResponse, Error,
                                                    GetInfoResponse,
                                                    LightRequest, LightResponse,
-                                                   StartTestResponse,
-                                                   StopTestResponse)
+                                                   TestRequest, TestResponse)
 from flipdot_controller.protos.flipdot_pb2_grpc import (FlipdotServicer,
                                                         add_FlipdotServicer_to_server)
 
@@ -61,13 +60,15 @@ class Servicer(FlipdotServicer):
         self.controller.draw(request.sign, image)
         return DrawResponse()
 
-    def StartTest(self, request, context) -> StartTestResponse:
-        self.controller.start_test()
-        return StartTestResponse()
+    def Test(self, request, context) -> TestResponse:
+        if (request.action != TestRequest.Action.Start
+                and request.action != TestRequest.Action.Stop):
+            err = Error(
+                code=1, message="Unexpected action {}".format(request.action))
+            return TestResponse(error=err)
 
-    def StopTest(self, request, context) -> StopTestResponse:
-        self.controller.stop_test()
-        return StopTestResponse()
+        self.controller.test(request.action == TestRequest.Action.Start)
+        return TestResponse()
 
     def Light(self, request, context):
         self.controller.light(request.status == LightRequest.Status.ON)
