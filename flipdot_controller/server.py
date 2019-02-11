@@ -30,8 +30,8 @@ class Server:
     def start(self):
         self.server.start()
 
-    def stop(self):
-        self.server.stop()
+    def stop(self, grace=0):
+        self.server.stop(grace)
 
 
 class Servicer(FlipdotServicer):
