@@ -18,9 +18,9 @@ class Server:
     def __init__(self,
                  controller: FlipdotController,
                  max_workers=10,
-                 port=50051):
+                 port=5001):
         # Create a servicer
-        self.servicer = FlipdotServicer(controller)
+        self.servicer = Servicer(controller)
         # Create gRPC server
         self.server = grpc.server(
             futures.ThreadPoolExecutor(max_workers=max_workers))
