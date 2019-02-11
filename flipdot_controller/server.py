@@ -9,7 +9,7 @@ from flipdot_controller.controller import FlipdotController
 from flipdot_controller.protos.flipdot_pb2 import (DrawResponse, Error,
                                                    GetInfoResponse,
                                                    LightRequest, LightResponse,
-                                                   TestRequest, TestResponse)
+                                                   TestRequest, TestResponse, Error)
 from flipdot_controller.protos.flipdot_pb2_grpc import (FlipdotServicer,
                                                         add_FlipdotServicer_to_server)
 
@@ -42,7 +42,7 @@ class Servicer(FlipdotServicer):
         # Get the sign info
         info = self.controller.get_info()
         # Build a response
-        response = GetInfoResponse()
+        response = GetInfoResponse(error=self._no_error())
         for sign_info in info:
             sign = response.signs.add()
             sign.name = sign_info.name
@@ -58,7 +58,7 @@ class Servicer(FlipdotServicer):
                                                       sign_info.width))
         # Send the command
         self.controller.draw(request.sign, image)
-        return DrawResponse()
+        return DrawResponse(error=self._no_error())
 
     def Test(self, request, context) -> TestResponse:
         if (request.action != TestRequest.START
@@ -68,8 +68,12 @@ class Servicer(FlipdotServicer):
             return TestResponse(error=err)
 
         self.controller.test(request.action == TestRequest.START)
-        return TestResponse()
+        return TestResponse(error=self._no_error())
 
     def Light(self, request, context):
         self.controller.light(request.status == LightRequest.ON)
-        return LightResponse()
+        return LightResponse(error=self._no_error())
+
+    @staticmethod
+    def _no_error():
+        return Error(code=0)
