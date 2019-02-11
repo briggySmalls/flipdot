@@ -15,8 +15,11 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
+	"time"
 
+	"github.com/briggySmalls/flipcli/flipdot"
 	"github.com/spf13/cobra"
 )
 
@@ -35,16 +38,51 @@ to quickly create a Cobra application.`,
 	},
 }
 
+var onCmd = &cobra.Command{
+	Use:   "on",
+	Short: "Turns on the lights",
+	Long:  `Turns on the lights that illuminate the flipdot displays`,
+	Run: func(cmd *cobra.Command, args []string) {
+		if flipClient == nil {
+			return
+		}
+		// Create timed context for request
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		// Send request
+		response, err := flipClient.Light(ctx, &flipdot.LightRequest{Status: flipdot.LightRequest_ON})
+		// Handle response
+		errorHandler(err)
+		if response != nil {
+			flipdotErrorHandler(*response.Error)
+		}
+	},
+}
+
+var offCmd = &cobra.Command{
+	Use:   "off",
+	Short: "Turns off the lights",
+	Long:  `Turns off the lights that illuminate the flipdot displays`,
+	Run: func(cmd *cobra.Command, args []string) {
+		if flipClient == nil {
+			return
+		}
+		// Create timed context for request
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		// Send request
+		response, err := flipClient.Light(ctx, &flipdot.LightRequest{Status: flipdot.LightRequest_OFF})
+		// Handle response
+		errorHandler(err)
+		if response != nil {
+			flipdotErrorHandler(*response.Error)
+		}
+	},
+}
+
 func init() {
 	rootCmd.AddCommand(lightCmd)
 
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// lightCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// lightCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	lightCmd.AddCommand(onCmd)
+	lightCmd.AddCommand(offCmd)
 }

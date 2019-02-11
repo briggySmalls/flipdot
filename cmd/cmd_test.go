@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/briggySmalls/flipcli/flipdot"
@@ -22,7 +23,7 @@ func (ta *testAction) Matches(x interface{}) bool {
 	return x.(*flipdot.TestRequest).Action == ta.action
 }
 func (ta *testAction) String() string {
-	return "Checks request for provided action"
+	return fmt.Sprintf("Action is %s", ta.action.String())
 }
 
 type lightStatus struct{ status flipdot.LightRequest_Status }
@@ -34,7 +35,7 @@ func (ls *lightStatus) Matches(x interface{}) bool {
 	return x.(*flipdot.LightRequest).Status == ls.status
 }
 func (ls *lightStatus) String() string {
-	return "Checks request for provided status"
+	return fmt.Sprintf("Status is %s", ls.status.String())
 }
 
 func createMock(t *testing.T) (*gomock.Controller, *mock_flipdot.MockFlipdotClient) {
