@@ -1,17 +1,27 @@
 ENTRYPOINT=main.go
 BIN_DIR=bin
-BINARY=$(BIN_DIR)/flipapp
+BINARY=$(BIN_DIR)/flipcli
 
+# Cross-compilation
+PIOS=linux
+PIARCH=arm
+PIARM=7
+
+# Generated protobufs
 PROTO_DIR=flipdot
 PROTO_FILE=$(PROTO_DIR)/flipdot.proto
 PROTO_OUT=$(PROTO_DIR)/flipdot.pb.go
 
+# Generated mocks
 MOCKED_CLASS=FlipdotClient
 MOCK_DIR=mock_flipdot
 MOCK_FILE=$(MOCK_DIR)/flipdot.go
 
-app: protobuf
-	go build -o $(BINARY) -v $(ENTRYPOINT)
+flipcli: protobuf
+	go build -o $(BINARY) $(ENTRYPOINT)
+
+flipcli-rpi: protobuf
+	GOOS=$(PIOS) GOARCH=$(PIARCH) GOARM=$(PIARM) go build -a -o $(BINARY) $(ENTRYPOINT)
 
 protobuf:
 	protoc -I $(PROTO_DIR) $(PROTO_FILE) --go_out=plugins=grpc:$(PROTO_DIR)
