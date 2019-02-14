@@ -6,7 +6,6 @@ import (
 	"image/color"
 	"strings"
 
-	"github.com/golang/freetype"
 	"github.com/golang/freetype/truetype"
 	"golang.org/x/image/font"
 	"golang.org/x/image/math/fixed"
@@ -21,7 +20,6 @@ func NewFace(data []byte, points float64) (font.Face, error) {
 	// Turn into a face
 	opts := truetype.Options{
 		Size: points,
-		DPI:  72 / 64,
 	}
 	return truetype.NewFace(font, &opts), nil
 }
@@ -51,8 +49,8 @@ func (tb *textBuilder) Images(text string) ([]image.Image, error) {
 	// Check font metrics
 	m := d.Face.Metrics()
 	charHeight := m.Ascent + m.Descent
-	if charHeight > fixed.Int26_6(tb.height) {
-		return nil, fmt.Errorf("Font height %d larger than height %d", charHeight, tb.height)
+	if charHeight.Round() > int(tb.height) {
+		return nil, fmt.Errorf("Font height %d larger than height %d", charHeight.Round(), tb.height)
 	}
 	// Split the string up into lines
 	lines, err := tb.toLines(*d, text)
@@ -78,7 +76,7 @@ func (tb *textBuilder) toLines(d font.Drawer, s string) ([]string, error) {
 		// Build a query line
 		queryLine := strings.Join(words[start:end+1], " ")
 		// Determine if string fits
-		if d.MeasureString(queryLine) > fixed.Int26_6(tb.width) {
+		if d.MeasureString(queryLine) > fixed.I(int(tb.width)) {
 			// String doesn't fit on line
 			if end == start {
 				// Single word is too big for a line
@@ -102,7 +100,7 @@ func createDrawer(face font.Face) (*font.Drawer, error) {
 	return &font.Drawer{
 		Src:  &image.Uniform{color.Gray{255}},
 		Face: face,
-		Dot:  freetype.Pt(0, int(m.Ascent)),
+		Dot:  fixed.Point26_6{X: 0, Y: m.Ascent},
 	}, nil
 }
 

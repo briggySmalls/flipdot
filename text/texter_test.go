@@ -1,6 +1,9 @@
 package text
 
 import (
+	"fmt"
+	"image"
+	"image/color"
 	"io/ioutil"
 	"path/filepath"
 	"reflect"
@@ -15,7 +18,7 @@ func TestNewFace(t *testing.T) {
 	errorHandler(err)
 	data, err := ioutil.ReadFile(file)
 	// Test the NewFace function
-	_, err = NewFace(data, 16)
+	_, err = NewFace(data, 5)
 	if err != nil {
 		t.Error(err)
 	}
@@ -54,7 +57,8 @@ func TestToToLines(t *testing.T) {
 		{"This is a multi-line string", []string{"This is a multi-line", "string"}},
 		{
 			"This is a really really long string, maybe; it's even four lines",
-			[]string{"This is a really really", "long string maybe it's", "even four lines"}},
+			[]string{"This is a really", "really long string", "maybe it's even four", "lines"},
+		},
 	}
 
 	for _, table := range tables {
@@ -74,13 +78,16 @@ func TestImages(t *testing.T) {
 	// Get a font
 	f := getTestFont()
 	// Create the text builder
-	tb := NewTextBuilder(84, 12, f)
+	tb := NewTextBuilder(84, 13, f)
 	images, err := tb.Images("Turn into image")
 	if err != nil {
 		t.Errorf("Image conversion returned error %s", err)
 	}
 	if len(images) != 1 {
 		t.Errorf("Incorrect number of images: %d", len(images))
+	}
+	for _, img := range images {
+		printImage(img)
 	}
 }
 
@@ -93,4 +100,19 @@ func getTestFont() font.Face {
 	face, err := NewFace(data, 16)
 	errorHandler(err)
 	return face
+}
+
+func printImage(im image.Image) {
+	c := color.Gray{0}
+	for y := 0; y < im.Bounds().Dy(); y++ {
+		fmt.Print("|")
+		for x := 0; x < im.Bounds().Dx(); x++ {
+			if im.At(x, y) == c {
+				fmt.Print(" ")
+			} else {
+				fmt.Print("#")
+			}
+		}
+		fmt.Println("|")
+	}
 }
