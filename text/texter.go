@@ -49,7 +49,7 @@ func (tb *textBuilder) Images(text string) ([]image.Image, error) {
 	// Check font metrics
 	m := d.Face.Metrics()
 	charHeight := m.Ascent + m.Descent
-	if charHeight.Round() > int(tb.height) {
+	if charHeight.Floor() > int(tb.height) {
 		return nil, fmt.Errorf("Font height %d larger than height %d", charHeight.Round(), tb.height)
 	}
 	// Split the string up into lines
@@ -58,6 +58,8 @@ func (tb *textBuilder) Images(text string) ([]image.Image, error) {
 	// Draw the string
 	var images []image.Image
 	for _, line := range lines {
+		// Reset the x position
+		d.Dot = fixed.Point26_6{X: 0, Y: m.Ascent}
 		// Create a fresh destination
 		d.Dst = image.NewGray(image.Rect(0, 0, int(tb.width), int(tb.height)))
 		// Draw a new image

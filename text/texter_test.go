@@ -78,8 +78,8 @@ func TestImages(t *testing.T) {
 	// Get a font
 	f := getTestFont()
 	// Create the text builder
-	tb := NewTextBuilder(84, 13, f)
-	images, err := tb.Images("Turn into image")
+	tb := NewTextBuilder(84, 7, f)
+	images, err := tb.Images("Hello my name is Sam. How's tricks?")
 	if err != nil {
 		t.Errorf("Image conversion returned error %s", err)
 	}
@@ -93,11 +93,11 @@ func TestImages(t *testing.T) {
 
 func getTestFont() font.Face {
 	// Load a font from disk
-	file, err := filepath.Abs("m3x6.ttf")
+	file, err := filepath.Abs("Smirnof.ttf")
 	errorHandler(err)
 	data, err := ioutil.ReadFile(file)
 	// Test the NewFace function
-	face, err := NewFace(data, 16)
+	face, err := NewFace(data, 8)
 	errorHandler(err)
 	return face
 }
@@ -110,7 +110,7 @@ func printImage(im image.Image) {
 			if im.At(x, y) == c {
 				fmt.Print(" ")
 			} else {
-				fmt.Print("#")
+				fmt.Print("O")
 			}
 		}
 		fmt.Println("|")
