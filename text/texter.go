@@ -6,6 +6,7 @@ import (
 	"image/color"
 	"strings"
 
+	"github.com/golang/freetype"
 	"github.com/golang/freetype/truetype"
 	"golang.org/x/image/font"
 	"golang.org/x/image/math/fixed"
@@ -72,29 +73,25 @@ func (tb *textBuilder) Images(text string) ([]image.Image, error) {
 func (tb *textBuilder) toLines(d font.Drawer, s string) ([]string, error) {
 	words := splitWords(s)
 	var lines []string
-	currentLine := strings.Builder{}
-	var previous string
-	for i, word := range words {
-		// Keep string prior to addition
-		previous = currentLine.String()
-		// Add new word
-		currentLine.WriteString(word)
+	start := 0
+	for end, word := range words {
+		// Build a query line
+		queryLine := strings.Join(words[start:end+1], " ")
 		// Determine if string fits
-		width := d.MeasureString(currentLine.String())
-		if width > fixed.Int26_6(tb.width) {
+		if d.MeasureString(queryLine) > fixed.Int26_6(tb.width) {
 			// String doesn't fit on line
-			if i == 0 {
+			if end == start {
 				// Single word is too big for a line
 				return nil, fmt.Errorf("Word %s too large", word)
 			}
-			// Add previous (fitting) line to lines
-			lines = append(lines, previous)
+			// The previous must have fit
+			lines = append(lines, strings.Join(words[start:end], " "))
 			// Start again
-			currentLine.Reset()
+			start = end
 		}
 	}
 	// Add any remaining lines
-	lines = append(lines, previous)
+	lines = append(lines, strings.TrimSpace(strings.Join(words[start:len(words)], " ")))
 	return lines, nil
 }
 
@@ -105,7 +102,7 @@ func createDrawer(face font.Face) (*font.Drawer, error) {
 	return &font.Drawer{
 		Src:  &image.Uniform{color.Gray{255}},
 		Face: face,
-		Dot:  fixed.Point26_6{X: fixed.Int26_6(0), Y: m.Ascent},
+		Dot:  freetype.Pt(0, int(m.Ascent)),
 	}, nil
 }
 

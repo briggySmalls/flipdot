@@ -38,18 +38,35 @@ func TestSplitWords(t *testing.T) {
 	}
 }
 
-func TestToOneLine(t *testing.T) {
+func TestToToLines(t *testing.T) {
 	// Get test drawer
 	f := getTestFont()
 	d, err := createDrawer(f)
 	errorHandler(err)
-	// Test toLines
 	tb := textBuilder{84, 7, f}
-	lines, err := tb.toLines(*d, "Single line")
-	errorHandler(err)
-	// Assert
-	if len(lines) != 1 {
-		t.Errorf("Unexpected number of lines: %d", len(lines))
+
+	// Prepare test table
+	tables := []struct {
+		input  string
+		output []string
+	}{
+		{"Single line", []string{"Single line"}},
+		{"This is a multi-line string", []string{"This is a multi-line", "string"}},
+		{
+			"This is a really really long string, maybe; it's even four lines",
+			[]string{"This is a really really", "long string maybe it's", "even four lines"}},
+	}
+
+	for _, table := range tables {
+		lines, err := tb.toLines(*d, table.input)
+		// Check operation passed
+		if err != nil {
+			t.Error(err)
+		}
+		// Check result is as expected
+		if !reflect.DeepEqual(lines, table.output) {
+			t.Errorf("toLines failed to split: %s", table.input)
+		}
 	}
 }
 
