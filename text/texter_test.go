@@ -1,11 +1,25 @@
-package main
+package text
 
 import (
 	"io/ioutil"
 	"path/filepath"
 	"reflect"
 	"testing"
+
+	"golang.org/x/image/font"
 )
+
+func TestNewFace(t *testing.T) {
+	// Load a font from disk
+	file, err := filepath.Abs("m3x6.ttf")
+	errorHandler(err)
+	data, err := ioutil.ReadFile(file)
+	// Test the NewFace function
+	_, err = NewFace(data, 16)
+	if err != nil {
+		t.Error(err)
+	}
+}
 
 func TestSplitWords(t *testing.T) {
 	tables := []struct {
@@ -30,7 +44,7 @@ func TestToOneLine(t *testing.T) {
 	d, err := createDrawer(f)
 	errorHandler(err)
 	// Test toLines
-	tb := textBuilder{84, 7}
+	tb := textBuilder{84, 7, f}
 	lines, err := tb.toLines(*d, "Single line")
 	errorHandler(err)
 	// Assert
@@ -43,8 +57,8 @@ func TestImages(t *testing.T) {
 	// Get a font
 	f := getTestFont()
 	// Create the text builder
-	tb := NewTextBuilder(84, 7)
-	images, err := tb.Images("Turn into image", f)
+	tb := NewTextBuilder(84, 12, f)
+	images, err := tb.Images("Turn into image")
 	if err != nil {
 		t.Errorf("Image conversion returned error %s", err)
 	}
@@ -53,11 +67,13 @@ func TestImages(t *testing.T) {
 	}
 }
 
-func getTestFont() []byte {
-	// Get a font
-	file, err := filepath.Abs("fonts/Nintendo-Entertainment-System/Nintendo Entertainment System.ttf")
+func getTestFont() font.Face {
+	// Load a font from disk
+	file, err := filepath.Abs("m3x6.ttf")
 	errorHandler(err)
 	data, err := ioutil.ReadFile(file)
+	// Test the NewFace function
+	face, err := NewFace(data, 16)
 	errorHandler(err)
-	return data
+	return face
 }

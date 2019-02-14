@@ -1,4 +1,4 @@
-package main
+package text
 
 import (
 	"fmt"
@@ -6,31 +6,46 @@ import (
 	"image/color"
 	"strings"
 
+	"github.com/golang/freetype/truetype"
 	"golang.org/x/image/font"
-	"golang.org/x/image/font/opentype"
-	"golang.org/x/image/font/sfnt"
 	"golang.org/x/image/math/fixed"
 )
 
-type TextBuilder interface {
-	Images(text string, fnt []byte) ([]image.Image, error)
+func NewFace(data []byte, points float64) (font.Face, error) {
+	// Parse the font
+	font, err := truetype.Parse(data)
+	if err != nil {
+		return nil, err
+	}
+	// Turn into a face
+	opts := truetype.Options{
+		Size: points,
+		DPI:  72 / 64,
+	}
+	return truetype.NewFace(font, &opts), nil
 }
 
-func NewTextBuilder(width uint, height uint) TextBuilder {
+type TextBuilder interface {
+	Images(text string) ([]image.Image, error)
+}
+
+func NewTextBuilder(width uint, height uint, font font.Face) TextBuilder {
 	return &textBuilder{
 		width:  width,
 		height: height,
+		font:   font,
 	}
 }
 
 type textBuilder struct {
 	width  uint
 	height uint
+	font   font.Face
 }
 
-func (tb *textBuilder) Images(text string, fnt []byte) ([]image.Image, error) {
+func (tb *textBuilder) Images(text string) ([]image.Image, error) {
 	// Create a drawer from the font
-	d, err := createDrawer(fnt)
+	d, err := createDrawer(tb.font)
 	errorHandler(err)
 	// Check font metrics
 	m := d.Face.Metrics()
@@ -52,18 +67,6 @@ func (tb *textBuilder) Images(text string, fnt []byte) ([]image.Image, error) {
 		images = append(images, d.Dst)
 	}
 	return images, nil
-}
-
-func getFace(data []byte, points float64) font.Face {
-	// Parse the font
-	font, err := sfnt.Parse(data)
-	errorHandler(err)
-	// Turn into a face
-	opts := opentype.FaceOptions{}
-	opts.Size = points
-	face, err := opentype.NewFace(font, &opts)
-	errorHandler(err)
-	return face
 }
 
 func (tb *textBuilder) toLines(d font.Drawer, s string) ([]string, error) {
@@ -90,19 +93,19 @@ func (tb *textBuilder) toLines(d font.Drawer, s string) ([]string, error) {
 			currentLine.Reset()
 		}
 	}
+	// Add any remaining lines
+	lines = append(lines, previous)
 	return lines, nil
 }
 
-func createDrawer(fnt []byte) (*font.Drawer, error) {
-	// Create a font Face to use for text
-	face := getFace(fnt, 6)
+func createDrawer(face font.Face) (*font.Drawer, error) {
 	// Establish the baseline
 	m := face.Metrics()
 	// Update the drawer with font-specific fields
 	return &font.Drawer{
 		Src:  &image.Uniform{color.Gray{255}},
 		Face: face,
-		Dot:  fixed.Point26_6{fixed.Int26_6(0), m.Ascent},
+		Dot:  fixed.Point26_6{X: fixed.Int26_6(0), Y: m.Ascent},
 	}, nil
 }
 
