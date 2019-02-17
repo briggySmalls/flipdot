@@ -1,7 +1,6 @@
 package text
 
 import (
-	"fmt"
 	"image"
 	"image/color"
 	"io/ioutil"
@@ -57,7 +56,7 @@ func TestToToLines(t *testing.T) {
 		{"This is a multi-line string", []string{"This is a multi-line", "string"}},
 		{
 			"This is a really really long string, maybe; it's even four lines",
-			[]string{"This is a really", "really long string", "maybe it's even four", "lines"},
+			[]string{"This is a really", "really long string", "maybe it's even", "four lines"},
 		},
 	}
 
@@ -81,13 +80,16 @@ func TestImages(t *testing.T) {
 	tb := NewTextBuilder(84, 7, f)
 	images, err := tb.Images("Hello my name is Sam. How's tricks?")
 	if err != nil {
-		t.Errorf("Image conversion returned error %s", err)
+		t.Fatalf("Image conversion returned error: %s", err)
+		return
 	}
-	if len(images) != 1 {
-		t.Errorf("Incorrect number of images: %d", len(images))
+	if len(images) != 2 {
+		t.Fatalf("Incorrect number of images: %d", len(images))
 	}
 	for _, img := range images {
-		printImage(img)
+		if !checkImage(img) {
+			t.Error("Image empty")
+		}
 	}
 }
 
@@ -102,17 +104,20 @@ func getTestFont() font.Face {
 	return face
 }
 
-func printImage(im image.Image) {
+func checkImage(im image.Image) bool {
 	c := color.Gray{0}
+	isEmpty := true
 	for y := 0; y < im.Bounds().Dy(); y++ {
-		fmt.Print("|")
+		// fmt.Print("|")
 		for x := 0; x < im.Bounds().Dx(); x++ {
 			if im.At(x, y) == c {
-				fmt.Print(" ")
+				// fmt.Print(" ")
+				isEmpty = false
 			} else {
-				fmt.Print("O")
+				// fmt.Print("#")
 			}
 		}
-		fmt.Println("|")
+		// fmt.Println("|")
 	}
+	return !isEmpty
 }
