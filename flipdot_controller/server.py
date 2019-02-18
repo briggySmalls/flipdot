@@ -54,7 +54,7 @@ class Servicer(FlipdotServicer):
         # Determine sign's shape
         sign_info = self.controller.get_info(request.sign)
         # Reconstruct image
-        image = np.frombuffer(request.image).reshape((sign_info.height,
+        image = np.array(request.image, dtype=bool).reshape((sign_info.height,
                                                       sign_info.width))
         # Send the command
         self.controller.draw(request.sign, image)
