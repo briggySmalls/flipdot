@@ -29,7 +29,7 @@ message Error {
  */
 
 message DrawRequest {
-    int32 sign = 1; // ID of the sign to draw on
+    string sign = 1; // ID of the sign to draw on
     repeated bool image = 2; // Flattened image C-style 2D array
 }
 
