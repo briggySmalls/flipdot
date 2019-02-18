@@ -15,9 +15,6 @@
 package cmd
 
 import (
-	"context"
-	"time"
-
 	"github.com/briggySmalls/flipcli/flipdot"
 	"github.com/spf13/cobra"
 )
@@ -37,8 +34,7 @@ var startCmd = &cobra.Command{
 		if flipClient == nil {
 			return
 		}
-		// Create timed context for request
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		ctx, cancel := getContext()
 		defer cancel()
 		// Send request
 		response, err := flipClient.Test(ctx, &flipdot.TestRequest{Action: flipdot.TestRequest_START})
@@ -59,7 +55,7 @@ var stopCmd = &cobra.Command{
 		if flipClient == nil {
 			return
 		}
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		ctx, cancel := getContext()
 		defer cancel()
 		// Send request
 		response, err := flipClient.Test(ctx, &flipdot.TestRequest{Action: flipdot.TestRequest_STOP})
