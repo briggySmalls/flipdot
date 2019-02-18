@@ -85,13 +85,13 @@ func sendText(images []text.Image) {
 		select {
 		case <-ticker.C:
 			// Write to top sign
-			if tryWriteImage(images, counter, 0) {
+			if tryWriteImage(images, counter, "top") {
 				counter++
 			} else {
 				return
 			}
 			// Write to bottom sign
-			if tryWriteImage(images, counter, 1) {
+			if tryWriteImage(images, counter, "bottom") {
 				counter++
 			} else {
 				return
@@ -100,13 +100,16 @@ func sendText(images []text.Image) {
 	}
 }
 
-func tryWriteImage(images []text.Image, index int, sign int) bool {
+func tryWriteImage(images []text.Image, index int, sign string) bool {
 	if index >= len(images) {
 		return false
 	}
 	// Send request
 	ctx, cancel := getContext()
 	defer cancel()
-	flipClient.Draw(ctx, &flipdot.DrawRequest{int32(sign), images[index].Slice()})
+	flipClient.Draw(ctx, &flipdot.DrawRequest{
+		Sign:  sign,
+		Image: images[index].Slice(),
+	})
 	return true
 }
