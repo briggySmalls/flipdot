@@ -5,7 +5,7 @@ from unittest import mock
 
 import pytest
 
-from flipdot_controller.protos.flipdot_pb2 import TestRequest, LightRequest
+from flipdot_controller.protos.flipdot_pb2 import LightRequest, TestRequest
 from flipdot_controller.server import Servicer
 
 
