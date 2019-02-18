@@ -1,8 +1,6 @@
 package text
 
 import (
-	"image"
-	"image/color"
 	"io/ioutil"
 	"path/filepath"
 	"reflect"
@@ -104,20 +102,11 @@ func getTestFont() font.Face {
 	return face
 }
 
-func checkImage(im image.Image) bool {
-	c := color.Gray{0}
-	isEmpty := true
-	for y := 0; y < im.Bounds().Dy(); y++ {
-		// fmt.Print("|")
-		for x := 0; x < im.Bounds().Dx(); x++ {
-			if im.At(x, y) == c {
-				// fmt.Print(" ")
-				isEmpty = false
-			} else {
-				// fmt.Print("#")
-			}
+func checkImage(im Image) bool {
+	for _, pix := range im.Slice() {
+		if pix {
+			return true
 		}
-		// fmt.Println("|")
 	}
-	return !isEmpty
+	return false
 }
