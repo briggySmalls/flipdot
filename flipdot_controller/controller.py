@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Main module."""
 from collections import namedtuple
-from typing import Sequence
+from typing import Sequence, Union
 
 import numpy as np
 from pyflipdot.pyflipdot import HanoverController
@@ -42,12 +42,12 @@ class FlipdotController:
         # Cleanup GPIOs
         self.power_manager.__exit__(*args, **kwargs)
 
-    def get_info(self, sign=None) -> Sequence[SignConfig]:
+    def get_info(self, sign=None) -> Union[Sequence[SignInfo], SignInfo]:
         info = {}
         for s in self.sign_controller._signs.values():
             info[s.name] = SignInfo(
                 name=s.name, width=s.width, height=s.height)
-        return list(info.values()) if sign is None else [info[sign]]
+        return list(info.values()) if sign is None else info[sign]
 
     def draw(self, sign: str, image: np.ndarray):
         """Draw the image on the sign

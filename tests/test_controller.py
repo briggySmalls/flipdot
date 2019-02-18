@@ -46,6 +46,13 @@ def test_get_info(controller):
     assert info[0].height == 8
 
 
+def test_get_specific_info(controller):
+    sign = controller.get_info(sign='mysign')
+    assert sign.name == 'mysign'
+    assert sign.width == 10
+    assert sign.height == 8
+
+
 def test_start_test(controller, port):
     # Send the start command
     controller.test(True)
