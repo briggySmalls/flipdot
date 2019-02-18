@@ -9,7 +9,7 @@ from flipdot_controller.controller import FlipdotController
 from flipdot_controller.protos.flipdot_pb2 import (DrawResponse, Error,
                                                    GetInfoResponse,
                                                    LightRequest, LightResponse,
-                                                   TestRequest, TestResponse)
+                                                   TestRequest, TestResponse, Error)
 from flipdot_controller.protos.flipdot_pb2_grpc import (FlipdotServicer,
                                                         add_FlipdotServicer_to_server)
 
@@ -24,14 +24,14 @@ class Server:
         # Create gRPC server
         self.server = grpc.server(
             futures.ThreadPoolExecutor(max_workers=max_workers))
-        add_FlipdotServicer_to_server(self, self.server)
+        add_FlipdotServicer_to_server(self.servicer, self.server)
         self.server.add_insecure_port('[::]:{}'.format(port))
 
     def start(self):
         self.server.start()
 
-    def stop(self):
-        self.server.stop()
+    def stop(self, grace=0):
+        self.server.stop(grace)
 
 
 class Servicer(FlipdotServicer):
@@ -42,7 +42,7 @@ class Servicer(FlipdotServicer):
         # Get the sign info
         info = self.controller.get_info()
         # Build a response
-        response = GetInfoResponse()
+        response = GetInfoResponse(error=self._no_error())
         for sign_info in info:
             sign = response.signs.add()
             sign.name = sign_info.name
@@ -58,18 +58,22 @@ class Servicer(FlipdotServicer):
                                                       sign_info.width))
         # Send the command
         self.controller.draw(request.sign, image)
-        return DrawResponse()
+        return DrawResponse(error=self._no_error())
 
     def Test(self, request, context) -> TestResponse:
-        if (request.action != TestRequest.Action.Start
-                and request.action != TestRequest.Action.Stop):
+        if (request.action != TestRequest.START
+                and request.action != TestRequest.STOP):
             err = Error(
                 code=1, message="Unexpected action {}".format(request.action))
             return TestResponse(error=err)
 
-        self.controller.test(request.action == TestRequest.Action.Start)
-        return TestResponse()
+        self.controller.test(request.action == TestRequest.START)
+        return TestResponse(error=self._no_error())
 
     def Light(self, request, context):
-        self.controller.light(request.status == LightRequest.Status.ON)
-        return LightResponse()
+        self.controller.light(request.status == LightRequest.ON)
+        return LightResponse(error=self._no_error())
+
+    @staticmethod
+    def _no_error():
+        return Error(code=0)
