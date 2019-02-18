@@ -30,7 +30,7 @@ message Error {
 
 message DrawRequest {
     int32 sign = 1; // ID of the sign to draw on
-    bytes image = 2; // Flattened image array
+    repeated bool image = 2; // Flattened image C-style 2D array
 }
 
 message DrawResponse {
