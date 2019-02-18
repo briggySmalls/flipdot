@@ -2,6 +2,7 @@
 """Main module."""
 from collections import namedtuple
 from typing import Sequence, Union
+import logging
 
 import numpy as np
 from pyflipdot.pyflipdot import HanoverController
@@ -9,6 +10,8 @@ from pyflipdot.sign import HanoverSign
 from serial import Serial
 
 from flipdot_controller.power import PinConfig, PowerManager
+
+logger = logging.getLogger(__name__)
 
 SignConfig = namedtuple("SignConfig",
                         ['name', 'address', 'width', 'height', 'flip'])
@@ -56,6 +59,7 @@ class FlipdotController:
             sign (str): The sign to display the image
             image (np.ndarray): The image to display
         """
+        logger.debug("draw called:\nsign %s\nimage %s", sign, image)
         self.sign_controller.draw_image(image, sign)
 
     def test(self, is_start: bool):
