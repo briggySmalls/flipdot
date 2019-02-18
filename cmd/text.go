@@ -25,6 +25,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var font string
+
 // textCmd represents the draw command
 var textCmd = &cobra.Command{
 	Use:   "text",
@@ -34,16 +36,20 @@ var textCmd = &cobra.Command{
 The phrase is automatically wrapped, and the images staggered if necessary`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// Get a text builder
-		tb := getTextBuilder()
+		tb := getTextBuilder(font)
 		// Make the text images
 		images, err := tb.Images(args[0])
 		errorHandler(err)
-
+		// Write the images
+		sendText(images)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(textCmd)
+
+	textCmd.Flags().StringVarP(&font, "font", "f", "", "Font to use to display text")
+	textCmd.MarkFlagRequired("font")
 
 	// Here you will define your flags and configuration settings.
 
@@ -56,9 +62,9 @@ func init() {
 	// textCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
 
-func getTextBuilder() text.TextBuilder {
+func getTextBuilder(font string) text.TextBuilder {
 	// Load font from disk
-	file, err := filepath.Abs("text/Smirnof.ttf")
+	file, err := filepath.Abs(font)
 	errorHandler(err)
 	data, err := ioutil.ReadFile(file)
 	errorHandler(err)
