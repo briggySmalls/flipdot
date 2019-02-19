@@ -38,6 +38,20 @@ func (ls *lightStatus) String() string {
 	return fmt.Sprintf("Status is %s", ls.status.String())
 }
 
+type drawImage struct {
+	sign string
+}
+
+func RequestDrawImage(sign string) gomock.Matcher {
+	return &drawImage{sign}
+}
+func (di *drawImage) Matches(x interface{}) bool {
+	return x.(*flipdot.DrawRequest).Sign == di.sign
+}
+func (di *drawImage) String() string {
+	return fmt.Sprintf("Sign should be %s", di.sign)
+}
+
 func createMock(t *testing.T) (*gomock.Controller, *mock_flipdot.MockFlipdotClient) {
 	// Create a mock
 	ctrl := gomock.NewController(t)
@@ -86,6 +100,20 @@ func TestLightsOff(t *testing.T) {
 	mock.EXPECT().Light(gomock.Any(), RequestLightStatus(flipdot.LightRequest_OFF)).Return(&response, nil)
 	// Run the command
 	rootCmd.SetArgs([]string{"light", "off"})
+	Execute(mockFactory)
+}
+
+func TestText(t *testing.T) {
+	ctrl, mock := createMock(t)
+	defer ctrl.Finish()
+	// Text command
+	response := flipdot.DrawResponse{Error: &noError}
+	gomock.InOrder(
+		mock.EXPECT().Draw(gomock.Any(), RequestDrawImage("top")).Return(&response, nil),
+		mock.EXPECT().Draw(gomock.Any(), RequestDrawImage("bottom")).Return(&response, nil),
+	)
+	// Run the command
+	rootCmd.SetArgs([]string{"text", "--font", "../text/Smirnof.ttf", "'Hello my name is Sam. How are you?'"})
 	Execute(mockFactory)
 }
 
