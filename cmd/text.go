@@ -76,40 +76,52 @@ func getTextBuilder(font string) text.TextBuilder {
 }
 
 func sendText(images []text.Image) {
+	// Send any relevant images
+	images = sendFrame(images)
+	// Check if we need to go on
+	if len(images) == 0 {
+		return
+	}
 	// Create a ticker
 	ticker := time.NewTicker(time.Second * 5)
 	defer ticker.Stop()
 	// Write images periodically
-	counter := 0
-	for {
+	for len(images) > 0 {
 		select {
 		case <-ticker.C:
-			// Write to top sign
-			if tryWriteImage(images, counter, "top") {
-				counter++
-			} else {
-				return
-			}
-			// Write to bottom sign
-			if tryWriteImage(images, counter, "bottom") {
-				counter++
-			} else {
-				return
-			}
+			images = sendFrame(images)
 		}
 	}
 }
 
-func tryWriteImage(images []text.Image, index int, sign string) bool {
-	if index >= len(images) {
-		return false
+func sendFrame(images []text.Image) (leftover []text.Image) {
+	switch length := len(images); length {
+	case 0:
+		panic("No images to send")
+	case 1:
+		leftover = []text.Image{}
+		tryWriteImage(images[0], "top")
+	case 2:
+		imageTop, imageBottom := images[0], images[1]
+		leftover = []text.Image{}
+		tryWriteImage(imageTop, "top")
+		tryWriteImage(imageBottom, "bottom")
+	default:
+		imageTop, imageBottom := images[0], images[1]
+		leftover = images[2:]
+		tryWriteImage(imageTop, "top")
+		tryWriteImage(imageBottom, "bottom")
 	}
+	return
+}
+
+func tryWriteImage(image text.Image, sign string) {
 	// Send request
 	ctx, cancel := getContext()
 	defer cancel()
-	flipClient.Draw(ctx, &flipdot.DrawRequest{
+	_, err := flipClient.Draw(ctx, &flipdot.DrawRequest{
 		Sign:  sign,
-		Image: images[index].Slice(),
+		Image: image.Slice(),
 	})
-	return true
+	errorHandler(err)
 }

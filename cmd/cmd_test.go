@@ -113,7 +113,7 @@ func TestText(t *testing.T) {
 		mock.EXPECT().Draw(gomock.Any(), RequestDrawImage("bottom")).Return(&response, nil),
 	)
 	// Run the command
-	rootCmd.SetArgs([]string{"text", "--font", "../text/Smirnof.ttf", "'Hello my name is Sam. How are you?'"})
+	rootCmd.SetArgs([]string{"text", "--font", "../text/Smirnof.ttf", "Hello my name is Sam. How's tricks?"})
 	Execute(mockFactory)
 }
 

@@ -42,8 +42,8 @@ func (i *img) Slice() []bool {
 	rows := i.source.Bounds().Dy()
 	cols := i.source.Bounds().Dx()
 	binImage := make([]bool, rows*cols)
-	for c := 0; c < cols; c++ {
-		for r := 0; r < rows; r++ {
+	for r := 0; r < rows; r++ {
+		for c := 0; c < cols; c++ {
 			binImage[r*cols+c] = i.source.At(c, r) != bgColor
 		}
 	}
