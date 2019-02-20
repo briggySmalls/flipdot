@@ -2,6 +2,7 @@
 """Console script for flipdot_controller."""
 import sys
 import time
+import logging
 
 import click
 from serial import Serial
@@ -18,11 +19,21 @@ SIGNS = [
 
 @click.command()
 @click.option('--serial-port', required=True, help="Name of serial port")
-@click.option('--grpc-port', required=True, type=int, help="Number of gRPC port")
-@click.option('--sign-pin', required=True, type=int, help="Pin number controlling power for signs")
-@click.option('--light-pin', required=True, type=int, help="Pin number controlling power for lights")
+@click.option(
+    '--grpc-port', required=True, type=int, help="Number of gRPC port")
+@click.option(
+    '--sign-pin',
+    required=True,
+    type=int,
+    help="Pin number controlling power for signs")
+@click.option(
+    '--light-pin',
+    required=True,
+    type=int,
+    help="Pin number controlling power for lights")
 def main(serial_port, grpc_port, sign_pin, light_pin):
     """Console script for flipdot_controller."""
+    logging.basicConfig(level=logging.DEBUG)
     pin_config = PinConfig(sign=sign_pin, light=light_pin)
     with Serial(serial_port) as ser, FlipdotController(
             port=ser, signs=SIGNS, pins=pin_config) as controller:
