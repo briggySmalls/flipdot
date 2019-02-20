@@ -29,22 +29,23 @@ def test_simple_config(tmp_path):
     with config_file_path.open('w') as file:
         file.write(config_text)
     # Read and validate the config with the parser
-    config_parser = ConfigParser.create(config_file_path)
-    config = config_parser.config
+    parser = ConfigParser.create(config_file_path)
 
     # Assert
-    assert config['serial_port'] == '/dev/ttyUSB0'
-    assert config['grpc_port'] == 5001
-    assert config['pins']['sign'] == 40
-    assert config['pins']['light'] == 38
+    assert parser.basic_config['serial_port'] == '/dev/ttyUSB0'
+    assert parser.basic_config['grpc_port'] == 5001
+    assert parser.pin_config.sign == 40
+    assert parser.pin_config.light == 38
     # Assert first sign
-    assert config['signs']['top']['address'] == 1
-    assert config['signs']['top']['width'] == 84
-    assert config['signs']['top']['height'] == 7
-    assert config['signs']['top']['flip']
+    assert parser.signs_config[0].name == 'top'
+    assert parser.signs_config[0].address == 1
+    assert parser.signs_config[0].width == 84
+    assert parser.signs_config[0].height == 7
+    assert parser.signs_config[0].flip
     # Assert second sign
-    assert config['signs']['bottom']['address'] == 2
-    assert config['signs']['bottom']['width'] == 12
-    assert config['signs']['bottom']['height'] == 18
-    assert not config['signs']['bottom']['flip']
+    assert parser.signs_config[1].name == 'bottom'
+    assert parser.signs_config[1].address == 2
+    assert parser.signs_config[1].width == 12
+    assert parser.signs_config[1].height == 18
+    assert not parser.signs_config[1].flip
 

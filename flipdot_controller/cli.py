@@ -24,16 +24,10 @@ def main(config):
     """Console script for flipdot_controller."""
     logging.basicConfig(level=logging.DEBUG)
     # Read the config
-    config = ConfigParser(config).config()
-    pin_config = PinConfig(**config['pins'])
-    signs = [
-        SignConfig(name=name, **sign_config)
-        for name, sign_config
-        in config['signs']
-    ]
+    config = ConfigParser.create(config)
     # Create controller from config
-    with Serial(config['serial_port']) as ser, FlipdotController(
-            port=ser, signs=signs, pins=pin_config) as controller:
+    with Serial(config.config['serial_port']) as ser, FlipdotController(
+            port=ser, signs=config.signs_config, pins=config.pin_config) as controller:
         server = Server(controller, port=config['grpc_port'])
         try:
             server.start()

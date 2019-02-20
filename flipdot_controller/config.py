@@ -1,6 +1,10 @@
 from pathlib import Path
+from typing import Sequence
 
 import toml
+
+from flipdot_controller.controller import SignConfig
+from flipdot_controller.power import PinConfig
 
 
 def _assert(condition, message=None):
@@ -31,8 +35,23 @@ class ConfigParser:
             _assert('height' in sign, "Height missing from sign {}".format(name))
 
     @property
-    def config(self):
-        return self._config
+    def basic_config(self):
+        return {
+            key: value for key, value in
+            self._config.items()
+            if key not in ['pins', 'signs']
+        }
+
+    @property
+    def pin_config(self) -> PinConfig:
+        return PinConfig(**self._config['pins'])
+
+    @property
+    def signs_config(self) -> Sequence[SignConfig]:
+        return [
+            SignConfig(name=name, **sign_config)
+            for name, sign_config in self._config['signs'].items()
+        ]
 
     def _assert_not_missing(self, field):
         _assert(field in self._config, "Config missing: {}".format(field))
