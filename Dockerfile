@@ -20,12 +20,12 @@ RUN printf "[global]\nextra-index-url=https://www.piwheels.org/simple\n" > /etc/
 # Ensure we can compile an efficient package installation
 RUN pip3 install wheel
 
-# Copy build package into a new image
-COPY --from=0 /package/dist/flipdot_controller*.tar.gz /app/
+# Copy build package into a new image and install
+COPY --from=0 /package/dist/flipdot_controller*.tar.gz /bin/
+RUN pip3 install /bin/flipdot_controller*.tar.gz
+RUN rm -rf /bin/
+
+COPY config.toml /app/config.toml
 WORKDIR /app/
-
-# Install the package
-RUN pip3 install flipdot_controller*.tar.gz
-
-ENV GRPC_PORT=5001
-CMD flipdot_controller --serial-port $SERIAL_PORT --grpc-port $GRPC_PORT --sign-pin $SIGN_PIN --light-pin $LIGHT_PIN
+ENTRYPOINT []
+CMD ["flipdot_controller", "--config", "config.toml"]

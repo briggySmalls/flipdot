@@ -10,6 +10,7 @@ from serial import Serial
 from flipdot_controller.controller import FlipdotController, SignConfig
 from flipdot_controller.power import PinConfig
 from flipdot_controller.server import Server
+from flipdot_controller.config import ConfigParser
 
 SIGNS = [
     SignConfig(name="top", address=1, width=84, height=7, flip=True),
@@ -18,26 +19,22 @@ SIGNS = [
 
 
 @click.command()
-@click.option('--serial-port', required=True, help="Name of serial port")
-@click.option(
-    '--grpc-port', required=True, type=int, help="Number of gRPC port")
-@click.option(
-    '--sign-pin',
-    required=True,
-    type=int,
-    help="Pin number controlling power for signs")
-@click.option(
-    '--light-pin',
-    required=True,
-    type=int,
-    help="Pin number controlling power for lights")
-def main(serial_port, grpc_port, sign_pin, light_pin):
+@click.option('--config', type=click.Path(exists=True), required=True, help="TOML config file")
+def main(config):
     """Console script for flipdot_controller."""
     logging.basicConfig(level=logging.DEBUG)
-    pin_config = PinConfig(sign=sign_pin, light=light_pin)
-    with Serial(serial_port) as ser, FlipdotController(
-            port=ser, signs=SIGNS, pins=pin_config) as controller:
-        server = Server(controller, port=grpc_port)
+    # Read the config
+    config = ConfigParser(config).config()
+    pin_config = PinConfig(**config['pins'])
+    signs = [
+        SignConfig(name=name, **sign_config)
+        for name, sign_config
+        in config['signs']
+    ]
+    # Create controller from config
+    with Serial(config['serial_port']) as ser, FlipdotController(
+            port=ser, signs=signs, pins=pin_config) as controller:
+        server = Server(controller, port=config['grpc_port'])
         try:
             server.start()
             while True:
