@@ -7,15 +7,9 @@ import logging
 import click
 from serial import Serial
 
-from flipdot_controller.controller import FlipdotController, SignConfig
-from flipdot_controller.power import PinConfig
+from flipdot_controller.controller import FlipdotController
 from flipdot_controller.server import Server
 from flipdot_controller.config import ConfigParser
-
-SIGNS = [
-    SignConfig(name="top", address=1, width=84, height=7, flip=True),
-    SignConfig(name="bottom", address=2, width=84, height=7, flip=False),
-]
 
 
 @click.command()
