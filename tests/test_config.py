@@ -48,4 +48,3 @@ def test_simple_config(tmp_path):
     assert parser.signs_config[1].width == 12
     assert parser.signs_config[1].height == 18
     assert not parser.signs_config[1].flip
-

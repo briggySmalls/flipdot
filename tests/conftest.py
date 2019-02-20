@@ -2,7 +2,6 @@ from unittest import mock
 
 import pytest
 
-
 # Mock RPi
 MOCK_RASPY = mock.MagicMock()
 MODULES = {

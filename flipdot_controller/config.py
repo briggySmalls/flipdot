@@ -25,20 +25,24 @@ class ConfigParser:
         self._assert_not_missing('serial_port')
         self._assert_not_missing('grpc_port')
         self._assert_not_missing('pins')
-        _assert('sign' in self._config['pins'], "sign_pin not supplied in pins")
-        _assert('light' in self._config['pins'], "light_pin not supplied in pins")
+        _assert('sign' in self._config['pins'],
+                "sign_pin not supplied in pins")
+        _assert('light' in self._config['pins'],
+                "light_pin not supplied in pins")
         self._assert_not_missing('signs')
         _assert(len(self._config['signs']) > 0, "No signs supplied")
         for name, sign in self._config['signs'].items():
-            _assert('address' in sign, "Address missing from sign {}".format(name))
+            _assert('address' in sign,
+                    "Address missing from sign {}".format(name))
             _assert('width' in sign, "Width missing from sign {}".format(name))
-            _assert('height' in sign, "Height missing from sign {}".format(name))
+            _assert('height' in sign,
+                    "Height missing from sign {}".format(name))
 
     @property
     def basic_config(self):
         return {
-            key: value for key, value in
-            self._config.items()
+            key: value
+            for key, value in self._config.items()
             if key not in ['pins', 'signs']
         }
 
