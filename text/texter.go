@@ -39,8 +39,8 @@ func NewImage(i image.Image) Image {
 func (i *img) Slice() []bool {
 	bgColor := color.Gray{0}
 	// Create an array for the image
-	rows := i.source.Bounds().Dx()
-	cols := i.source.Bounds().Dy()
+	rows := i.source.Bounds().Dy()
+	cols := i.source.Bounds().Dx()
 	binImage := make([]bool, rows*cols)
 	for c := 0; c < cols; c++ {
 		for r := 0; r < rows; r++ {

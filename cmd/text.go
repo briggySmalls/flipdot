@@ -77,7 +77,7 @@ func getTextBuilder(font string) text.TextBuilder {
 
 func sendText(images []text.Image) {
 	// Create a ticker
-	ticker := time.NewTicker(time.Second)
+	ticker := time.NewTicker(time.Second * 5)
 	defer ticker.Stop()
 	// Write images periodically
 	counter := 0
