@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """Main module."""
+import logging
 from collections import namedtuple
 from typing import Sequence, Union
-import logging
 
 import numpy as np
 from pyflipdot.pyflipdot import HanoverController
