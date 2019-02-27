@@ -76,8 +76,13 @@ func getTextBuilder(font string) text.TextBuilder {
 }
 
 func sendText(images []text.Image) {
+	// Get the signs
+	context, cancel := getContext()
+	defer cancel()
+	response, err := flipClient.GetInfo(context, &flipdot.GetInfoRequest{})
+	errorHandler(err)
 	// Send any relevant images
-	images = sendFrame(images)
+	images = sendFrame(images, response.Signs)
 	// Check if we need to go on
 	if len(images) == 0 {
 		return
@@ -89,33 +94,26 @@ func sendText(images []text.Image) {
 	for len(images) > 0 {
 		select {
 		case <-ticker.C:
-			images = sendFrame(images)
+			images = sendFrame(images, response.Signs)
 		}
 	}
 }
 
-func sendFrame(images []text.Image) (leftover []text.Image) {
-	switch length := len(images); length {
-	case 0:
-		panic("No images to send")
-	case 1:
-		leftover = []text.Image{}
-		tryWriteImage(images[0], "top")
-	case 2:
-		imageTop, imageBottom := images[0], images[1]
-		leftover = []text.Image{}
-		tryWriteImage(imageTop, "top")
-		tryWriteImage(imageBottom, "bottom")
-	default:
-		imageTop, imageBottom := images[0], images[1]
-		leftover = images[2:]
-		tryWriteImage(imageTop, "top")
-		tryWriteImage(imageBottom, "bottom")
+func sendFrame(images []text.Image, signs []*flipdot.GetInfoResponse_SignInfo) (leftover []text.Image) {
+	for _, sign := range signs {
+		// Stop sending if there are no more images left
+		if len(images) == 0 {
+			return images
+		}
+		// Pop an image off the stack and send it
+		var image text.Image
+		image, images = images[0], images[1:]
+		writeImage(image, sign.Name)
 	}
-	return
+	return images
 }
 
-func tryWriteImage(image text.Image, sign string) {
+func writeImage(image text.Image, sign string) {
 	// Send request
 	ctx, cancel := getContext()
 	defer cancel()

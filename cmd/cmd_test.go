@@ -5,13 +5,12 @@ import (
 	"testing"
 
 	"github.com/briggySmalls/flipcli/flipdot"
-	"github.com/briggySmalls/flipcli/mock_flipdot"
 	"github.com/golang/mock/gomock"
 	"google.golang.org/grpc"
 )
 
 // Mock used to test the cli
-var mock *mock_flipdot.MockFlipdotClient
+var mock *flipdot.MockFlipdotClient
 var noError = flipdot.Error{Code: 0}
 
 type testAction struct{ action flipdot.TestRequest_Action }
@@ -52,10 +51,10 @@ func (di *drawImage) String() string {
 	return fmt.Sprintf("Sign should be %s", di.sign)
 }
 
-func createMock(t *testing.T) (*gomock.Controller, *mock_flipdot.MockFlipdotClient) {
+func createMock(t *testing.T) (*gomock.Controller, *flipdot.MockFlipdotClient) {
 	// Create a mock
 	ctrl := gomock.NewController(t)
-	mock = mock_flipdot.NewMockFlipdotClient(ctrl)
+	mock = flipdot.NewMockFlipdotClient(ctrl)
 	return ctrl, mock
 }
 
@@ -106,14 +105,25 @@ func TestLightsOff(t *testing.T) {
 func TestText(t *testing.T) {
 	ctrl, mock := createMock(t)
 	defer ctrl.Finish()
+	// Construct signs
+	top := flipdot.GetInfoResponse_SignInfo{
+		Name: "top",
+	}
+	bottom := flipdot.GetInfoResponse_SignInfo{
+		Name: "bottom",
+	}
+	info_response := flipdot.GetInfoResponse{
+		Signs: []*flipdot.GetInfoResponse_SignInfo{&top, &bottom},
+	}
 	// Text command
 	response := flipdot.DrawResponse{Error: &noError}
 	gomock.InOrder(
+		mock.EXPECT().GetInfo(gomock.Any(), gomock.Any()).Return(&info_response, nil),
 		mock.EXPECT().Draw(gomock.Any(), RequestDrawImage("top")).Return(&response, nil),
 		mock.EXPECT().Draw(gomock.Any(), RequestDrawImage("bottom")).Return(&response, nil),
 	)
 	// Run the command
-	rootCmd.SetArgs([]string{"text", "--font", "../text/Smirnof.ttf", "Hello my name is Sam. How's tricks?"})
+	rootCmd.SetArgs([]string{"text", "--font", "../Smirnof.ttf", "Hello my name is Sam. How's tricks?"})
 	Execute(mockFactory)
 }
 
