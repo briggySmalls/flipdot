@@ -15,8 +15,10 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/briggySmalls/flipcli/flipdot"
 	"github.com/spf13/cobra"
@@ -52,14 +54,18 @@ func init() {
 
 func errorHandler(err error) {
 	if err != nil {
-		fmt.Println(err)
+		panic(err)
 	}
 }
 
 func flipdotErrorHandler(err flipdot.Error) {
 	if err.Code != 0 {
-		fmt.Println(err.Message)
+		panic(err.Message)
 	}
+}
+
+func getContext() (context.Context, context.CancelFunc) {
+	return context.WithTimeout(context.Background(), 10*time.Second)
 }
 
 func Execute(cf func(uint) (flipdot.FlipdotClient, *grpc.ClientConn, error)) {

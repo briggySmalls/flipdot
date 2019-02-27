@@ -24,8 +24,34 @@ func NewFace(data []byte, points float64) (font.Face, error) {
 	return truetype.NewFace(font, &opts), nil
 }
 
+type Image interface {
+	Slice() []bool
+}
+
+type img struct {
+	source image.Image
+}
+
+func NewImage(i image.Image) Image {
+	return &img{source: i}
+}
+
+func (i *img) Slice() []bool {
+	bgColor := color.Gray{0}
+	// Create an array for the image
+	rows := i.source.Bounds().Dy()
+	cols := i.source.Bounds().Dx()
+	binImage := make([]bool, rows*cols)
+	for r := 0; r < rows; r++ {
+		for c := 0; c < cols; c++ {
+			binImage[r*cols+c] = i.source.At(c, r) != bgColor
+		}
+	}
+	return binImage
+}
+
 type TextBuilder interface {
-	Images(text string) ([]image.Image, error)
+	Images(text string) ([]Image, error)
 }
 
 func NewTextBuilder(width uint, height uint, font font.Face) TextBuilder {
@@ -42,7 +68,7 @@ type textBuilder struct {
 	font   font.Face
 }
 
-func (tb *textBuilder) Images(text string) ([]image.Image, error) {
+func (tb *textBuilder) Images(text string) ([]Image, error) {
 	// Create a drawer from the font
 	d, err := createDrawer(tb.font)
 	errorHandler(err)
@@ -56,7 +82,7 @@ func (tb *textBuilder) Images(text string) ([]image.Image, error) {
 	lines, err := tb.toLines(*d, text)
 	errorHandler(err)
 	// Draw the string
-	var images []image.Image
+	var images []Image
 	for _, line := range lines {
 		// Reset the x position
 		d.Dot = fixed.Point26_6{X: 0, Y: m.Ascent}
@@ -65,7 +91,7 @@ func (tb *textBuilder) Images(text string) ([]image.Image, error) {
 		// Draw a new image
 		d.DrawString(line)
 		// Save the image
-		images = append(images, d.Dst)
+		images = append(images, NewImage(d.Dst))
 	}
 	return images, nil
 }
@@ -80,9 +106,9 @@ func (tb *textBuilder) toLines(d font.Drawer, s string) ([]string, error) {
 		// Determine if string fits
 		if d.MeasureString(queryLine) > fixed.I(int(tb.width)) {
 			// String doesn't fit on line
-			if end == start {
+			if end == 0 {
 				// Single word is too big for a line
-				return nil, fmt.Errorf("Word %s too large", word)
+				return nil, fmt.Errorf("Word '%s' too large to fit on line of width %d", word, tb.width)
 			}
 			// The previous must have fit
 			lines = append(lines, strings.Join(words[start:end], " "))

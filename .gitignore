@@ -1,8 +1,6 @@
 # Results of compilation
 bin/
 
-# Generated mocks
-mock_flipdot/
-
-# Generated output
-flipdot/flipdot.pb.go
+# Generated files
+*.mock.go
+*.pb.go

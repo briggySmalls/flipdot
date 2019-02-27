@@ -3,6 +3,7 @@ package text
 import (
 	"image"
 	"image/color"
+	"image/draw"
 	"io/ioutil"
 	"path/filepath"
 	"reflect"
@@ -93,6 +94,24 @@ func TestImages(t *testing.T) {
 	}
 }
 
+func TestSlice(t *testing.T) {
+	// Prepare test table
+	tables := []struct {
+		input  image.Image
+		output []bool
+	}{
+		{createTestImage(color.Gray{1}, image.Rect(0, 0, 2, 3)), []bool{true, true, true, true, true, true}},
+		{createTestImage(color.Gray{0}, image.Rect(0, 0, 3, 3)), []bool{false, false, false, false, false, false, false, false, false}},
+	}
+	for _, table := range tables {
+		img := NewImage(table.input)
+		slice := img.Slice()
+		if !reflect.DeepEqual(slice, table.output) {
+			t.Errorf("Image %s not sliced correctly", table.input)
+		}
+	}
+}
+
 func getTestFont() font.Face {
 	// Load a font from disk
 	file, err := filepath.Abs("Smirnof.ttf")
@@ -104,20 +123,18 @@ func getTestFont() font.Face {
 	return face
 }
 
-func checkImage(im image.Image) bool {
-	c := color.Gray{0}
-	isEmpty := true
-	for y := 0; y < im.Bounds().Dy(); y++ {
-		// fmt.Print("|")
-		for x := 0; x < im.Bounds().Dx(); x++ {
-			if im.At(x, y) == c {
-				// fmt.Print(" ")
-				isEmpty = false
-			} else {
-				// fmt.Print("#")
-			}
+func checkImage(im Image) bool {
+	for _, pix := range im.Slice() {
+		if pix {
+			return true
 		}
-		// fmt.Println("|")
 	}
-	return !isEmpty
+	return false
+}
+
+func createTestImage(c color.Color, r image.Rectangle) image.Image {
+	// Draw the image
+	dst := image.NewGray(r)
+	draw.Draw(dst, dst.Bounds(), image.NewUniform(c), image.Point{X: 0, Y: 0}, draw.Src)
+	return dst
 }
