@@ -146,10 +146,14 @@ func TestText(t *testing.T) {
 	defer ctrl.Finish()
 	// Construct signs
 	top := flipdot.GetInfoResponse_SignInfo{
-		Name: "top",
+		Name:   "top",
+		Width:  84,
+		Height: 8,
 	}
 	bottom := flipdot.GetInfoResponse_SignInfo{
-		Name: "bottom",
+		Name:   "bottom",
+		Width:  84,
+		Height: 8,
 	}
 	info_response := flipdot.GetInfoResponse{
 		Signs: []*flipdot.GetInfoResponse_SignInfo{&top, &bottom},

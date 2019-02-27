@@ -40,7 +40,7 @@ The phrase is automatically wrapped, and the images staggered if necessary`,
 		err := checkSigns(signs)
 		errorHandler(err)
 		// Get a text builder
-		tb := getTextBuilder(font)
+		tb := getTextBuilder(font, uint(signs[0].Width), uint(signs[0].Height))
 		// Make the text images
 		images, err := tb.Images(args[0])
 		errorHandler(err)
@@ -70,7 +70,7 @@ func init() {
 	// textCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
 
-func getTextBuilder(font string) text.TextBuilder {
+func getTextBuilder(font string, width uint, height uint) text.TextBuilder {
 	// Load font from disk
 	file, err := filepath.Abs(font)
 	errorHandler(err)
@@ -80,7 +80,7 @@ func getTextBuilder(font string) text.TextBuilder {
 	face, err := text.NewFace(data, 8)
 	errorHandler(err)
 	// Create a text builder
-	return text.NewTextBuilder(84, 7, face)
+	return text.NewTextBuilder(width, height, face)
 }
 
 func sendText(images []text.Image, signNames []string) {
@@ -131,7 +131,7 @@ func writeImage(image text.Image, sign string) {
 
 // Check that all signs have the same width/height
 func checkSigns(signs []*flipdot.GetInfoResponse_SignInfo) error {
-	var width, height int32
+	var width, height uint32
 	for i, sign := range signs {
 		if i == 0 {
 			width = sign.Width
