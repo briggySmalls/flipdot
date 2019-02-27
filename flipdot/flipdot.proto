@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+package flipdot;
+
 service Flipdot {
     rpc GetInfo (GetInfoRequest) returns (GetInfoResponse);
     rpc Draw (DrawRequest) returns (DrawResponse);
