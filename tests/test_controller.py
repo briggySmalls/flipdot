@@ -5,14 +5,6 @@ from unittest import mock
 
 import pytest
 
-mock_rpi = mock.MagicMock()
-modules = {
-    "RPi": mock_rpi,
-    "RPi.GPIO": mock_rpi.GPIO,
-}
-patcher = mock.patch.dict("sys.modules", modules)
-patcher.start()
-
 # Skip these imports (we have to mock RPi.GPIO first)
 from flipdot_controller.controller import FlipdotController, SignConfig  # isort:skip
 from flipdot_controller.power import PinConfig  # isort:skip
@@ -67,7 +59,7 @@ def test_stop_test(controller, port):
     port.write.assert_called_once()
 
 
-def test_light(controller, pins):
+def test_light(controller, pins, mock_rpi):
     # Turn on the lights
     controller.light(True)
     mock_rpi.GPIO.output.assert_called_once_with(pins.light, True)

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """Main module."""
+import logging
 from collections import namedtuple
 from typing import Sequence, Union
 
@@ -9,6 +10,8 @@ from pyflipdot.sign import HanoverSign
 from serial import Serial
 
 from flipdot_controller.power import PinConfig, PowerManager
+
+logger = logging.getLogger(__name__)
 
 SignConfig = namedtuple("SignConfig",
                         ['name', 'address', 'width', 'height', 'flip'])
@@ -43,6 +46,7 @@ class FlipdotController:
         self.power_manager.__exit__(*args, **kwargs)
 
     def get_info(self, sign=None) -> Union[Sequence[SignInfo], SignInfo]:
+        logger.debug("get_info(sign=%s) called", sign)
         info = {}
         for s in self.sign_controller._signs.values():
             info[s.name] = SignInfo(
@@ -56,11 +60,13 @@ class FlipdotController:
             sign (str): The sign to display the image
             image (np.ndarray): The image to display
         """
+        logger.debug("draw(sign=%s, image=%s) called", sign, image)
         self.sign_controller.draw_image(image, sign)
 
     def test(self, is_start: bool):
         """Start the test mode on all signs
         """
+        logger.debug("test(is_start=%s) called", is_start)
         if is_start:
             self.sign_controller.start_test_signs()
         else:
@@ -72,4 +78,5 @@ class FlipdotController:
         Args:
             status (bool): True to turn on, False to turn off
         """
+        logger.debug("light(status=%s) called", status)
         self.power_manager.light(status)

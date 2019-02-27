@@ -3,12 +3,13 @@
 """Tests for `flipdot_controller` package."""
 from unittest import mock
 
-import pytest
 import numpy as np
+import pytest
 
-from flipdot_controller.protos.flipdot_pb2 import LightRequest, TestRequest, DrawRequest
-from flipdot_controller.server import Servicer
 from flipdot_controller.controller import SignInfo
+from flipdot_controller.protos.flipdot_pb2 import (DrawRequest, LightRequest,
+                                                   TestRequest)
+from flipdot_controller.server import Servicer
 
 
 @pytest.fixture
@@ -63,9 +64,5 @@ def test_draw(servicer, controller):
     args, _ = controller.draw.call_args
     called_sign, called_image = args
     assert called_sign == 'test'
-    np.testing.assert_equal(
-        called_image,
-        [
-            [False, False, True],
-            [False, False, True]
-        ])
+    np.testing.assert_equal(called_image,
+                            [[False, False, True], [False, False, True]])
