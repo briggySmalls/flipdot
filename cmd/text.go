@@ -15,6 +15,7 @@
 package cmd
 
 import (
+	"fmt"
 	"io/ioutil"
 	"path/filepath"
 	"time"
@@ -35,13 +36,20 @@ var textCmd = &cobra.Command{
 	Long: `Write text to the signs
 The phrase is automatically wrapped, and the images staggered if necessary`,
 	Run: func(cmd *cobra.Command, args []string) {
+		signs := getSigns()
+		err := checkSigns(signs)
+		errorHandler(err)
 		// Get a text builder
 		tb := getTextBuilder(font)
 		// Make the text images
 		images, err := tb.Images(args[0])
 		errorHandler(err)
 		// Write the images
-		sendText(images)
+		var signNames []string
+		for _, sign := range signs {
+			signNames = append(signNames, sign.Name)
+		}
+		sendText(images, signNames)
 	},
 }
 
@@ -75,14 +83,9 @@ func getTextBuilder(font string) text.TextBuilder {
 	return text.NewTextBuilder(84, 7, face)
 }
 
-func sendText(images []text.Image) {
-	// Get the signs
-	context, cancel := getContext()
-	defer cancel()
-	response, err := flipClient.GetInfo(context, &flipdot.GetInfoRequest{})
-	errorHandler(err)
+func sendText(images []text.Image, signNames []string) {
 	// Send any relevant images
-	images = sendFrame(images, response.Signs)
+	images = sendFrame(images, signNames)
 	// Check if we need to go on
 	if len(images) == 0 {
 		return
@@ -94,13 +97,14 @@ func sendText(images []text.Image) {
 	for len(images) > 0 {
 		select {
 		case <-ticker.C:
-			images = sendFrame(images, response.Signs)
+			images = sendFrame(images, signNames)
 		}
 	}
 }
 
-func sendFrame(images []text.Image, signs []*flipdot.GetInfoResponse_SignInfo) (leftover []text.Image) {
-	for _, sign := range signs {
+// Send a set of images to available signs
+func sendFrame(images []text.Image, signNames []string) (leftover []text.Image) {
+	for _, sign := range signNames {
 		// Stop sending if there are no more images left
 		if len(images) == 0 {
 			return images
@@ -108,11 +112,12 @@ func sendFrame(images []text.Image, signs []*flipdot.GetInfoResponse_SignInfo) (
 		// Pop an image off the stack and send it
 		var image text.Image
 		image, images = images[0], images[1:]
-		writeImage(image, sign.Name)
+		writeImage(image, sign)
 	}
 	return images
 }
 
+// Write an image to the specified sign
 func writeImage(image text.Image, sign string) {
 	// Send request
 	ctx, cancel := getContext()
@@ -122,4 +127,32 @@ func writeImage(image text.Image, sign string) {
 		Image: image.Slice(),
 	})
 	errorHandler(err)
+}
+
+// Check that all signs have the same width/height
+func checkSigns(signs []*flipdot.GetInfoResponse_SignInfo) error {
+	var width, height int32
+	for i, sign := range signs {
+		if i == 0 {
+			width = sign.Width
+			height = sign.Height
+		} else {
+			if width != sign.Width {
+				return fmt.Errorf("Sign width %d != %d", sign.Width, width)
+			} else if height != sign.Height {
+				return fmt.Errorf("Sign height %d != %d", sign.Height, height)
+			}
+		}
+	}
+	return nil
+}
+
+// Get the list of signs from the client
+func getSigns() (signs []*flipdot.GetInfoResponse_SignInfo) {
+	// Get the signs
+	context, cancel := getContext()
+	defer cancel()
+	response, err := flipClient.GetInfo(context, &flipdot.GetInfoRequest{})
+	errorHandler(err)
+	return response.Signs
 }

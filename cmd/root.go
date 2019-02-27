@@ -54,13 +54,13 @@ func init() {
 
 func errorHandler(err error) {
 	if err != nil {
-		fmt.Println(err)
+		panic(err)
 	}
 }
 
 func flipdotErrorHandler(err flipdot.Error) {
 	if err.Code != 0 {
-		fmt.Println(err.Message)
+		panic(err.Message)
 	}
 }
 

@@ -9,10 +9,6 @@ import (
 	"google.golang.org/grpc"
 )
 
-// Mock used to test the cli
-var mock *flipdot.MockFlipdotClient
-var noError = flipdot.Error{Code: 0}
-
 type testAction struct{ action flipdot.TestRequest_Action }
 
 func RequestTestAction(action flipdot.TestRequest_Action) gomock.Matcher {
@@ -54,7 +50,7 @@ func (di *drawImage) String() string {
 func createMock(t *testing.T) (*gomock.Controller, *flipdot.MockFlipdotClient) {
 	// Create a mock
 	ctrl := gomock.NewController(t)
-	mock = flipdot.NewMockFlipdotClient(ctrl)
+	mock := flipdot.NewMockFlipdotClient(ctrl)
 	return ctrl, mock
 }
 
@@ -62,44 +58,87 @@ func TestTestStart(t *testing.T) {
 	ctrl, mock := createMock(t)
 	defer ctrl.Finish()
 	// Configure the mock
-	response := flipdot.TestResponse{Error: &noError}
+	nilErr := getNoError()
+	response := flipdot.TestResponse{Error: &nilErr}
 	mock.EXPECT().Test(gomock.Any(), RequestTestAction(flipdot.TestRequest_START)).Return(&response, nil)
 	// Run the command
 	rootCmd.SetArgs([]string{"test", "start"})
-	Execute(mockFactory)
+	Execute(func(port uint) (flipdot.FlipdotClient, *grpc.ClientConn, error) {
+		return mock, nil, nil
+	})
 }
 
 func TestTestStop(t *testing.T) {
 	ctrl, mock := createMock(t)
 	defer ctrl.Finish()
 	// Configure the mock
-	response := flipdot.TestResponse{Error: &noError}
+	nilErr := getNoError()
+	response := flipdot.TestResponse{Error: &nilErr}
 	mock.EXPECT().Test(gomock.Any(), RequestTestAction(flipdot.TestRequest_STOP)).Return(&response, nil)
 	// Run the command
 	rootCmd.SetArgs([]string{"test", "stop"})
-	Execute(mockFactory)
+	Execute(func(port uint) (flipdot.FlipdotClient, *grpc.ClientConn, error) {
+		return mock, nil, nil
+	})
 }
 
 func TestLightsOn(t *testing.T) {
 	ctrl, mock := createMock(t)
 	defer ctrl.Finish()
 	// 'On' command
-	response := flipdot.LightResponse{Error: &noError}
+	nilErr := getNoError()
+	response := flipdot.LightResponse{Error: &nilErr}
 	mock.EXPECT().Light(gomock.Any(), RequestLightStatus(flipdot.LightRequest_ON)).Return(&response, nil)
 	// Run the command
 	rootCmd.SetArgs([]string{"light", "on"})
-	Execute(mockFactory)
+	Execute(func(port uint) (flipdot.FlipdotClient, *grpc.ClientConn, error) {
+		return mock, nil, nil
+	})
 }
 
 func TestLightsOff(t *testing.T) {
 	ctrl, mock := createMock(t)
 	defer ctrl.Finish()
 	// 'Off' command
-	response := flipdot.LightResponse{Error: &noError}
+	nilErr := getNoError()
+	response := flipdot.LightResponse{Error: &nilErr}
 	mock.EXPECT().Light(gomock.Any(), RequestLightStatus(flipdot.LightRequest_OFF)).Return(&response, nil)
 	// Run the command
 	rootCmd.SetArgs([]string{"light", "off"})
-	Execute(mockFactory)
+	Execute(func(port uint) (flipdot.FlipdotClient, *grpc.ClientConn, error) {
+		return mock, nil, nil
+	})
+}
+
+func TestDifferentSignsCaught(t *testing.T) {
+	ctrl, mock := createMock(t)
+	defer ctrl.Finish()
+	// Construct signs with different dimensions
+	sign_a := flipdot.GetInfoResponse_SignInfo{
+		Name:   "a",
+		Width:  1,
+		Height: 1,
+	}
+	sign_b := flipdot.GetInfoResponse_SignInfo{
+		Name:   "b",
+		Width:  1,
+		Height: 2,
+	}
+	info_response := flipdot.GetInfoResponse{Signs: []*flipdot.GetInfoResponse_SignInfo{&sign_a, &sign_b}}
+	// Prepare for failure
+	defer func() {
+		if err := recover(); err != nil {
+			// We paniced
+		}
+	}()
+	mock.EXPECT().GetInfo(gomock.Any(), gomock.Any()).Return(&info_response, nil)
+	// Run the command
+	rootCmd.SetArgs([]string{"text", "--font", "../Smirnof.ttf", "Hello my name is Sam. How's tricks?"})
+	Execute(func(port uint) (flipdot.FlipdotClient, *grpc.ClientConn, error) {
+		return mock, nil, nil
+	})
+	// We didn't panic
+	t.Fail()
 }
 
 func TestText(t *testing.T) {
@@ -116,7 +155,8 @@ func TestText(t *testing.T) {
 		Signs: []*flipdot.GetInfoResponse_SignInfo{&top, &bottom},
 	}
 	// Text command
-	response := flipdot.DrawResponse{Error: &noError}
+	nilErr := getNoError()
+	response := flipdot.DrawResponse{Error: &nilErr}
 	gomock.InOrder(
 		mock.EXPECT().GetInfo(gomock.Any(), gomock.Any()).Return(&info_response, nil),
 		mock.EXPECT().Draw(gomock.Any(), RequestDrawImage("top")).Return(&response, nil),
@@ -124,9 +164,11 @@ func TestText(t *testing.T) {
 	)
 	// Run the command
 	rootCmd.SetArgs([]string{"text", "--font", "../Smirnof.ttf", "Hello my name is Sam. How's tricks?"})
-	Execute(mockFactory)
+	Execute(func(port uint) (flipdot.FlipdotClient, *grpc.ClientConn, error) {
+		return mock, nil, nil
+	})
 }
 
-func mockFactory(port uint) (flipdot.FlipdotClient, *grpc.ClientConn, error) {
-	return mock, nil, nil
+func getNoError() flipdot.Error {
+	return flipdot.Error{Code: 0}
 }
