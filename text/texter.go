@@ -106,9 +106,9 @@ func (tb *textBuilder) toLines(d font.Drawer, s string) ([]string, error) {
 		// Determine if string fits
 		if d.MeasureString(queryLine) > fixed.I(int(tb.width)) {
 			// String doesn't fit on line
-			if end == start {
+			if end == 0 {
 				// Single word is too big for a line
-				return nil, fmt.Errorf("Word %s too large", word)
+				return nil, fmt.Errorf("Word '%s' too large to fit on line of width %d", word, tb.width)
 			}
 			// The previous must have fit
 			lines = append(lines, strings.Join(words[start:end], " "))
