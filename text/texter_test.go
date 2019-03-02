@@ -9,20 +9,19 @@ import (
 	"testing"
 
 	"golang.org/x/image/font"
+	"golang.org/x/image/font/gofont/goregular"
 	"golang.org/x/image/font/inconsolata"
 )
 
-// func TestNewFace(t *testing.T) {
-// 	// Load a font from disk
-// 	file, err := filepath.Abs("m3x6.ttf")
-// 	errorHandler(err)
-// 	data, err := ioutil.ReadFile(file)
-// 	// Test the NewFace function
-// 	_, err = NewFace(data, 5)
-// 	if err != nil {
-// 		t.Error(err)
-// 	}
-// }
+func TestNewFace(t *testing.T) {
+	// Load a font from disk
+	data := goregular.TTF
+	// Test the NewFace function
+	_, err := NewFace(data, 5)
+	if err != nil {
+		t.Error(err)
+	}
+}
 
 func TestSplitWords(t *testing.T) {
 	tables := []struct {
