@@ -197,8 +197,8 @@ func getFont() (font font.Face) {
 
 func getStandardSignsResponse() (response GetInfoResponse) {
 	// Construct signs
-	top := GetInfoResponse_SignInfo{Name: "top", Width: 84, Height: 8}
-	bottom := GetInfoResponse_SignInfo{Name: "bottom", Width: 84, Height: 8}
+	top := GetInfoResponse_SignInfo{Name: "top", Width: 84, Height: 17}
+	bottom := GetInfoResponse_SignInfo{Name: "bottom", Width: 84, Height: 17}
 	noError := getNoError()
 	response = GetInfoResponse{Error: &noError, Signs: []*GetInfoResponse_SignInfo{&top, &bottom}}
 	return
