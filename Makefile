@@ -9,9 +9,9 @@ PIARM=7
 
 # Generated protobufs
 PROTO_DIR=protos
-PROTO_SRCS=flipdot/flipdot.pb.go flipserver/flipserver.pb.go
-PROTO_BUFS=$(subst .pb.go,.proto,$(PROTO_SRCS))
-PROTO_MOCKS=$(subst .pb.go,.mock.go,$(PROTO_SRCS))
+PROTO_SRCS=flipdot/flipdot.pb.go flipserver/flipserver.pb.go flipdot/flipdot.go
+PROTO_BUFS=$(subst .go,.proto,$(PROTO_SRCS))
+PROTO_MOCKS=$(subst .go,.mock.go,$(PROTO_SRCS))
 
 # Generated mocks
 MOCKED_CLASS=FlipdotClient
@@ -35,8 +35,8 @@ test: mocks
 
 mocks: $(PROTO_MOCKS)
 
-%.mock.go: %.pb.go
-	mockgen -source $< -package $(subst .pb.go,,$(notdir $<)) > $@
+%.mock.go: %.go
+	mockgen -source $< -package $(lastword $(subst /, ,$(dir $<))) > $@
 
 format:
 	gofmt -w .
