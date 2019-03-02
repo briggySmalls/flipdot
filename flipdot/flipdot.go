@@ -63,14 +63,8 @@ func (f *flipdot) TestStop() (err error) {
 
 // Draw a set of images
 func (f *flipdot) Draw(images []image.Image) (err error) {
-	// Convert stdlib images to our type
-	// TODO: Move our image interface here and do away with img type
-	var imgs []text.Image
-	for _, image := range images {
-		imgs = append(imgs, text.NewImage(image))
-	}
 	// Send the images
-	err = f.sendImages(imgs)
+	err = f.sendImages(images)
 	return
 }
 
@@ -143,7 +137,7 @@ func (f *flipdot) test(start bool) (err error) {
 }
 
 // Send a set of images, periodically if necessary
-func (f *flipdot) sendImages(images []text.Image) (err error) {
+func (f *flipdot) sendImages(images []image.Image) (err error) {
 	// Send any relevant images
 	images, err = f.sendFrame(images)
 	// Check if we need to go on
@@ -167,14 +161,14 @@ func (f *flipdot) sendImages(images []text.Image) (err error) {
 }
 
 // Send a set of images to available signs
-func (f *flipdot) sendFrame(images []text.Image) (leftover []text.Image, err error) {
+func (f *flipdot) sendFrame(images []image.Image) (leftover []image.Image, err error) {
 	for _, sign := range f.signNames {
 		// Stop sending if there are no more images left
 		if len(images) == 0 {
 			return
 		}
 		// Pop an image off the stack and send it
-		var image text.Image
+		var image image.Image
 		image, images = images[0], images[1:]
 		err = f.writeImage(image, sign)
 		if err != nil {
@@ -185,13 +179,13 @@ func (f *flipdot) sendFrame(images []text.Image) (leftover []text.Image, err err
 }
 
 // Write an image to the specified sign
-func (f *flipdot) writeImage(image text.Image, sign string) (err error) {
+func (f *flipdot) writeImage(image image.Image, sign string) (err error) {
 	// Send request
 	ctx, cancel := getContext()
 	defer cancel()
 	response, clientError := f.client.Draw(ctx, &DrawRequest{
 		Sign:  sign,
-		Image: image.Slice(),
+		Image: text.Slice(image),
 	})
 	return handleErrors(clientError, response.Error)
 }

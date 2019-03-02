@@ -105,8 +105,7 @@ func TestSlice(t *testing.T) {
 		{createTestImage(color.Gray{0}, image.Rect(0, 0, 3, 3)), []bool{false, false, false, false, false, false, false, false, false}},
 	}
 	for _, table := range tables {
-		img := NewImage(table.input)
-		slice := img.Slice()
+		slice := Slice(table.input)
 		if !reflect.DeepEqual(slice, table.output) {
 			t.Errorf("Image %s not sliced correctly", table.input)
 		}
@@ -118,9 +117,9 @@ func getFont() (font font.Face) {
 	return inconsolata.Regular8x16
 }
 
-func checkImage(im Image) bool {
+func checkImage(im image.Image) bool {
 	// Check the individual pixels to see if any are set
-	for _, pix := range im.Slice() {
+	for _, pix := range Slice(im) {
 		if pix {
 			return true
 		}
@@ -136,10 +135,10 @@ func createTestImage(c color.Color, r image.Rectangle) image.Image {
 }
 
 // Helper function to print out an image on the command line
-func printImage(images []Image, rowCount uint) {
+func printImage(images []image.Image, rowCount uint) {
 	// Draw the image on the command line
 	for _, img := range images {
-		for i, pix := range img.Slice() {
+		for i, pix := range Slice(img) {
 			if pix {
 				fmt.Print("#")
 			} else {
