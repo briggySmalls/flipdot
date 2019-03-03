@@ -26,8 +26,8 @@ import (
 )
 
 var port *uint
-var clientFactory func(uint) (flipdot.FlipdotClient, *grpc.ClientConn, error)
-var flipClient flipdot.FlipdotClient
+var clientFactory func(uint) (flipdot.Flipdot, *grpc.ClientConn, error)
+var controller flipdot.Flipdot
 var connection *grpc.ClientConn
 
 // rootCmd represents the base command when called without any subcommands
@@ -37,7 +37,7 @@ var rootCmd = &cobra.Command{
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		// Create the client, with the specified connection
 		var err error
-		flipClient, connection, err = clientFactory(*port)
+		controller, connection, err = clientFactory(*port)
 		errorHandler(err)
 	},
 	PersistentPostRun: func(cmd *cobra.Command, args []string) {
@@ -68,7 +68,7 @@ func getContext() (context.Context, context.CancelFunc) {
 	return context.WithTimeout(context.Background(), 10*time.Second)
 }
 
-func Execute(cf func(uint) (flipdot.FlipdotClient, *grpc.ClientConn, error)) {
+func Execute(cf func(uint) (flipdot.Flipdot, *grpc.ClientConn, error)) {
 	// Keep hold of the factory method
 	clientFactory = cf
 	// Execute adds all child commands to the root command and sets flags appropriately.

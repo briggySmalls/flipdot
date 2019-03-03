@@ -15,12 +15,14 @@ func main() {
 	cmd.Execute(createClient)
 }
 
-func createClient(port uint) (flipdot.FlipdotClient, *grpc.ClientConn, error) {
+func createClient(port uint) (flippy flipdot.Flipdot, connection *grpc.ClientConn, err error) {
 	// Get a gRPC connection
-	connection, err := grpc.Dial(fmt.Sprintf(":%d", port), grpc.WithInsecure())
+	connection, err = grpc.Dial(fmt.Sprintf(":%d", port), grpc.WithInsecure())
 	if err != nil {
-		return nil, nil, err
+		return
 	}
 	// Create the gRPC client for subcommands to use
-	return flipdot.NewFlipdotClient(connection), connection, nil
+	client := flipdot.NewFlipdotClient(connection)
+	flippy, err = flipdot.NewFlipdot(client)
+	return
 }
