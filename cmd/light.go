@@ -17,7 +17,6 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/briggySmalls/flipcli/flipdot"
 	"github.com/spf13/cobra"
 )
 
@@ -41,18 +40,9 @@ var onCmd = &cobra.Command{
 	Short: "Turns on the lights",
 	Long:  `Turns on the lights that illuminate the flipdot displays`,
 	Run: func(cmd *cobra.Command, args []string) {
-		if flipClient == nil {
-			return
-		}
-		ctx, cancel := getContext()
-		defer cancel()
-		// Send request
-		response, err := flipClient.Light(ctx, &flipdot.LightRequest{Status: flipdot.LightRequest_ON})
-		// Handle response
+		// Send light on instruction
+		err := controller.LightOn()
 		errorHandler(err)
-		if response != nil {
-			flipdotErrorHandler(*response.Error)
-		}
 	},
 }
 
@@ -61,18 +51,9 @@ var offCmd = &cobra.Command{
 	Short: "Turns off the lights",
 	Long:  `Turns off the lights that illuminate the flipdot displays`,
 	Run: func(cmd *cobra.Command, args []string) {
-		if flipClient == nil {
-			return
-		}
-		ctx, cancel := getContext()
-		defer cancel()
-		// Send request
-		response, err := flipClient.Light(ctx, &flipdot.LightRequest{Status: flipdot.LightRequest_OFF})
-		// Handle response
+		// Send light off instruction
+		err := controller.LightOff()
 		errorHandler(err)
-		if response != nil {
-			flipdotErrorHandler(*response.Error)
-		}
 	},
 }
 

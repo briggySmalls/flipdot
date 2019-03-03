@@ -1,24 +1,23 @@
 package text
 
 import (
+	"fmt"
 	"image"
 	"image/color"
 	"image/draw"
-	"io/ioutil"
-	"path/filepath"
 	"reflect"
 	"testing"
 
 	"golang.org/x/image/font"
+	"golang.org/x/image/font/gofont/goregular"
+	"golang.org/x/image/font/inconsolata"
 )
 
 func TestNewFace(t *testing.T) {
 	// Load a font from disk
-	file, err := filepath.Abs("m3x6.ttf")
-	errorHandler(err)
-	data, err := ioutil.ReadFile(file)
+	data := goregular.TTF
 	// Test the NewFace function
-	_, err = NewFace(data, 5)
+	_, err := NewFace(data, 5)
 	if err != nil {
 		t.Error(err)
 	}
@@ -42,11 +41,12 @@ func TestSplitWords(t *testing.T) {
 }
 
 func TestToToLines(t *testing.T) {
+	// Get test font
+	f := getFont()
 	// Get test drawer
-	f := getTestFont()
 	d, err := createDrawer(f)
 	errorHandler(err)
-	tb := textBuilder{84, 7, f}
+	tb := textBuilder{140, 17, f}
 
 	// Prepare test table
 	tables := []struct {
@@ -54,10 +54,10 @@ func TestToToLines(t *testing.T) {
 		output []string
 	}{
 		{"Single line", []string{"Single line"}},
-		{"This is a multi-line string", []string{"This is a multi-line", "string"}},
+		{"This is a multi-line string", []string{"This is a", "multi-line string"}},
 		{
 			"This is a really really long string, maybe; it's even four lines",
-			[]string{"This is a really", "really long string", "maybe it's even", "four lines"},
+			[]string{"This is a really", "really long", "string maybe it's", "even four lines"},
 		},
 	}
 
@@ -75,16 +75,17 @@ func TestToToLines(t *testing.T) {
 }
 
 func TestImages(t *testing.T) {
-	// Get a font
-	f := getTestFont()
+	// Get test font
+	f := getFont()
 	// Create the text builder
-	tb := NewTextBuilder(84, 7, f)
+	var rowCount uint = 120
+	tb := NewTextBuilder(rowCount, 17, f)
 	images, err := tb.Images("Hello my name is Sam. How's tricks?")
 	if err != nil {
 		t.Fatalf("Image conversion returned error: %s", err)
 		return
 	}
-	if len(images) != 2 {
+	if len(images) != 3 {
 		t.Fatalf("Incorrect number of images: %d", len(images))
 	}
 	for _, img := range images {
@@ -104,27 +105,21 @@ func TestSlice(t *testing.T) {
 		{createTestImage(color.Gray{0}, image.Rect(0, 0, 3, 3)), []bool{false, false, false, false, false, false, false, false, false}},
 	}
 	for _, table := range tables {
-		img := NewImage(table.input)
-		slice := img.Slice()
+		slice := Slice(table.input)
 		if !reflect.DeepEqual(slice, table.output) {
 			t.Errorf("Image %s not sliced correctly", table.input)
 		}
 	}
 }
 
-func getTestFont() font.Face {
-	// Load a font from disk
-	file, err := filepath.Abs("Smirnof.ttf")
-	errorHandler(err)
-	data, err := ioutil.ReadFile(file)
-	// Test the NewFace function
-	face, err := NewFace(data, 8)
-	errorHandler(err)
-	return face
+// Helper function to get a font face
+func getFont() (font font.Face) {
+	return inconsolata.Regular8x16
 }
 
-func checkImage(im Image) bool {
-	for _, pix := range im.Slice() {
+func checkImage(im image.Image) bool {
+	// Check the individual pixels to see if any are set
+	for _, pix := range Slice(im) {
 		if pix {
 			return true
 		}
@@ -137,4 +132,21 @@ func createTestImage(c color.Color, r image.Rectangle) image.Image {
 	dst := image.NewGray(r)
 	draw.Draw(dst, dst.Bounds(), image.NewUniform(c), image.Point{X: 0, Y: 0}, draw.Src)
 	return dst
+}
+
+// Helper function to print out an image on the command line
+func printImage(images []image.Image, rowCount uint) {
+	// Draw the image on the command line
+	for _, img := range images {
+		for i, pix := range Slice(img) {
+			if pix {
+				fmt.Print("#")
+			} else {
+				fmt.Print(" ")
+			}
+			if uint(i)%rowCount == rowCount-1 {
+				fmt.Println("")
+			}
+		}
+	}
 }

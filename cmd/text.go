@@ -15,18 +15,16 @@
 package cmd
 
 import (
-	"fmt"
 	"io/ioutil"
 	"path/filepath"
-	"time"
 
-	"github.com/briggySmalls/flipcli/flipdot"
+	"golang.org/x/image/font"
 
 	"github.com/briggySmalls/flipcli/text"
 	"github.com/spf13/cobra"
 )
 
-var font string
+var fnt string
 
 // textCmd represents the draw command
 var textCmd = &cobra.Command{
@@ -36,27 +34,16 @@ var textCmd = &cobra.Command{
 	Long: `Write text to the signs
 The phrase is automatically wrapped, and the images staggered if necessary`,
 	Run: func(cmd *cobra.Command, args []string) {
-		signs := getSigns()
-		err := checkSigns(signs)
+		// Send text
+		err := controller.Text(args[0], getFont(fnt))
 		errorHandler(err)
-		// Get a text builder
-		tb := getTextBuilder(font, uint(signs[0].Width), uint(signs[0].Height))
-		// Make the text images
-		images, err := tb.Images(args[0])
-		errorHandler(err)
-		// Write the images
-		var signNames []string
-		for _, sign := range signs {
-			signNames = append(signNames, sign.Name)
-		}
-		sendText(images, signNames)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(textCmd)
 
-	textCmd.Flags().StringVarP(&font, "font", "f", "", "Font to use to display text")
+	textCmd.Flags().StringVarP(&fnt, "font", "f", "", "Font to use to display text")
 	textCmd.MarkFlagRequired("font")
 
 	// Here you will define your flags and configuration settings.
@@ -70,9 +57,9 @@ func init() {
 	// textCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
 
-func getTextBuilder(font string, width uint, height uint) text.TextBuilder {
+func getFont(fnt string) font.Face {
 	// Load font from disk
-	file, err := filepath.Abs(font)
+	file, err := filepath.Abs(fnt)
 	errorHandler(err)
 	data, err := ioutil.ReadFile(file)
 	errorHandler(err)
@@ -80,79 +67,5 @@ func getTextBuilder(font string, width uint, height uint) text.TextBuilder {
 	face, err := text.NewFace(data, 8)
 	errorHandler(err)
 	// Create a text builder
-	return text.NewTextBuilder(width, height, face)
-}
-
-func sendText(images []text.Image, signNames []string) {
-	// Send any relevant images
-	images = sendFrame(images, signNames)
-	// Check if we need to go on
-	if len(images) == 0 {
-		return
-	}
-	// Create a ticker
-	ticker := time.NewTicker(time.Second * 5)
-	defer ticker.Stop()
-	// Write images periodically
-	for len(images) > 0 {
-		select {
-		case <-ticker.C:
-			images = sendFrame(images, signNames)
-		}
-	}
-}
-
-// Send a set of images to available signs
-func sendFrame(images []text.Image, signNames []string) (leftover []text.Image) {
-	for _, sign := range signNames {
-		// Stop sending if there are no more images left
-		if len(images) == 0 {
-			return images
-		}
-		// Pop an image off the stack and send it
-		var image text.Image
-		image, images = images[0], images[1:]
-		writeImage(image, sign)
-	}
-	return images
-}
-
-// Write an image to the specified sign
-func writeImage(image text.Image, sign string) {
-	// Send request
-	ctx, cancel := getContext()
-	defer cancel()
-	_, err := flipClient.Draw(ctx, &flipdot.DrawRequest{
-		Sign:  sign,
-		Image: image.Slice(),
-	})
-	errorHandler(err)
-}
-
-// Check that all signs have the same width/height
-func checkSigns(signs []*flipdot.GetInfoResponse_SignInfo) error {
-	var width, height uint32
-	for i, sign := range signs {
-		if i == 0 {
-			width = sign.Width
-			height = sign.Height
-		} else {
-			if width != sign.Width {
-				return fmt.Errorf("Sign width %d != %d", sign.Width, width)
-			} else if height != sign.Height {
-				return fmt.Errorf("Sign height %d != %d", sign.Height, height)
-			}
-		}
-	}
-	return nil
-}
-
-// Get the list of signs from the client
-func getSigns() (signs []*flipdot.GetInfoResponse_SignInfo) {
-	// Get the signs
-	context, cancel := getContext()
-	defer cancel()
-	response, err := flipClient.GetInfo(context, &flipdot.GetInfoRequest{})
-	errorHandler(err)
-	return response.Signs
+	return face
 }

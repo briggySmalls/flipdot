@@ -24,34 +24,22 @@ func NewFace(data []byte, points float64) (font.Face, error) {
 	return truetype.NewFace(font, &opts), nil
 }
 
-type Image interface {
-	Slice() []bool
-}
-
-type img struct {
-	source image.Image
-}
-
-func NewImage(i image.Image) Image {
-	return &img{source: i}
-}
-
-func (i *img) Slice() []bool {
+func Slice(image image.Image) []bool {
 	bgColor := color.Gray{0}
 	// Create an array for the image
-	rows := i.source.Bounds().Dy()
-	cols := i.source.Bounds().Dx()
+	rows := image.Bounds().Dy()
+	cols := image.Bounds().Dx()
 	binImage := make([]bool, rows*cols)
 	for r := 0; r < rows; r++ {
 		for c := 0; c < cols; c++ {
-			binImage[r*cols+c] = i.source.At(c, r) != bgColor
+			binImage[r*cols+c] = image.At(c, r) != bgColor
 		}
 	}
 	return binImage
 }
 
 type TextBuilder interface {
-	Images(text string) ([]Image, error)
+	Images(text string) ([]image.Image, error)
 }
 
 func NewTextBuilder(width uint, height uint, font font.Face) TextBuilder {
@@ -68,7 +56,7 @@ type textBuilder struct {
 	font   font.Face
 }
 
-func (tb *textBuilder) Images(text string) ([]Image, error) {
+func (tb *textBuilder) Images(text string) ([]image.Image, error) {
 	// Create a drawer from the font
 	d, err := createDrawer(tb.font)
 	errorHandler(err)
@@ -82,7 +70,7 @@ func (tb *textBuilder) Images(text string) ([]Image, error) {
 	lines, err := tb.toLines(*d, text)
 	errorHandler(err)
 	// Draw the string
-	var images []Image
+	var images []image.Image
 	for _, line := range lines {
 		// Reset the x position
 		d.Dot = fixed.Point26_6{X: 0, Y: m.Ascent}
@@ -91,7 +79,7 @@ func (tb *textBuilder) Images(text string) ([]Image, error) {
 		// Draw a new image
 		d.DrawString(line)
 		// Save the image
-		images = append(images, NewImage(d.Dst))
+		images = append(images, d.Dst)
 	}
 	return images, nil
 }

@@ -15,7 +15,6 @@
 package cmd
 
 import (
-	"github.com/briggySmalls/flipcli/flipdot"
 	"github.com/spf13/cobra"
 )
 
@@ -31,18 +30,9 @@ var startCmd = &cobra.Command{
 	Short: "Start test signs",
 	Long:  `Sends the start test signs instruction to all connected signs`,
 	Run: func(cmd *cobra.Command, args []string) {
-		if flipClient == nil {
-			return
-		}
-		ctx, cancel := getContext()
-		defer cancel()
-		// Send request
-		response, err := flipClient.Test(ctx, &flipdot.TestRequest{Action: flipdot.TestRequest_START})
-		// Handle response
+		// Send test start instruction
+		err := controller.TestStart()
 		errorHandler(err)
-		if response != nil {
-			flipdotErrorHandler(*response.Error)
-		}
 	},
 }
 
@@ -51,19 +41,9 @@ var stopCmd = &cobra.Command{
 	Short: "stop test signs",
 	Long:  `Sends the stop test signs instruction to all connected signs`,
 	Run: func(cmd *cobra.Command, args []string) {
-		// Create timed context for request
-		if flipClient == nil {
-			return
-		}
-		ctx, cancel := getContext()
-		defer cancel()
-		// Send request
-		response, err := flipClient.Test(ctx, &flipdot.TestRequest{Action: flipdot.TestRequest_STOP})
-		// Handle response
+		// Send test stop instruction
+		err := controller.TestStop()
 		errorHandler(err)
-		if response != nil {
-			flipdotErrorHandler(*response.Error)
-		}
 	},
 }
 
