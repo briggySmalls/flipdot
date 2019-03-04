@@ -42,7 +42,7 @@ class Servicer(FlipdotServicer):
         # Get the sign info
         info = self.controller.get_info()
         # Build a response
-        response = GetInfoResponse(error=self._no_error())
+        response = GetInfoResponse()
         for sign_info in info:
             sign = response.signs.add()
             sign.name = sign_info.name
@@ -59,22 +59,24 @@ class Servicer(FlipdotServicer):
                                                 sign_info.width))
         # Send the command
         self.controller.draw(request.sign, image)
-        return DrawResponse(error=self._no_error())
+        return DrawResponse()
 
     def Test(self, request, context) -> TestResponse:
         if (request.action != TestRequest.START
                 and request.action != TestRequest.STOP):
-            err = Error(
-                code=1, message="Unexpected action {}".format(request.action))
-            return TestResponse(error=err)
+            context.set_code(grpc.StatusCode.INVALID_ARGUMENT)
+            context.set_details("Unexpected action {}".format(request.action))
+            return TestResponse()
 
         self.controller.test(request.action == TestRequest.START)
-        return TestResponse(error=self._no_error())
+        return TestResponse()
 
     def Light(self, request, context):
-        self.controller.light(request.status == LightRequest.ON)
-        return LightResponse(error=self._no_error())
+        if (request.status != LightRequest.ON
+                and request.status != LightRequest.OFF):
+            context.set_code(grpc.StatusCode.INVALID_ARGUMENT)
+            context.set_details("Unexpected status {}".format(request.status))
+            return LightResponse()
 
-    @staticmethod
-    def _no_error():
-        return Error(code=0)
+        self.controller.light(request.status == LightRequest.ON)
+        return LightResponse()
