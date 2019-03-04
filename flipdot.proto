@@ -16,13 +16,7 @@ message GetInfoResponse {
         uint32 width = 2;
         uint32 height = 3;
     }
-    Error error = 1;
     repeated SignInfo signs = 2;
-}
-
-message Error {
-    int32 code = 1; // Error code. 0 means success
-    string message = 2;
 }
 
 /*
@@ -35,7 +29,6 @@ message DrawRequest {
 }
 
 message DrawResponse {
-    Error error = 1;
 }
 
 /*
@@ -52,7 +45,6 @@ message TestRequest {
 }
 
 message TestResponse {
-    Error error = 1;
 }
 
 /*
@@ -69,5 +61,4 @@ message LightRequest {
 }
 
 message LightResponse {
-    Error error = 1;
 }
