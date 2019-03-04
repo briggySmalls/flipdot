@@ -9,7 +9,7 @@ PIARM=7
 
 # Generated protobufs
 PROTO_DIR=protos
-PROTO_SRCS=flipdot/flipdot.pb.go flipdot/flipdot.go
+PROTO_SRCS=flipdot/flipdot.pb.go flipapps/flipapps.pb.go
 PROTO_BUFS=$(subst .go,.proto,$(PROTO_SRCS))
 PROTO_MOCKS=$(subst .go,.mock.go,$(PROTO_SRCS))
 

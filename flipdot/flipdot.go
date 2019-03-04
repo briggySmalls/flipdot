@@ -19,6 +19,7 @@ type Flipdot interface {
 	LightOff() error
 	TestStart() error
 	TestStop() error
+	GetInfo() error
 	Draw(images []image.Image) error
 	Text(text string, font font.Face) error
 }
@@ -59,6 +60,16 @@ func (f *flipdot) TestStart() (err error) {
 // Send request to turn the light off
 func (f *flipdot) TestStop() (err error) {
 	return f.test(false)
+}
+
+// Get info from the sign
+func (f *flipdot) GetInfo() (err error) {
+	// Get context
+	ctx, cancel := getContext()
+	defer cancel()
+	// Send request
+	response, err := f.client.GetInfo(ctx, &GetInfoRequest{})
+	return handleErrors(err, response.Error)
 }
 
 // Draw a set of images

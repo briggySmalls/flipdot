@@ -25,9 +25,13 @@ message GetInfoResponse {
  * Draw
  */
 
+message Image {
+    repeated bool image = 2; // Flattened image C-style 2D array
+}
+
 message DrawRequest {
     string sign = 1; // ID of the sign to draw on
-    repeated bool image = 2; // Flattened image C-style 2D array
+    Image image = 2; // Flattened image C-style 2D array
 }
 
 message DrawResponse {

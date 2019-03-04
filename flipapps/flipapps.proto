@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+import "flipdot.proto";
+
+service FlipApps {
+    rpc GetInfo (flipdot.GetInfoRequest) returns (flipdot.GetInfoResponse);
+    rpc Draw (flipdot.DrawRequest) returns (flipdot.DrawResponse);
+    rpc Text (TextRequest) returns (TextResponse);
+}
+
+/*
+ * Text
+ */
+
+message TextRequest {
+    string text = 1; // Text to send to the sign
+}
+
+message TextResponse {
+}
