@@ -115,9 +115,9 @@ func (f *flipdot) light(on bool) (err error) {
 	} else {
 		status = LightRequest_OFF
 	}
-	response, err := f.client.Light(ctx, &LightRequest{Status: status})
+	_, err = f.client.Light(ctx, &LightRequest{Status: status})
 	// Handle errors
-	return handleErrors(err, response.Error)
+	return
 }
 
 // Send request to start/stop test sequence
@@ -132,8 +132,8 @@ func (f *flipdot) test(start bool) (err error) {
 	} else {
 		action = TestRequest_STOP
 	}
-	response, err := f.client.Test(ctx, &TestRequest{Action: action})
-	return handleErrors(err, response.Error)
+	_, err = f.client.Test(ctx, &TestRequest{Action: action})
+	return
 }
 
 // Send a set of images, periodically if necessary
@@ -183,11 +183,11 @@ func (f *flipdot) writeImage(image image.Image, sign string) (err error) {
 	// Send request
 	ctx, cancel := getContext()
 	defer cancel()
-	response, clientError := f.client.Draw(ctx, &DrawRequest{
+	_, err = f.client.Draw(ctx, &DrawRequest{
 		Sign:  sign,
 		Image: text.Slice(image),
 	})
-	return handleErrors(clientError, response.Error)
+	return
 }
 
 // Check that all signs have the same width/height
@@ -212,29 +212,12 @@ func (f *flipdot) getSigns() (signs []*GetInfoResponse_SignInfo, err error) {
 	// Get the signs
 	context, cancel := getContext()
 	defer cancel()
-	response, clientErr := f.client.GetInfo(context, &GetInfoRequest{})
-	err = handleErrors(clientErr, response.Error)
+	response, err := f.client.GetInfo(context, &GetInfoRequest{})
 	if err != nil {
 		// Something went wrong
 		return nil, err
 	}
 	return response.Signs, nil
-}
-
-// Handle error and response from gRPC call
-func handleErrors(clientError error, serverError *Error) error {
-	if clientError != nil {
-		return clientError
-	}
-	if serverError.Code != 0 {
-		return toError(serverError)
-	}
-	return nil
-}
-
-// Convert a server error message (sent via gRPC) to an error
-func toError(serverError *Error) (err error) {
-	return fmt.Errorf("Flipdot server error (%d): %s", serverError.Code, serverError.Message)
 }
 
 // Get a simple context for sending requests via gRPC

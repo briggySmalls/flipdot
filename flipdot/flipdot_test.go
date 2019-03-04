@@ -62,8 +62,7 @@ func TestTestStart(t *testing.T) {
 	ctrl, mock := createMock(t)
 	defer ctrl.Finish()
 	// Configure the mock
-	nilErr := getNoError()
-	test_response := TestResponse{Error: &nilErr}
+	test_response := TestResponse{}
 	info_response := getStandardSignsResponse()
 	gomock.InOrder(
 		mock.EXPECT().GetInfo(gomock.Any(), gomock.Any()).Return(&info_response, nil),
@@ -80,8 +79,7 @@ func TestTestStop(t *testing.T) {
 	ctrl, mock := createMock(t)
 	defer ctrl.Finish()
 	// Configure the mock
-	nilErr := getNoError()
-	test_response := TestResponse{Error: &nilErr}
+	test_response := TestResponse{}
 	info_response := getStandardSignsResponse()
 	gomock.InOrder(
 		mock.EXPECT().GetInfo(gomock.Any(), gomock.Any()).Return(&info_response, nil),
@@ -98,8 +96,7 @@ func TestLightsOn(t *testing.T) {
 	ctrl, mock := createMock(t)
 	defer ctrl.Finish()
 	// 'On' command
-	nilErr := getNoError()
-	light_response := LightResponse{Error: &nilErr}
+	light_response := LightResponse{}
 	info_response := getStandardSignsResponse()
 	gomock.InOrder(
 		mock.EXPECT().GetInfo(gomock.Any(), gomock.Any()).Return(&info_response, nil),
@@ -116,8 +113,7 @@ func TestLightsOff(t *testing.T) {
 	ctrl, mock := createMock(t)
 	defer ctrl.Finish()
 	// 'Off' command
-	nilErr := getNoError()
-	light_response := LightResponse{Error: &nilErr}
+	light_response := LightResponse{}
 	info_response := getStandardSignsResponse()
 	gomock.InOrder(
 		mock.EXPECT().GetInfo(gomock.Any(), gomock.Any()).Return(&info_response, nil),
@@ -145,6 +141,7 @@ func TestDifferentSignsCaught(t *testing.T) {
 			// We paniced
 		}
 	}()
+
 	// Run the test
 	runTest(func(f Flipdot) error {
 		return f.Text("Hello my name is Sam. How's tricks?", getFont())
@@ -158,8 +155,7 @@ func TestText(t *testing.T) {
 	ctrl, mock := createMock(t)
 	defer ctrl.Finish()
 	// Configure the mock
-	nilErr := getNoError()
-	text_response := DrawResponse{Error: &nilErr}
+	text_response := DrawResponse{}
 	info_response := getStandardSignsResponse()
 	gomock.InOrder(
 		mock.EXPECT().GetInfo(gomock.Any(), gomock.Any()).Return(&info_response, nil),
@@ -199,8 +195,7 @@ func getStandardSignsResponse() (response GetInfoResponse) {
 	// Construct signs
 	top := GetInfoResponse_SignInfo{Name: "top", Width: 84, Height: 17}
 	bottom := GetInfoResponse_SignInfo{Name: "bottom", Width: 84, Height: 17}
-	noError := getNoError()
-	response = GetInfoResponse{Error: &noError, Signs: []*GetInfoResponse_SignInfo{&top, &bottom}}
+	response = GetInfoResponse{Signs: []*GetInfoResponse_SignInfo{&top, &bottom}}
 	return
 }
 
@@ -209,9 +204,4 @@ func failOnError(err error, t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-}
-
-// Helper function to create a 'no server error' error code
-func getNoError() Error {
-	return Error{Code: 0}
 }
