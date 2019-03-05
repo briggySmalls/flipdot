@@ -135,19 +135,12 @@ func TestDifferentSignsCaught(t *testing.T) {
 	info_response := GetInfoResponse{Signs: []*GetInfoResponse_SignInfo{&sign_a, &sign_b}}
 	// Configure the mock
 	mock.EXPECT().GetInfo(gomock.Any(), gomock.Any()).Return(&info_response, nil)
-	// Prepare for failure
-	defer func() {
-		if err := recover(); err != nil {
-			// We paniced
-		}
-	}()
-
-	// Run the test
-	runTest(func(f Flipdot) error {
-		return f.Text("Hello my name is Sam. How's tricks?", getFont())
-	}, mock, t)
-	// We didn't panic
-	t.Fail()
+	// Create a new flipdot
+	_, err := NewFlipdot(mock)
+	// Confirm there was an error
+	if err == nil {
+		t.Errorf("Incompatible signs not detected")
+	}
 }
 
 // Test building text into images and sending them
