@@ -11,7 +11,7 @@ import (
 
 func NewFlipappsServer(flipdot flipdot.Flipdot) FlipAppsServer {
 	// Create a flipdot controller
-	return flipappsServer{flipdot: flipdot}
+	return &flipappsServer{flipdot: flipdot}
 }
 
 type flipappsServer struct {
