@@ -1,5 +1,8 @@
 syntax = "proto3";
 
+package flipapps;
+option go_package = "github.com/briggySmalls/flipcli/flipapps";
+
 import "flipdot.proto";
 
 service FlipApps {

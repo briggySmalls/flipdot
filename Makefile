@@ -10,8 +10,8 @@ PIARM=7
 # Generated protobufs
 PROTO_DIR=protos
 PROTO_SRCS=flipdot/flipdot.pb.go flipapps/flipapps.pb.go
-PROTO_BUFS=$(subst .go,.proto,$(PROTO_SRCS))
-PROTO_MOCKS=$(subst .go,.mock.go,$(PROTO_SRCS))
+PROTO_BUFS=$(subst .pg.go,.proto,$(PROTO_SRCS))
+MOCKS=$(subst .go,.mock.go,$(PROTO_SRCS)) flipdot/flipdot.mock.go
 
 # Generated mocks
 MOCKED_CLASS=FlipdotClient
@@ -28,12 +28,12 @@ protobuf: $(PROTO_SRCS)
 
 %.pb.go: %.proto
 	@echo Generating: $<
-	protoc $(addprefix -I ,$(dir $(PROTO_BUFS))) $< --go_out=plugins=grpc:$(dir $<)
+	protoc $(addprefix -I ,$(dir $(PROTO_BUFS))) --go_out=plugins=grpc:../../.. $<
 
 test: mocks
 	go test ./...
 
-mocks: $(PROTO_MOCKS)
+mocks: $(MOCKS)
 
 %.mock.go: %.go
 	mockgen -source $< -package $(lastword $(subst /, ,$(dir $<))) > $@
@@ -44,4 +44,4 @@ format:
 clean:
 	go clean
 	rm -rf $(BIN_DIR)
-	rm -f $(PROTO_SRCS) $(PROTO_MOCKS)
+	rm -f $(PROTO_SRCS) $(MOCKS)

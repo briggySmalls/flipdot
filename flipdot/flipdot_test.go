@@ -161,8 +161,6 @@ func TestText(t *testing.T) {
 	}, mock, t)
 }
 
-func
-
 // Helper function to create a mock FlipdotClient
 func createMock(t *testing.T) (*gomock.Controller, *MockFlipdotClient) {
 	// Create a mock
