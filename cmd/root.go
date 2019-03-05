@@ -58,12 +58,6 @@ func errorHandler(err error) {
 	}
 }
 
-func flipdotErrorHandler(err flipdot.Error) {
-	if err.Code != 0 {
-		panic(err.Message)
-	}
-}
-
 func getContext() (context.Context, context.CancelFunc) {
 	return context.WithTimeout(context.Background(), 10*time.Second)
 }
