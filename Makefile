@@ -31,7 +31,7 @@ protobuf: $(PROTO_SRCS)
 	protoc $(addprefix -I ,$(dir $(PROTO_BUFS))) $< --go_out=plugins=grpc:$(dir $<)
 
 test: mocks
-	go test
+	go test ./...
 
 mocks: $(PROTO_MOCKS)
 
