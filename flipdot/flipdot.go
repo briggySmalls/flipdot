@@ -16,6 +16,7 @@ const (
 
 type Flipdot interface {
 	Signs() []*GetInfoResponse_SignInfo
+	Size() (width, height uint)
 	LightOn() error
 	LightOff() error
 	TestStart() error
@@ -67,6 +68,12 @@ func (f *flipdot) Signs() (signs []*GetInfoResponse_SignInfo) {
 	return f.signs
 }
 
+// Return accepted size for flipdot
+func (f *flipdot) Size() (width, height uint) {
+	// Get the first sign
+	sign := f.Signs()[0]
+	// Return the sign's dimensions
+	return uint(sign.Width), uint(sign.Height)
 }
 
 // Draw a set of images

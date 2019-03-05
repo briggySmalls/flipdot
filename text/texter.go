@@ -38,6 +38,27 @@ func Slice(image image.Image) []bool {
 	return binImage
 }
 
+func UnSlice(data []bool, width, height int) (img image.Image, err error) {
+	if width*height != len(data) {
+		err = fmt.Errorf("Width %d, height %d incompatible with data length %d",
+			width, height, len(data))
+		return
+	}
+	grey := image.NewGray(image.Rect(0, 0, width, height))
+	for r := 0; r < height; r++ {
+		for c := 0; c < width; c++ {
+			var colour color.Gray
+			if data[r*width+c] {
+				colour = color.Gray{255}
+			} else {
+				colour = color.Gray{0}
+			}
+			grey.SetGray(c, r, colour)
+		}
+	}
+	return
+}
+
 type TextBuilder interface {
 	Images(text string) ([]image.Image, error)
 }
