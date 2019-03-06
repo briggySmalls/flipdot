@@ -7,7 +7,7 @@ import numpy as np
 import pytest
 
 from flipdot_controller.controller import SignInfo
-from flipdot_controller.protos.flipdot_pb2 import (DrawRequest, LightRequest,
+from flipdot_controller.protos.flipdot_pb2 import (DrawRequest, Image, LightRequest,
                                                    TestRequest)
 from flipdot_controller.server import Servicer
 
@@ -56,7 +56,7 @@ def test_draw(servicer, controller):
     controller.get_info.return_value = SignInfo(name='test', width=3, height=2)
     # Create a draw request
     img = [False, False, True, False, False, True]
-    request = DrawRequest(sign='test', image=img)
+    request = DrawRequest(sign='test', image=Image(data=img))
     # Send the request
     servicer.Draw(request, None)
     controller.get_info.assert_called_once_with('test')
