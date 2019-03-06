@@ -6,7 +6,7 @@ import grpc
 import numpy as np
 
 from flipdot_controller.controller import FlipdotController
-from flipdot_controller.protos.flipdot_pb2 import (DrawResponse, Error,
+from flipdot_controller.protos.flipdot_pb2 import (DrawResponse,
                                                    GetInfoResponse,
                                                    LightRequest, LightResponse,
                                                    TestRequest, TestResponse)
