@@ -7,17 +7,21 @@ import "flipdot.proto";
 
 service FlipApps {
     rpc GetInfo (flipdot.GetInfoRequest) returns (flipdot.GetInfoResponse);
-    rpc Draw (flipdot.DrawRequest) returns (flipdot.DrawResponse);
-    rpc Text (TextRequest) returns (TextResponse);
+    rpc SendMessage (MessageRequest) returns (MessageResponse);
 }
 
-/*
- * Text
- */
-
-message TextRequest {
-    string text = 1; // Text to send to the sign
+message Images {
+    repeated flipdot.Image images = 1; // Collection of images to show
 }
 
-message TextResponse {
+message MessageRequest {
+    string from = 1; // Person message is from
+    oneof payload {
+        Images images = 2;
+        string text = 3;
+    }
+}
+
+message MessageResponse {
+    Images images = 1; // Images written
 }

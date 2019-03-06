@@ -20,7 +20,7 @@ type Flipdot interface {
 	LightOff() error
 	TestStart() error
 	TestStop() error
-	Draw(images []Image) error
+	Draw(images []*Image) error
 	Text(text string, font font.Face) error
 }
 
@@ -76,7 +76,7 @@ func (f *flipdot) Size() (width, height uint) {
 }
 
 // Draw a set of images
-func (f *flipdot) Draw(images []Image) (err error) {
+func (f *flipdot) Draw(images []*Image) (err error) {
 	// Send the images
 	err = f.sendImages(images)
 	return
@@ -92,9 +92,9 @@ func (f *flipdot) Text(txt string, font font.Face) (err error) {
 		return
 	}
 	// Convert the images to C form
-	var packedImages []Image
+	var packedImages []*Image
 	for _, img := range images {
-		packedImages = append(packedImages, Image{Data: text.Slice(img)})
+		packedImages = append(packedImages, &Image{Data: text.Slice(img)})
 	}
 	// Send the text
 	err = f.sendImages(packedImages)
@@ -156,7 +156,7 @@ func (f *flipdot) test(start bool) (err error) {
 }
 
 // Send a set of images, periodically if necessary
-func (f *flipdot) sendImages(images []Image) (err error) {
+func (f *flipdot) sendImages(images []*Image) (err error) {
 	// Send any relevant images
 	images, err = f.sendFrame(images)
 	// Check if we need to go on
@@ -180,16 +180,16 @@ func (f *flipdot) sendImages(images []Image) (err error) {
 }
 
 // Send a set of images to available signs
-func (f *flipdot) sendFrame(images []Image) (leftover []Image, err error) {
+func (f *flipdot) sendFrame(images []*Image) (leftover []*Image, err error) {
 	for _, sign := range f.signNames {
 		// Stop sending if there are no more images left
 		if len(images) == 0 {
 			return
 		}
 		// Pop an image off the stack and send it
-		var image Image
+		var image *Image
 		image, images = images[0], images[1:]
-		err = f.writeImage(image, sign)
+		err = f.writeImage(*image, sign)
 		if err != nil {
 			return
 		}

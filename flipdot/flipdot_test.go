@@ -193,9 +193,9 @@ func TestDraw(t *testing.T) {
 		mock.EXPECT().Draw(gomock.Any(), RequestDrawImage("bottom", bottomImageData)).Return(&drawResponse, nil),
 	)
 	// Create a couple of images
-	images := []Image{
-		Image{Data: topImageData},
-		Image{Data: bottomImageData},
+	images := []*Image{
+		&Image{Data: topImageData},
+		&Image{Data: bottomImageData},
 	}
 	// Run the test
 	runTest(func(f Flipdot) error {
