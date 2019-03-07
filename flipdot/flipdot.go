@@ -5,7 +5,7 @@ import (
 	fmt "fmt"
 	"time"
 
-	"github.com/briggySmalls/flipcli/text"
+	"github.com/briggySmalls/flipapp/text"
 	"golang.org/x/image/font"
 )
 

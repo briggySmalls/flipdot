@@ -8,9 +8,9 @@ import (
 	"net"
 	"path/filepath"
 
-	"github.com/briggySmalls/flipcli/flipapps"
-	"github.com/briggySmalls/flipcli/flipdot"
-	"github.com/briggySmalls/flipcli/text"
+	"github.com/briggySmalls/flipapp/flipapps"
+	"github.com/briggySmalls/flipapp/flipdot"
+	"github.com/briggySmalls/flipapp/text"
 	"golang.org/x/image/font"
 	grpc "google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -47,7 +47,7 @@ func main() {
 	errorHandler(err)
 	// Start the server
 	// Register reflection service on gRPC server.
-	reflection.Register(s)
+	reflection.Register(grpcServer)
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %s", err)
 	}

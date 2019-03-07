@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 package flipdot;
-option go_package = "github.com/briggySmalls/flipcli/flipdot";
+option go_package = "github.com/briggySmalls/flipapp/flipdot";
 
 service Flipdot {
     rpc GetInfo (GetInfoRequest) returns (GetInfoResponse);

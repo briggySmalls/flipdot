@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/briggySmalls/flipcli/flipdot"
+	"github.com/briggySmalls/flipapp/flipdot"
 	gomock "github.com/golang/mock/gomock"
 	"golang.org/x/image/font"
 	"golang.org/x/image/font/inconsolata"

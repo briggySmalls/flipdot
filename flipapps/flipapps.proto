@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 package flipapps;
-option go_package = "github.com/briggySmalls/flipcli/flipapps";
+option go_package = "github.com/briggySmalls/flipapp/flipapps";
 
 import "flipdot.proto";
 
