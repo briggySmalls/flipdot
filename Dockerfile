@@ -1,11 +1,15 @@
 ## BUILD
 FROM golang:alpine AS builder
 # Install git for fetching the dependencies
-RUN apk update && apk add --no-cache git make
+RUN apk update && apk add --no-cache git make protobuf
 WORKDIR $GOPATH/src/github.com/briggySmalls/flipapp
+
+# Get the protobuf source generator (do this prior to copy)
+RUN go get -u github.com/golang/protobuf/protoc-gen-go
+# Fetch other dependencies using go get
 COPY . .
-# Fetch dependencies using go get
 RUN go get -d -v
+
 # Build the binary
 RUN make install IS_PI=TRUE
 
@@ -22,8 +26,8 @@ COPY ./Smirnoff.ttf /app
 # Run the go program
 ENTRYPOINT ["/go/bin/flipapps"]
 CMD [ \
-    "-client-port", "$CLIENT_PORT", \
-    "-server-port", "$SERVER_PORT", \
-    "-font", "/app/Smirnoff.ttf", \
-    "-size", "6" \
+    "--client-port", "$CLIENT_PORT", \
+    "--server-port", "$SERVER_PORT", \
+    "--font-file", "/app/Smirnoff.ttf", \
+    "--font-size", "6" \
 ]
