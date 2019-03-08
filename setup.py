@@ -17,7 +17,7 @@ requirements = [
     'pyserial>=3.4',
     'RPi.GPIO>=0.6.5',
     'grpcio>=1.9.0',
-    'numpy>=1.9.3',
+    'numpy==1.9.3',
     'protobuf>=3.6.0',
     'toml>=0.10.0',
     'grpcio-reflection>=1.19.0',
