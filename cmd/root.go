@@ -113,7 +113,7 @@ func init() {
 	// Add all flags to config
 	viper.BindPFlag("client-port", flags.Lookup("client-port"))
 	viper.BindPFlag("server-port", flags.Lookup("server-port"))
-	viper.BindPFlag("font-file", flags.Lookup("client-port"))
+	viper.BindPFlag("font-file", flags.Lookup("font-file"))
 	viper.BindPFlag("font-size", flags.Lookup("font-size"))
 }
 
