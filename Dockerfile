@@ -11,7 +11,7 @@ COPY . .
 RUN go get -d -v
 
 # Build the binary
-RUN make install IS_PI=TRUE
+RUN make build IS_PI=TRUE
 
 # INSTALL
 FROM scratch
@@ -20,14 +20,14 @@ ENV CLIENT_PORT 5001
 ENV SERVER_PORT 5002
 
 # Copy in executable and font
-COPY --from=builder /go/bin/flipapp /go/bin/flipapp
-COPY ./Smirnoff.ttf /app
+COPY --from=builder /go/src/github.com/briggySmalls/flipapp/bin/flipapp /go/bin/flipapp
+COPY ./Smirnof.ttf /app
 
 # Run the go program
 ENTRYPOINT ["/go/bin/flipapps"]
 CMD [ \
     "--client-port", "$CLIENT_PORT", \
     "--server-port", "$SERVER_PORT", \
-    "--font-file", "/app/Smirnoff.ttf", \
+    "--font-file", "/app/Smirnof.ttf", \
     "--font-size", "6" \
 ]
