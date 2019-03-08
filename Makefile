@@ -1,11 +1,21 @@
-ENTRYPOINT=./main.go
+# Build configuration
+MAIN_FILE=./main.go
 BIN_DIR=bin
-BINARY=$(BIN_DIR)/flipapp
+BUILD_CMD?=go build
+BUILD_ARGS?=-o $(BIN_DIR)/flipapp
 
 # Cross-compilation
-PIOS=linux
-PIARCH=arm
-PIARM=7
+PI_OS=linux
+PI_ARCH=arm
+PI_ARM=7
+IS_PI?=
+ifdef IS_PI
+	BUILD_ARGS+= -a
+	ENVS+=GOOS=$(PI_OS) GOARCH=$(PI_ARCH) GOARM=$(PI_ARM)
+endif
+
+# General sources
+SRCS=$(shell find . -name "*.go")
 
 # Generated protobufs
 PROTO_DIR=protos
@@ -18,22 +28,21 @@ MOCKED_CLASS=FlipdotClient
 MOCK_DIR=mock_flipdot
 MOCK_FILE=$(MOCK_DIR)/flipdot.go
 
-flipapps: protobuf
-	go build -o $(BINARY) $(ENTRYPOINT)
+install: BUILD_CMD=go install
+install: BUILD_ARGS=
+install: build
 
-flipapps-rpi: protobuf
-	GOOS=$(PIOS) GOARCH=$(PIARCH) GOARM=$(PIARM) go build -a -o $(BINARY) $(ENTRYPOINT)
+build: protobufs
+	$(ENVS) $(BUILD_CMD) $(BUILD_ARGS) $(MAIN_FILE)
 
-protobuf: $(PROTO_SRCS)
+protobufs: $(PROTO_SRCS)
+
+test: $(MOCKS) $(PROTO_SRCS)
+	go test ./...
 
 %.pb.go: %.proto
 	@echo Generating: $<
 	protoc $(addprefix -I ,$(dir $(PROTO_BUFS))) --go_out=plugins=grpc:../../.. $<
-
-test: mocks
-	go test ./...
-
-mocks: $(MOCKS)
 
 %.mock.go: %.go
 	mockgen -source $< -package $(lastword $(subst /, ,$(dir $<))) > $@
@@ -45,3 +54,5 @@ clean:
 	go clean
 	rm -rf $(BIN_DIR)
 	rm -f $(PROTO_SRCS) $(MOCKS)
+
+.PHONY: clean format test
