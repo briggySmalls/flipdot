@@ -1,10 +1,9 @@
 # Build configuration
-MAIN_FILE=./main.go
 BIN_DIR?=bin
 GO_CMD=go build
 EXE_FILENAME=flipapp
 LOCAL_EXE=$(BIN_DIR)/$(EXE_FILENAME)
-GLOBAL_EXE=$(GOBIN)/$(EXE_FILENAME)
+GLOBAL_EXE=$(GOPATH)/bin/$(EXE_FILENAME)
 BUILD_ARGS?=
 
 # Cross-compilation
@@ -38,13 +37,11 @@ build: BUILD_ARGS+=-o $(LOCAL_EXE)
 build: $(LOCAL_EXE)
 
 # Build and install to GOPATH
-install: $(GLOBAL_EXE)
-
-$(GLOBAL_EXE): $(PROGRAM_SRCS)
-	$(ENVS) go install $(BUILD_ARGS) $(MAIN_FILE)
+install: $(PROGRAM_SRCS)
+	$(ENVS) go install $(BUILD_ARGS) .
 
 $(LOCAL_EXE): $(PROGRAM_SRCS)
-	$(ENVS) go build $(BUILD_ARGS) $(MAIN_FILE)
+	$(ENVS) go build $(BUILD_ARGS) ./main.go
 
 test: $(PROGRAM_SRCS) $(TEST_SRCS)
 	go test ./...
