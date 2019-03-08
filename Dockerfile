@@ -7,7 +7,7 @@ COPY . .
 # Fetch dependencies using go get
 RUN go get -d -v
 # Build the binary
-RUN make flipapps-rpi
+RUN make install IS_PI=TRUE
 
 # INSTALL
 FROM scratch
@@ -16,7 +16,7 @@ ENV CLIENT_PORT 5001
 ENV SERVER_PORT 5002
 
 # Copy in executable and font
-COPY --from=builder /go/bin/flipapps /go/bin/flipapps
+COPY --from=builder /go/bin/flipapp /go/bin/flipapp
 COPY ./Smirnoff.ttf /app
 
 # Run the go program
