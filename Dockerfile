@@ -24,7 +24,7 @@ COPY --from=builder /go/src/github.com/briggySmalls/flipapp/bin/flipapp /go/bin/
 COPY ./Smirnof.ttf /app
 
 # Run the go program
-ENTRYPOINT ["/go/bin/flipapps"]
+ENTRYPOINT ["/go/bin/flipapp"]
 CMD [ \
     "--client-port", "$CLIENT_PORT", \
     "--server-port", "$SERVER_PORT", \
