@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Main module."""
 from concurrent import futures
+import logging
 
 import grpc
 import numpy as np
@@ -14,6 +15,7 @@ from flipdot_controller.protos.flipdot_pb2 import (DESCRIPTOR, DrawResponse,
 from flipdot_controller.protos.flipdot_pb2_grpc import (FlipdotServicer,
                                                         add_FlipdotServicer_to_server)
 
+logger = logging.getLogger(__name__)
 
 class Server:
     def __init__(self,
@@ -32,7 +34,9 @@ class Server:
             reflection.SERVICE_NAME,
         )
         reflection.enable_server_reflection(service_names, self.server)
-        self.server.add_insecure_port('[::]:{}'.format(port))
+        port_string = '[::]:{}'.format(port)
+        logger.debug("Starting server on port '{}'".format(port_string))
+        self.server.add_insecure_port(port_string)
 
     def start(self):
         self.server.start()
