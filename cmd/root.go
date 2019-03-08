@@ -58,7 +58,7 @@ var rootCmd = &cobra.Command{
 		config := validateConfig()
 
 		// Create a gRPC connection
-		connection, err := grpc.Dial(fmt.Sprintf(":%d", config.clientPort), grpc.WithInsecure())
+		connection, err := grpc.Dial(fmt.Sprintf("localhost:%d", config.clientPort), grpc.WithInsecure())
 		errorHandler(err)
 		// Create a flipdot client
 		flipClient := flipdot.NewFlipdotClient(connection)
