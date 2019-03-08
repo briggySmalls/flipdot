@@ -2,6 +2,7 @@ package flipdot
 
 import (
 	"fmt"
+	reflect "reflect"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -33,16 +34,29 @@ func (ls *lightStatus) String() string {
 	return fmt.Sprintf("Status is %s", ls.status.String())
 }
 
-type drawImage struct{ sign string }
+type drawImage struct {
+	sign         string
+	image        []bool
+	isSignMatch  bool
+	isImageMatch bool
+}
 
-func RequestDrawImage(sign string) gomock.Matcher {
-	return &drawImage{sign}
+func RequestDrawImage(sign string, image []bool) gomock.Matcher {
+	return &drawImage{sign: sign, image: image}
 }
 func (di *drawImage) Matches(x interface{}) bool {
-	return x.(*DrawRequest).Sign == di.sign
+	di.isSignMatch = di.sign == x.(*DrawRequest).Sign
+	di.isImageMatch = di.image == nil || reflect.DeepEqual(x.(*DrawRequest).Image.Data, di.image)
+	return di.isSignMatch && di.isImageMatch
 }
 func (di *drawImage) String() string {
-	return fmt.Sprintf("Sign should be %s", di.sign)
+	if !di.isImageMatch {
+		return fmt.Sprintf("Image should match")
+	} else if !di.isSignMatch {
+		return fmt.Sprintf("Sign should be '%s'", di.sign)
+	} else {
+		panic("String() called but no detected failure")
+	}
 }
 
 func TestCreate(t *testing.T) {
@@ -152,12 +166,40 @@ func TestText(t *testing.T) {
 	info_response := getStandardSignsResponse()
 	gomock.InOrder(
 		mock.EXPECT().GetInfo(gomock.Any(), gomock.Any()).Return(&info_response, nil),
-		mock.EXPECT().Draw(gomock.Any(), RequestDrawImage("top")).Return(&text_response, nil),
-		mock.EXPECT().Draw(gomock.Any(), RequestDrawImage("bottom")).Return(&text_response, nil),
+		mock.EXPECT().Draw(gomock.Any(), RequestDrawImage("top", nil)).Return(&text_response, nil),
+		mock.EXPECT().Draw(gomock.Any(), RequestDrawImage("bottom", nil)).Return(&text_response, nil),
 	)
 	// Run the test
 	runTest(func(f Flipdot) error {
 		return f.Text("Hello my name is Sam. How's tricks?", getFont())
+	}, mock, t)
+}
+
+func TestDraw(t *testing.T) {
+	ctrl, mock := createMock(t)
+	defer ctrl.Finish()
+	// Configure the mock
+	drawResponse := DrawResponse{}
+	infoResponse := getStandardSignsResponse()
+	// Make some mock images
+	topImageData := make([]bool, infoResponse.Signs[0].Width*infoResponse.Signs[0].Height)
+	bottomImageData := make([]bool, infoResponse.Signs[1].Width*infoResponse.Signs[1].Height)
+	for i, _ := range bottomImageData {
+		bottomImageData[i] = true
+	}
+	gomock.InOrder(
+		mock.EXPECT().GetInfo(gomock.Any(), gomock.Any()).Return(&infoResponse, nil),
+		mock.EXPECT().Draw(gomock.Any(), RequestDrawImage("top", topImageData)).Return(&drawResponse, nil),
+		mock.EXPECT().Draw(gomock.Any(), RequestDrawImage("bottom", bottomImageData)).Return(&drawResponse, nil),
+	)
+	// Create a couple of images
+	images := []*Image{
+		&Image{Data: topImageData},
+		&Image{Data: bottomImageData},
+	}
+	// Run the test
+	runTest(func(f Flipdot) error {
+		return f.Draw(images)
 	}, mock, t)
 }
 

@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package flipapps;
+option go_package = "github.com/briggySmalls/flipapp/flipapps";
+
+import "flipdot.proto";
+
+service FlipApps {
+    rpc GetInfo (flipdot.GetInfoRequest) returns (flipdot.GetInfoResponse);
+    rpc SendMessage (MessageRequest) returns (MessageResponse);
+}
+
+message Images {
+    repeated flipdot.Image images = 1; // Collection of images to show
+}
+
+message MessageRequest {
+    string from = 1; // Person message is from
+    oneof payload {
+        Images images = 2;
+        string text = 3;
+    }
+}
+
+message MessageResponse {
+}

@@ -3,10 +3,9 @@ package flipdot
 import (
 	context "context"
 	fmt "fmt"
-	"image"
 	"time"
 
-	"github.com/briggySmalls/flipcli/text"
+	"github.com/briggySmalls/flipapp/text"
 	"golang.org/x/image/font"
 )
 
@@ -15,11 +14,13 @@ const (
 )
 
 type Flipdot interface {
+	Signs() []*GetInfoResponse_SignInfo
+	Size() (width, height uint)
 	LightOn() error
 	LightOff() error
 	TestStart() error
 	TestStop() error
-	Draw(images []image.Image) error
+	Draw(images []*Image) error
 	Text(text string, font font.Face) error
 }
 
@@ -61,8 +62,21 @@ func (f *flipdot) TestStop() (err error) {
 	return f.test(false)
 }
 
+// Get info from the sign
+func (f *flipdot) Signs() (signs []*GetInfoResponse_SignInfo) {
+	return f.signs
+}
+
+// Return accepted size for flipdot
+func (f *flipdot) Size() (width, height uint) {
+	// Get the first sign
+	sign := f.Signs()[0]
+	// Return the sign's dimensions
+	return uint(sign.Width), uint(sign.Height)
+}
+
 // Draw a set of images
-func (f *flipdot) Draw(images []image.Image) (err error) {
+func (f *flipdot) Draw(images []*Image) (err error) {
 	// Send the images
 	err = f.sendImages(images)
 	return
@@ -77,8 +91,13 @@ func (f *flipdot) Text(txt string, font font.Face) (err error) {
 	if err != nil {
 		return
 	}
+	// Convert the images to C form
+	var packedImages []*Image
+	for _, img := range images {
+		packedImages = append(packedImages, &Image{Data: text.Slice(img)})
+	}
 	// Send the text
-	err = f.sendImages(images)
+	err = f.sendImages(packedImages)
 	return
 }
 
@@ -137,7 +156,7 @@ func (f *flipdot) test(start bool) (err error) {
 }
 
 // Send a set of images, periodically if necessary
-func (f *flipdot) sendImages(images []image.Image) (err error) {
+func (f *flipdot) sendImages(images []*Image) (err error) {
 	// Send any relevant images
 	images, err = f.sendFrame(images)
 	// Check if we need to go on
@@ -161,16 +180,16 @@ func (f *flipdot) sendImages(images []image.Image) (err error) {
 }
 
 // Send a set of images to available signs
-func (f *flipdot) sendFrame(images []image.Image) (leftover []image.Image, err error) {
+func (f *flipdot) sendFrame(images []*Image) (leftover []*Image, err error) {
 	for _, sign := range f.signNames {
 		// Stop sending if there are no more images left
 		if len(images) == 0 {
 			return
 		}
 		// Pop an image off the stack and send it
-		var image image.Image
+		var image *Image
 		image, images = images[0], images[1:]
-		err = f.writeImage(image, sign)
+		err = f.writeImage(*image, sign)
 		if err != nil {
 			return
 		}
@@ -179,13 +198,13 @@ func (f *flipdot) sendFrame(images []image.Image) (leftover []image.Image, err e
 }
 
 // Write an image to the specified sign
-func (f *flipdot) writeImage(image image.Image, sign string) (err error) {
+func (f *flipdot) writeImage(image Image, sign string) (err error) {
 	// Send request
 	ctx, cancel := getContext()
 	defer cancel()
 	_, err = f.client.Draw(ctx, &DrawRequest{
 		Sign:  sign,
-		Image: text.Slice(image),
+		Image: &image,
 	})
 	return
 }

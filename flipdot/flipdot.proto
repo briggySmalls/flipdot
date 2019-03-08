@@ -1,6 +1,7 @@
 syntax = "proto3";
 
 package flipdot;
+option go_package = "github.com/briggySmalls/flipapp/flipdot";
 
 service Flipdot {
     rpc GetInfo (GetInfoRequest) returns (GetInfoResponse);
@@ -21,13 +22,17 @@ message GetInfoResponse {
     repeated SignInfo signs = 2;
 }
 
+message Image {
+    repeated bool data = 1; // Data of the image as a C-style array
+}
+
 /*
  * Draw
  */
 
 message DrawRequest {
     string sign = 1; // ID of the sign to draw on
-    repeated bool image = 2; // Flattened image C-style 2D array
+    Image image = 2; // Flattened image C-style 2D array
 }
 
 message DrawResponse {

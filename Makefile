@@ -1,39 +1,54 @@
-ENTRYPOINT=main.go
-BIN_DIR=bin
-BINARY=$(BIN_DIR)/flipcli
+# Build configuration
+BIN_DIR?=bin
+GO_CMD=go build
+EXE_FILENAME=flipapp
+LOCAL_EXE=$(BIN_DIR)/$(EXE_FILENAME)
+GLOBAL_EXE=$(GOPATH)/bin/$(EXE_FILENAME)
+BUILD_ARGS?=
 
 # Cross-compilation
-PIOS=linux
-PIARCH=arm
-PIARM=7
+PI_OS=linux
+PI_ARCH=arm
+PI_ARM=7
+IS_PI?=
+ifdef IS_PI
+	BUILD_ARGS+= -a
+	ENVS+=GOOS=$(PI_OS) GOARCH=$(PI_ARCH) GOARM=$(PI_ARM)
+endif
 
 # Generated protobufs
 PROTO_DIR=protos
-PROTO_SRCS=flipdot/flipdot.pb.go flipdot/flipdot.go
-PROTO_BUFS=$(subst .go,.proto,$(PROTO_SRCS))
-PROTO_MOCKS=$(subst .go,.mock.go,$(PROTO_SRCS))
+PROTO_SRCS=./flipdot/flipdot.pb.go ./flipapps/flipapps.pb.go
+PROTO_BUFS=$(subst .pg.go,.proto,$(PROTO_SRCS))
+MOCK_SRCS=$(subst .go,.mock.go,$(PROTO_SRCS)) ./flipdot/flipdot.mock.go
 
 # Generated mocks
 MOCKED_CLASS=FlipdotClient
 MOCK_DIR=mock_flipdot
 MOCK_FILE=$(MOCK_DIR)/flipdot.go
 
-flipcli: protobuf
-	go build -o $(BINARY) $(ENTRYPOINT)
+# All sources
+TEST_SRCS=$(shell find . -name "*_test.go") $(MOCK_SRCS)
+STD_SRCS=$(filter-out $(TEST_SRCS) $(PROTO_SRCS) $(MOCK_SRCS), $(shell find . -name "*.go"))
+PROGRAM_SRCS=$(STD_SRCS) $(PROTO_SRCS)
 
-flipcli-rpi: protobuf
-	GOOS=$(PIOS) GOARCH=$(PIARCH) GOARM=$(PIARM) go build -a -o $(BINARY) $(ENTRYPOINT)
+# Build to a local build directory
+build: BUILD_ARGS+=-o $(LOCAL_EXE)
+build: $(LOCAL_EXE)
 
-protobuf: $(PROTO_SRCS)
+# Build and install to GOPATH
+install: $(PROGRAM_SRCS)
+	$(ENVS) go install $(BUILD_ARGS) .
+
+$(LOCAL_EXE): $(PROGRAM_SRCS)
+	$(ENVS) go build $(BUILD_ARGS) ./main.go
+
+test: $(PROGRAM_SRCS) $(TEST_SRCS)
+	go test ./...
 
 %.pb.go: %.proto
 	@echo Generating: $<
-	protoc $(addprefix -I ,$(dir $(PROTO_BUFS))) $< --go_out=plugins=grpc:$(dir $<)
-
-test: mocks
-	go test ./...
-
-mocks: $(PROTO_MOCKS)
+	protoc $(addprefix -I ,$(dir $(PROTO_BUFS))) --go_out=plugins=grpc:../../.. $<
 
 %.mock.go: %.go
 	mockgen -source $< -package $(lastword $(subst /, ,$(dir $<))) > $@
@@ -44,4 +59,10 @@ format:
 clean:
 	go clean
 	rm -rf $(BIN_DIR)
-	rm -f $(PROTO_SRCS) $(PROTO_MOCKS)
+	rm -f $(PROTO_SRCS) $(MOCK_SRCS)
+
+# Helper to debug variables
+print-%:
+	@echo $*=$($*)
+
+.PHONY: clean format test

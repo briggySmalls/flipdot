@@ -1,73 +1,200 @@
-// Copyright © 2019 NAME HERE <EMAIL ADDRESS>
+// Copyright © 2019 Sam Briggs
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
 //
-//     http://www.apache.org/licenses/LICENSE-2.0
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
 //
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
 
 package cmd
 
 import (
-	"context"
 	"fmt"
+	"io/ioutil"
+	"log"
+	"net"
 	"os"
-	"time"
+	"path/filepath"
+	"strings"
 
-	"github.com/briggySmalls/flipcli/flipdot"
+	"github.com/briggySmalls/flipapp/flipapps"
+	"github.com/briggySmalls/flipapp/flipdot"
+	"github.com/briggySmalls/flipapp/text"
+	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+	"golang.org/x/image/font"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 )
 
-var port *uint
-var clientFactory func(uint) (flipdot.Flipdot, *grpc.ClientConn, error)
-var controller flipdot.Flipdot
-var connection *grpc.ClientConn
+var cfgFile string
+
+type config struct {
+	clientPort int
+	serverPort int
+	fontFile   string
+	fontSize   float64
+}
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "flipcli",
-	Short: "Simple CLI for testing the flipdriver service",
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		// Create the client, with the specified connection
-		var err error
-		controller, connection, err = clientFactory(*port)
+	Use:   "flipapp",
+	Short: "Application to display clock and messages on flipdot displays",
+	Run: func(cmd *cobra.Command, args []string) {
+		// Root function
+		config := validateConfig()
+
+		// Create a gRPC connection
+		connection, err := grpc.Dial(fmt.Sprintf(":%d", config.clientPort), grpc.WithInsecure())
 		errorHandler(err)
-	},
-	PersistentPostRun: func(cmd *cobra.Command, args []string) {
-		if connection != nil {
-			// Close the connection if it was ever created
-			connection.Close()
+		// Create a flipdot client
+		flipClient := flipdot.NewFlipdotClient(connection)
+
+		// Create a flipdot controller
+		flipdot, err := flipdot.NewFlipdot(flipClient)
+		errorHandler(err)
+		// Create a flipdot server
+		server := flipapps.NewFlipappsServer(
+			flipdot,
+			readFont(config.fontFile, config.fontSize))
+		// create a gRPC server object
+		grpcServer := grpc.NewServer()
+		// attach the Ping service to the server
+		flipapps.RegisterFlipAppsServer(grpcServer, server)
+		// Create a listener on TCP port
+		lis, err := net.Listen("tcp", fmt.Sprintf(":%d", config.serverPort))
+		errorHandler(err)
+		// Start the server
+		// Register reflection service on gRPC server.
+		reflection.Register(grpcServer)
+		if err := grpcServer.Serve(lis); err != nil {
+			log.Fatalf("failed to serve: %s", err)
 		}
+
 	},
 }
 
-func init() {
-	port = rootCmd.PersistentFlags().Uint("port", 5001, "Port of the gRPC server")
-}
-
-func errorHandler(err error) {
-	if err != nil {
-		panic(err)
-	}
-}
-
-func getContext() (context.Context, context.CancelFunc) {
-	return context.WithTimeout(context.Background(), 10*time.Second)
-}
-
-func Execute(cf func(uint) (flipdot.Flipdot, *grpc.ClientConn, error)) {
-	// Keep hold of the factory method
-	clientFactory = cf
-	// Execute adds all child commands to the root command and sets flags appropriately.
+// Execute adds all child commands to the root command and sets flags appropriately.
+// This is called by main.main(). It only needs to happen once to the rootCmd.
+func Execute() {
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
+	}
+}
+
+func init() {
+	// Init config
+	cobra.OnInitialize(initConfig)
+
+	// Always accept a config argument
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.flipapp.yaml)")
+
+	// Define some root-command flags
+	flags := rootCmd.Flags()
+	flags.UintP("client-port", "c", 0, "port used to connect to flipdot service")
+	flags.UintP("server-port", "s", 5002, "port used to expose flipapp API over")
+	flags.StringP("font-file", "f", "", "path to font .ttf file to display text with")
+	flags.Float32P("font-size", "p", 0, "point size to obtain font face from font file")
+
+	// Add all flags to config
+	viper.BindPFlag("client-port", flags.Lookup("client-port"))
+	viper.BindPFlag("server-port", flags.Lookup("server-port"))
+	viper.BindPFlag("font-file", flags.Lookup("client-port"))
+	viper.BindPFlag("font-size", flags.Lookup("font-size"))
+}
+
+// initConfig reads in config file and ENV variables if set.
+func initConfig() {
+	if cfgFile != "" {
+		// Use config file from the flag.
+		viper.SetConfigFile(cfgFile)
+	} else {
+		// Find home directory.
+		home, err := homedir.Dir()
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+
+		// Search config in home directory with name ".flipapp" (without extension).
+		viper.AddConfigPath(home)
+		viper.SetConfigName(".flipapp")
+	}
+
+	viper.AutomaticEnv() // read in environment variables that match
+	replacer := strings.NewReplacer("-", "_")
+	viper.SetEnvKeyReplacer(replacer) // Separate environment variables with underscores
+
+	// If a config file is found, read it in.
+	if err := viper.ReadInConfig(); err == nil {
+		fmt.Println("Using config file:", viper.ConfigFileUsed())
+	}
+}
+
+// Validate the supplied config
+func validateConfig() config {
+	clientPort := viper.GetInt("client-port")
+	serverPort := viper.GetInt("server-port")
+	fontFile := viper.GetString("font-file")
+	fontSize := viper.GetFloat64("font-size")
+
+	if serverPort == 0 {
+		errorHandler(fmt.Errorf("server-port cannot be: %d", serverPort))
+	}
+	if clientPort == 0 {
+		errorHandler(fmt.Errorf("client-port cannot be: %d", clientPort))
+	}
+	if fontSize == 0 {
+		errorHandler(fmt.Errorf("font-size cannot be: %f", fontSize))
+	}
+	if fontFile == "" {
+		errorHandler(fmt.Errorf("font-file cannot be: %s", fontFile))
+	}
+
+	fmt.Println("")
+	fmt.Println("Starting server with the following configuration:")
+	fmt.Printf("client-port: %d\n", clientPort)
+	fmt.Printf("server-port: %d\n", serverPort)
+	fmt.Printf("font-file: %s\n", fontFile)
+	fmt.Printf("font-size: %f\n", fontSize)
+
+	return config{
+		clientPort: clientPort,
+		serverPort: serverPort,
+		fontFile:   fontFile,
+		fontSize:   fontSize,
+	}
+}
+
+// Load font from disk
+func readFont(filename string, size float64) font.Face {
+	file, err := filepath.Abs(filename)
+	errorHandler(err)
+	data, err := ioutil.ReadFile(file)
+	errorHandler(err)
+	// Create the font face from the file
+	face, err := text.NewFace(data, size)
+	errorHandler(err)
+	return face
+}
+
+// Generic error handler
+func errorHandler(err error) {
+	if err != nil {
+		panic(err)
 	}
 }
