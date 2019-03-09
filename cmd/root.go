@@ -43,10 +43,10 @@ import (
 var cfgFile string
 
 type config struct {
-	clientPort int
-	serverPort int
-	fontFile   string
-	fontSize   float64
+	clientAddress string
+	serverAddress string
+	fontFile      string
+	fontSize      float64
 }
 
 // rootCmd represents the base command when called without any subcommands
@@ -58,7 +58,7 @@ var rootCmd = &cobra.Command{
 		config := validateConfig()
 
 		// Create a gRPC connection
-		connection, err := grpc.Dial(fmt.Sprintf("localhost:%d", config.clientPort), grpc.WithInsecure())
+		connection, err := grpc.Dial(fmt.Sprintf(config.clientAddress), grpc.WithInsecure())
 		errorHandler(err)
 		// Create a flipdot client
 		flipClient := flipdot.NewFlipdotClient(connection)
@@ -75,7 +75,7 @@ var rootCmd = &cobra.Command{
 		// attach the Ping service to the server
 		flipapps.RegisterFlipAppsServer(grpcServer, server)
 		// Create a listener on TCP port
-		lis, err := net.Listen("tcp", fmt.Sprintf(":%d", config.serverPort))
+		lis, err := net.Listen("tcp", fmt.Sprintf(config.serverAddress))
 		errorHandler(err)
 		// Start the server
 		// Register reflection service on gRPC server.
@@ -105,14 +105,14 @@ func init() {
 
 	// Define some root-command flags
 	flags := rootCmd.Flags()
-	flags.UintP("client-port", "c", 0, "port used to connect to flipdot service")
-	flags.UintP("server-port", "s", 5002, "port used to expose flipapp API over")
+	flags.StringP("client-address", "c", "localhost:5001", "address used to connect to flipdot service")
+	flags.StringP("server-address", "s", "0.0.0.0:5002", "address used to expose flipapp API over")
 	flags.StringP("font-file", "f", "", "path to font .ttf file to display text with")
 	flags.Float32P("font-size", "p", 0, "point size to obtain font face from font file")
 
 	// Add all flags to config
-	viper.BindPFlag("client-port", flags.Lookup("client-port"))
-	viper.BindPFlag("server-port", flags.Lookup("server-port"))
+	viper.BindPFlag("client-address", flags.Lookup("client-address"))
+	viper.BindPFlag("server-address", flags.Lookup("server-address"))
 	viper.BindPFlag("font-file", flags.Lookup("font-file"))
 	viper.BindPFlag("font-size", flags.Lookup("font-size"))
 }
@@ -147,16 +147,16 @@ func initConfig() {
 
 // Validate the supplied config
 func validateConfig() config {
-	clientPort := viper.GetInt("client-port")
-	serverPort := viper.GetInt("server-port")
+	clientAddress := viper.GetString("client-address")
+	serverAddress := viper.GetString("server-address")
 	fontFile := viper.GetString("font-file")
 	fontSize := viper.GetFloat64("font-size")
 
-	if serverPort == 0 {
-		errorHandler(fmt.Errorf("server-port cannot be: %d", serverPort))
+	if serverAddress == "" {
+		errorHandler(fmt.Errorf("server-address cannot be: %s", serverAddress))
 	}
-	if clientPort == 0 {
-		errorHandler(fmt.Errorf("client-port cannot be: %d", clientPort))
+	if clientAddress == "" {
+		errorHandler(fmt.Errorf("client-address cannot be: %s", clientAddress))
 	}
 	if fontSize == 0 {
 		errorHandler(fmt.Errorf("font-size cannot be: %f", fontSize))
@@ -167,16 +167,16 @@ func validateConfig() config {
 
 	fmt.Println("")
 	fmt.Println("Starting server with the following configuration:")
-	fmt.Printf("client-port: %d\n", clientPort)
-	fmt.Printf("server-port: %d\n", serverPort)
+	fmt.Printf("client-address: %s\n", clientAddress)
+	fmt.Printf("server-address: %s\n", serverAddress)
 	fmt.Printf("font-file: %s\n", fontFile)
 	fmt.Printf("font-size: %f\n", fontSize)
 
 	return config{
-		clientPort: clientPort,
-		serverPort: serverPort,
-		fontFile:   fontFile,
-		fontSize:   fontSize,
+		clientAddress: clientAddress,
+		serverAddress: serverAddress,
+		fontFile:      fontFile,
+		fontSize:      fontSize,
 	}
 }
 
