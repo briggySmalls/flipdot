@@ -21,7 +21,7 @@ ENV SERVER_ADDRESS 0.0.0.0:5002
 
 # Copy in executable and font
 COPY --from=builder /go/src/github.com/briggySmalls/flipapp/bin/flipapp /go/bin/flipapp
-COPY ./Smirnof.ttf /app
+COPY ./Smirnof.ttf /app/
 
 # Run the go program
 ENTRYPOINT ["/go/bin/flipapp"]
