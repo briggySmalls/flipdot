@@ -13,7 +13,7 @@ with open('HISTORY.rst') as history_file:
 
 requirements = [
     'Click>=6.0',
-    'pyflipdot>=0.1.2',
+    'pyflipdot>=0.1.3',
     'pyserial>=3.4',
     'RPi.GPIO>=0.6.5',
     'grpcio>=1.9.0',
