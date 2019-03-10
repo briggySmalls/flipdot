@@ -10,6 +10,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+// Create a new server
 func NewFlipappsServer(flipdot flipdot.Flipdot, font font.Face) FlipAppsServer {
 	// Create a flipdot controller
 	return &flipappsServer{
@@ -23,6 +24,7 @@ type flipappsServer struct {
 	font    font.Face
 }
 
+// Get info about connected signs
 func (f *flipappsServer) GetInfo(_ context.Context, _ *flipdot.GetInfoRequest) (*flipdot.GetInfoResponse, error) {
 	// Make a request to the controller
 	signs := f.flipdot.Signs()
@@ -30,6 +32,7 @@ func (f *flipappsServer) GetInfo(_ context.Context, _ *flipdot.GetInfoRequest) (
 	return &response, nil
 }
 
+// Send a message to be displayed on the signs
 func (f *flipappsServer) SendMessage(ctx context.Context, request *MessageRequest) (response *MessageResponse, err error) {
 	// Check if we are sending text or images
 	switch request.Payload.(type) {
@@ -44,11 +47,13 @@ func (f *flipappsServer) SendMessage(ctx context.Context, request *MessageReques
 	return
 }
 
+// Helper function to send text to the signs
 func (f *flipappsServer) sendText(txt string) (err error) {
 	err = f.flipdot.Text(txt, f.font, false)
 	return
 }
 
+// Helper function to send images to the signs
 func (f *flipappsServer) sendImages(images []*flipdot.Image) (err error) {
 	err = f.flipdot.Draw(images)
 	return
