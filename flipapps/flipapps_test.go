@@ -32,7 +32,7 @@ func TestGetInfo(t *testing.T) {
 	response, err := flipapps.GetInfo(ctx, &flipdot.GetInfoRequest{})
 	// Assert the return values
 	if err != nil {
-		t.Errorf("GetInfo returned an error %s", err)
+		t.Fatal(err)
 	}
 	for _, sign := range response.Signs {
 		if !reflect.DeepEqual(sign, sign) {
@@ -42,10 +42,17 @@ func TestGetInfo(t *testing.T) {
 }
 
 func TestMessageText(t *testing.T) {
+	// Create mocks
 	ctrl, mock, flipapps := createTestObjects(t)
 	defer ctrl.Finish()
-	// Configure the mock
-	mock.EXPECT().Text("test text", getTestFont(), false).Return(nil)
+	// Create a channel to signal the test is complete
+	complete := make(chan struct{})
+	defer close(complete)
+	// Configure the mock (calls 'done' when executed)
+	mockAction := func(txt string, fnt font.Face) {
+		complete <- struct{}{}
+	}
+	mock.EXPECT().Text("test text", getTestFont(), false).Do(mockAction).Return(nil)
 	// Run the command
 	ctx, cancel := getContext()
 	defer cancel()
@@ -55,7 +62,16 @@ func TestMessageText(t *testing.T) {
 	})
 	// Assert the return values
 	if err != nil {
-		t.Errorf("GetInfo returned an error %s", err)
+		t.Fatal(err)
+	}
+	// Wait until the message is handled, or timeout
+	select {
+	case <-complete:
+		// Completed successfully
+		return
+	case <-time.After(time.Second):
+		// Timeout before we completed
+		t.Fatal("Timeout before expected call")
 	}
 }
 
