@@ -10,10 +10,10 @@ light=38
 address=1
 width=84
 height=7
-flip=true
+flip=false
 
 [signs.bottom]
 address=2
 width=84
 height=7
-flip=false
+flip=true
