@@ -173,6 +173,8 @@ func TestText(t *testing.T) {
 		mock.EXPECT().GetInfo(gomock.Any(), gomock.Any()).Return(&info_response, nil),
 		mock.EXPECT().Draw(gomock.Any(), RequestDrawImage("top", nil)).Return(&text_response, nil),
 		mock.EXPECT().Draw(gomock.Any(), RequestDrawImage("bottom", nil)).Return(&text_response, nil),
+		mock.EXPECT().Draw(gomock.Any(), RequestDrawImage("top", nil)).Return(&text_response, nil),
+		mock.EXPECT().Draw(gomock.Any(), RequestDrawImage("bottom", nil)).Return(&text_response, nil),
 	)
 	// Run the test
 	runTest(func(f Flipdot) error {
