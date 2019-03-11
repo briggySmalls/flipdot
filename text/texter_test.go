@@ -1,10 +1,8 @@
 package text
 
 import (
-	"fmt"
 	"image"
 	"image/color"
-	"image/draw"
 	"reflect"
 	"testing"
 
@@ -95,66 +93,20 @@ func TestImages(t *testing.T) {
 	}
 }
 
-func TestSlice(t *testing.T) {
-	// Prepare test table
-	tables := []struct {
-		input  image.Image
-		output []bool
-	}{
-		{createTestImage(color.Gray{1}, image.Rect(0, 0, 2, 3)), []bool{true, true, true, true, true, true}},
-		{createTestImage(color.Gray{0}, image.Rect(0, 0, 3, 3)), []bool{false, false, false, false, false, false, false, false, false}},
-	}
-	for _, table := range tables {
-		slice := Slice(table.input)
-		if !reflect.DeepEqual(slice, table.output) {
-			t.Errorf("Image %s not sliced correctly", table.input)
-		}
-		bounds := table.input.Bounds()
-		width := bounds.Max.X - bounds.Min.X
-		height := bounds.Max.Y - bounds.Min.Y
-		unslice, err := UnSlice(slice, width, height)
-		if err != nil {
-			t.Error("Failed to unslice slice")
-		}
-		reflect.DeepEqual(unslice, table.input)
-	}
-}
-
 // Helper function to get a font face
 func getFont() (font font.Face) {
 	return inconsolata.Regular8x16
 }
 
+// Check the individual pixels to see if any are set
 func checkImage(im image.Image) bool {
-	// Check the individual pixels to see if any are set
-	for _, pix := range Slice(im) {
-		if pix {
-			return true
+	rect := im.Bounds()
+	for x := 0; x < rect.Dx(); x++ {
+		for y := 0; y < rect.Dy(); y++ {
+			if (im.At(x, y) != color.RGBA{0, 0, 0, 0}) {
+				return true
+			}
 		}
 	}
 	return false
-}
-
-func createTestImage(c color.Color, r image.Rectangle) image.Image {
-	// Draw the image
-	dst := image.NewGray(r)
-	draw.Draw(dst, dst.Bounds(), image.NewUniform(c), image.Point{X: 0, Y: 0}, draw.Src)
-	return dst
-}
-
-// Helper function to print out an image on the command line
-func printImage(images []image.Image, rowCount uint) {
-	// Draw the image on the command line
-	for _, img := range images {
-		for i, pix := range Slice(img) {
-			if pix {
-				fmt.Print("#")
-			} else {
-				fmt.Print(" ")
-			}
-			if uint(i)%rowCount == rowCount-1 {
-				fmt.Println("")
-			}
-		}
-	}
 }
