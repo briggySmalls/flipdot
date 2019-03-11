@@ -3,6 +3,7 @@ package flipapps
 import (
 	context "context"
 	fmt "fmt"
+	"time"
 
 	"google.golang.org/grpc/codes"
 
@@ -55,6 +56,38 @@ func (f *flipappsServer) SendMessage(ctx context.Context, request *MessageReques
 	return
 }
 
+// Routine for handling queued messages
+func (f *flipappsServer) run() {
+	// Create a ticker
+	ticker := time.NewTicker(time.Second * 2)
+	// Run forever
+	for {
+		select {
+		// Handle message, if available
+		case message := <-f.messageQueue:
+			f.handleMessage(message)
+		// Otherwise display the time
+		case t := <-ticker.C:
+			// Print the time
+			f.sendText(t.Format("15:04:05"))
+		}
+	}
+}
+
+func (f *flipappsServer) handleMessage(message MessageRequest) {
+	var err error
+	switch message.Payload.(type) {
+	case *MessageRequest_Images:
+		err = f.sendImages(message.GetImages().Images)
+	case *MessageRequest_Text:
+		err = f.sendText(message.GetText())
+	default:
+		err = status.Error(codes.InvalidArgument, "Neither images or text supplied")
+	}
+	// Handle errors
+	errorHandler(err)
+}
+
 // Helper function to send text to the signs
 func (f *flipappsServer) sendText(txt string) (err error) {
 	err = f.flipdot.Text(txt, f.font, false)
@@ -65,27 +98,6 @@ func (f *flipappsServer) sendText(txt string) (err error) {
 func (f *flipappsServer) sendImages(images []*flipdot.Image) (err error) {
 	err = f.flipdot.Draw(images)
 	return
-}
-
-// Routine for handling queued messages
-func (f *flipappsServer) run() {
-	// Run forever
-	for {
-		// Pop a message off the queue
-		message := <-f.messageQueue
-		// Handle message depending on type (text/images)
-		var err error
-		switch message.Payload.(type) {
-		case *MessageRequest_Images:
-			err = f.sendImages(message.GetImages().Images)
-		case *MessageRequest_Text:
-			err = f.sendText(message.GetText())
-		default:
-			err = status.Error(codes.InvalidArgument, "Neither images or text supplied")
-		}
-		// Handle errors
-		errorHandler(err)
-	}
 }
 
 // In-queue error handler
