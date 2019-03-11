@@ -141,17 +141,9 @@ func createDrawer(face font.Face) (*font.Drawer, error) {
 	}, nil
 }
 
+// Helper function to split words up
 func splitWords(s string) []string {
-	s = strings.Map(removePunctuation, s)
 	return strings.Fields(s)
-}
-
-func removePunctuation(r rune) rune {
-	if strings.ContainsRune(".,:;", r) {
-		return -1
-	} else {
-		return r
-	}
 }
 
 func errorHandler(err error) {

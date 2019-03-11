@@ -29,7 +29,7 @@ func TestSplitWords(t *testing.T) {
 		output []string
 	}{
 		{"this is a string", []string{"this", "is", "a", "string"}},
-		{"this, is. a: string", []string{"this", "is", "a", "string"}},
+		{"this, is. a: string", []string{"this,", "is.", "a:", "string"}},
 	}
 
 	for _, table := range tables {
@@ -56,8 +56,8 @@ func TestToToLines(t *testing.T) {
 		{"Single line", []string{"Single line"}},
 		{"This is a multi-line string", []string{"This is a", "multi-line string"}},
 		{
-			"This is a really really long string, maybe; it's even four lines",
-			[]string{"This is a really", "really long", "string maybe it's", "even four lines"},
+			"This is a really really long string, maybe; it's four lines",
+			[]string{"This is a really", "really long", "string, maybe;", "it's four lines"},
 		},
 	}
 
