@@ -189,16 +189,19 @@ func TestDraw(t *testing.T) {
 	drawResponse := DrawResponse{}
 	infoResponse := getStandardSignsResponse()
 	// Make some mock images
+	falseImageData := make([]bool, infoResponse.Signs[0].Width*infoResponse.Signs[0].Height)
 	topImageData := make([]bool, infoResponse.Signs[0].Width*infoResponse.Signs[0].Height)
-	bottomImageData := make([]bool, infoResponse.Signs[1].Width*infoResponse.Signs[1].Height)
-	for i, _ := range bottomImageData {
-		bottomImageData[i] = true
-	}
+	topImageData[0] = true
+	bottomImageData := make([]bool, infoResponse.Signs[0].Width*infoResponse.Signs[0].Height)
+	bottomImageData[1] = true
+	// Expect the mock images
 	gomock.InOrder(
 		mock.EXPECT().GetInfo(gomock.Any(), gomock.Any()).Return(&infoResponse, nil),
 		mock.EXPECT().Draw(gomock.Any(), RequestDrawImage("top", topImageData)).Return(&drawResponse, nil),
 		mock.EXPECT().Draw(gomock.Any(), RequestDrawImage("bottom", bottomImageData)).Return(&drawResponse, nil),
 		mock.EXPECT().Draw(gomock.Any(), RequestDrawImage("top", topImageData)).Return(&drawResponse, nil),
+		// Final image is false because it is an 'empty' end-of-frame
+		mock.EXPECT().Draw(gomock.Any(), RequestDrawImage("bottom", falseImageData)).Return(&drawResponse, nil),
 	)
 	// Create a couple of images
 	images := []*Image{
