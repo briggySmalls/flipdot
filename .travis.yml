@@ -2,4 +2,9 @@ language: go
 
 go_import_path: github.com/briggysmalls/flipapp
 
-script: make test
+jobs:
+  include:
+    - stage: build
+      script: make build
+    - stage: test
+      script: make test
