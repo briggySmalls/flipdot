@@ -28,6 +28,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/briggySmalls/flipapp/flipapps"
 	"github.com/briggySmalls/flipapp/flipdot"
@@ -43,10 +44,11 @@ import (
 var cfgFile string
 
 type config struct {
-	clientAddress string
-	serverAddress string
-	fontFile      string
-	fontSize      float64
+	clientAddress     string
+	serverAddress     string
+	fontFile          string
+	fontSize          float64
+	frameDurationSecs int
 }
 
 // rootCmd represents the base command when called without any subcommands
@@ -64,7 +66,9 @@ var rootCmd = &cobra.Command{
 		flipClient := flipdot.NewFlipdotClient(connection)
 
 		// Create a flipdot controller
-		flipdot, err := flipdot.NewFlipdot(flipClient)
+		flipdot, err := flipdot.NewFlipdot(
+			flipClient,
+			time.Duration(config.frameDurationSecs)*time.Second)
 		errorHandler(err)
 		// Create a flipdot server
 		server := flipapps.NewFlipappsServer(
@@ -109,12 +113,10 @@ func init() {
 	flags.StringP("server-address", "s", "0.0.0.0:5002", "address used to expose flipapp API over")
 	flags.StringP("font-file", "f", "", "path to font .ttf file to display text with")
 	flags.Float32P("font-size", "p", 0, "point size to obtain font face from font file")
+	flags.Float32P("frame-duration", "d", 5, "Duration (in seconds) to display each frame of a message")
 
 	// Add all flags to config
-	viper.BindPFlag("client-address", flags.Lookup("client-address"))
-	viper.BindPFlag("server-address", flags.Lookup("server-address"))
-	viper.BindPFlag("font-file", flags.Lookup("font-file"))
-	viper.BindPFlag("font-size", flags.Lookup("font-size"))
+	viper.BindPFlags(flags)
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -151,6 +153,7 @@ func validateConfig() config {
 	serverAddress := viper.GetString("server-address")
 	fontFile := viper.GetString("font-file")
 	fontSize := viper.GetFloat64("font-size")
+	frameDuration := viper.GetInt("frame-duration")
 
 	if serverAddress == "" {
 		errorHandler(fmt.Errorf("server-address cannot be: %s", serverAddress))
@@ -171,12 +174,14 @@ func validateConfig() config {
 	fmt.Printf("server-address: %s\n", serverAddress)
 	fmt.Printf("font-file: %s\n", fontFile)
 	fmt.Printf("font-size: %f\n", fontSize)
+	fmt.Printf("frame-duration: %d\n", frameDuration)
 
 	return config{
-		clientAddress: clientAddress,
-		serverAddress: serverAddress,
-		fontFile:      fontFile,
-		fontSize:      fontSize,
+		clientAddress:     clientAddress,
+		serverAddress:     serverAddress,
+		fontFile:          fontFile,
+		fontSize:          fontSize,
+		frameDurationSecs: frameDuration,
 	}
 }
 

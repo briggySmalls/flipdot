@@ -33,10 +33,15 @@ type flipdot struct {
 	signNames []string
 	// TextBuilder used to convert text to images
 	textBuilder text.TextBuilder
+	// Duration to space out message frames
+	frameTime time.Duration
 }
 
-func NewFlipdot(client FlipdotClient) (f Flipdot, err error) {
-	flipdot := flipdot{client: client}
+func NewFlipdot(client FlipdotClient, frameTime time.Duration) (f Flipdot, err error) {
+	flipdot := flipdot{
+		client:    client,
+		frameTime: frameTime,
+	}
 	err = flipdot.init()
 	f = Flipdot(&flipdot)
 	return
@@ -164,7 +169,7 @@ func (f *flipdot) sendImages(images []*Image) (err error) {
 		return
 	}
 	// Create a ticker
-	ticker := time.NewTicker(time.Second * 5)
+	ticker := time.NewTicker(f.frameTime)
 	defer ticker.Stop()
 	// Write images periodically
 	for len(images) > 0 {

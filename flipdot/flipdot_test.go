@@ -4,10 +4,15 @@ import (
 	"fmt"
 	reflect "reflect"
 	"testing"
+	"time"
 
 	"github.com/golang/mock/gomock"
 	"golang.org/x/image/font"
 	"golang.org/x/image/font/inconsolata"
+)
+
+const (
+	frameDuration = time.Millisecond
 )
 
 type testAction struct{ action TestRequest_Action }
@@ -67,7 +72,7 @@ func TestCreate(t *testing.T) {
 	response := getStandardSignsResponse()
 	mock.EXPECT().GetInfo(gomock.Any(), gomock.Any()).Return(&response, nil)
 	// Create the flipdot instance
-	_, err := NewFlipdot(mock)
+	_, err := NewFlipdot(mock, frameDuration)
 	failOnError(err, t)
 }
 
@@ -150,7 +155,7 @@ func TestDifferentSignsCaught(t *testing.T) {
 	// Configure the mock
 	mock.EXPECT().GetInfo(gomock.Any(), gomock.Any()).Return(&info_response, nil)
 	// Create a new flipdot
-	_, err := NewFlipdot(mock)
+	_, err := NewFlipdot(mock, frameDuration)
 	// Confirm there was an error
 	if err == nil {
 		t.Errorf("Incompatible signs not detected")
@@ -216,7 +221,7 @@ func createMock(t *testing.T) (*gomock.Controller, *MockFlipdotClient) {
 // Helper function to create a Flipdot and run a test function
 func runTest(fn func(f Flipdot) error, mock *MockFlipdotClient, t *testing.T) {
 	// Create a flipdot
-	f, err := NewFlipdot(mock)
+	f, err := NewFlipdot(mock, frameDuration)
 	failOnError(err, t)
 	// Run the command
 	err = fn(f)
