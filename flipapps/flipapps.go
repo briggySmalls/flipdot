@@ -60,16 +60,26 @@ func (f *flipappsServer) SendMessage(ctx context.Context, request *MessageReques
 func (f *flipappsServer) run() {
 	// Create a ticker
 	ticker := time.NewTicker(time.Second * 2)
+	defer ticker.Stop()
+	pause := false
 	// Run forever
 	for {
 		select {
 		// Handle message, if available
 		case message := <-f.messageQueue:
+			// Pause clock whilst we handle a message
+			pause = true
+			// Handle message
 			f.handleMessage(message)
+			// Unpause clock
+			pause = false
 		// Otherwise display the time
 		case t := <-ticker.C:
-			// Print the time
-			f.sendText(t.Format("15:04:05"))
+			// Only display the time if we've not paused the clock
+			if !pause {
+				// Print the time
+				f.sendText(t.Format("15:04:05"))
+			}
 		}
 	}
 }
