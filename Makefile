@@ -32,6 +32,8 @@ TEST_SRCS=$(shell find . -name "*_test.go") $(MOCK_SRCS)
 STD_SRCS=$(filter-out $(TEST_SRCS) $(PROTO_SRCS) $(MOCK_SRCS), $(shell find . -name "*.go"))
 PROGRAM_SRCS=$(STD_SRCS) $(PROTO_SRCS)
 
+## BUILD TARGETS
+
 # Build to a local build directory
 build: BUILD_ARGS+=-o $(LOCAL_EXE)
 build: $(LOCAL_EXE)
@@ -40,18 +42,10 @@ build: $(LOCAL_EXE)
 install: $(PROGRAM_SRCS)
 	$(ENVS) go install $(BUILD_ARGS) .
 
-$(LOCAL_EXE): $(PROGRAM_SRCS)
-	$(ENVS) go build $(BUILD_ARGS) ./main.go
+proto: $(PROTO_SRCS)
 
 test: $(PROGRAM_SRCS) $(TEST_SRCS)
 	go test ./...
-
-%.pb.go: %.proto
-	@echo Generating: $<
-	protoc $(addprefix -I ,$(dir $(PROTO_BUFS))) --go_out=plugins=grpc:../../.. $<
-
-%.mock.go: %.go
-	mockgen -source $< -package $(lastword $(subst /, ,$(dir $<))) > $@
 
 format:
 	gofmt -w .
@@ -60,6 +54,18 @@ clean:
 	go clean
 	rm -rf $(BIN_DIR)
 	rm -f $(PROTO_SRCS) $(MOCK_SRCS)
+
+## PATTERN/SUB-RULES
+
+$(LOCAL_EXE): $(PROGRAM_SRCS)
+	$(ENVS) go build $(BUILD_ARGS) ./main.go
+
+%.pb.go: %.proto
+	@echo Generating: $<
+	protoc $(addprefix -I ,$(dir $(PROTO_BUFS))) --go_out=plugins=grpc:../../.. $<
+
+%.mock.go: %.go
+	mockgen -source $< -package $(lastword $(subst /, ,$(dir $<))) > $@
 
 # Helper to debug variables
 print-%:
