@@ -15,19 +15,13 @@ RUN make build IS_PI=TRUE
 
 # INSTALL
 FROM scratch
-# Make some sensible default arguments
-ENV CLIENT_ADDRESS localhost:5001
-ENV SERVER_ADDRESS 0.0.0.0:5002
 
 # Copy in executable and font
 COPY --from=builder /go/src/github.com/briggySmalls/flipapp/bin/flipapp /go/bin/flipapp
 COPY ./Smirnof.ttf /app/
+COPY ./config.yaml /app/
 
 # Run the go program
 ENTRYPOINT ["/go/bin/flipapp"]
-CMD [ \
-    "--client-address", "${CLIENT_ADDRESS}", \
-    "--server-address", "${SERVER_ADDRESS}", \
-    "--font-file", "/app/Smirnof.ttf", \
-    "--font-size", "6" \
-]
+CMD ["--config", "/app/config.yaml"]
+
