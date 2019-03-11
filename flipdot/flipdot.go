@@ -187,9 +187,11 @@ func (f *flipdot) sendImages(images []*Image) (err error) {
 // Send a set of images to available signs
 func (f *flipdot) sendFrame(images []*Image) (leftover []*Image, err error) {
 	leftover = images
+	blankImageData := make([]bool, f.signs[0].Width*f.signs[0].Height)
 	for _, sign := range f.signNames {
-		// Stop sending if there are no more images left
+		// Send an empty image if there are none left (removes old messages)
 		if len(leftover) == 0 {
+			f.writeImage(Image{Data: blankImageData}, sign)
 			return
 		}
 		// Pop an image off the stack and send it
