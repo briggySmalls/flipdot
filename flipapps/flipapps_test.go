@@ -45,7 +45,7 @@ func TestMessageText(t *testing.T) {
 	ctrl, mock, flipapps := createTestObjects(t)
 	defer ctrl.Finish()
 	// Configure the mock
-	mock.EXPECT().Text("test text", getTestFont()).Return(nil)
+	mock.EXPECT().Text("test text", getTestFont(), false).Return(nil)
 	// Run the command
 	ctx, cancel := getContext()
 	defer cancel()

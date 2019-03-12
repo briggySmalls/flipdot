@@ -181,7 +181,7 @@ func TestText(t *testing.T) {
 	)
 	// Run the test
 	runTest(func(f Flipdot) error {
-		return f.Text("Hello my name is Sam. How's tricks?", getFont())
+		return f.Text("Hello my name is Sam. How's tricks?", getFont(), false)
 	}, mock, t)
 }
 

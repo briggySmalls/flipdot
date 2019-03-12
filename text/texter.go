@@ -25,7 +25,7 @@ func NewFace(data []byte, points float64) (font.Face, error) {
 }
 
 type TextBuilder interface {
-	Images(text string) ([]image.Image, error)
+	Images(text string, centre bool) ([]image.Image, error)
 }
 
 func NewTextBuilder(width uint, height uint, font font.Face) TextBuilder {
@@ -42,7 +42,7 @@ type textBuilder struct {
 	font   font.Face
 }
 
-func (tb *textBuilder) Images(text string) ([]image.Image, error) {
+func (tb *textBuilder) Images(text string, centre bool) ([]image.Image, error) {
 	// Create a drawer from the font
 	d, err := createDrawer(tb.font)
 	errorHandler(err)
@@ -58,8 +58,13 @@ func (tb *textBuilder) Images(text string) ([]image.Image, error) {
 	// Draw the string
 	var images []image.Image
 	for _, line := range lines {
+		var xPos fixed.Int26_6 = 0
+		if centre {
+			lineWidth := d.MeasureString(line)
+			xPos = (fixed.I(int(tb.width)) - lineWidth) / 2
+		}
 		// Reset the x position
-		d.Dot = fixed.Point26_6{X: 0, Y: m.Ascent}
+		d.Dot = fixed.Point26_6{X: xPos, Y: m.Ascent}
 		// Create a fresh destination
 		d.Dst = image.NewGray(image.Rect(0, 0, int(tb.width), int(tb.height)))
 		// Draw a new image

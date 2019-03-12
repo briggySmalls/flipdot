@@ -23,7 +23,7 @@ type Flipdot interface {
 	TestStart() error
 	TestStop() error
 	Draw(images []*Image) error
-	Text(text string, font font.Face) error
+	Text(text string, font font.Face, centre bool) error
 }
 
 type flipdot struct {
@@ -90,12 +90,12 @@ func (f *flipdot) Draw(images []*Image) (err error) {
 }
 
 // Draw some text
-func (f *flipdot) Text(txt string, font font.Face) (err error) {
+func (f *flipdot) Text(txt string, font font.Face, centre bool) (err error) {
 	// Create a text builder
 	width, height := f.Size()
 	f.textBuilder = text.NewTextBuilder(width, height, font)
 	// Convert the text to images
-	images, err := f.textBuilder.Images(txt)
+	images, err := f.textBuilder.Images(txt, centre)
 	if err != nil {
 		return
 	}

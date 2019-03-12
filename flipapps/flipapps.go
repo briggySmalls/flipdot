@@ -45,7 +45,7 @@ func (f *flipappsServer) SendMessage(ctx context.Context, request *MessageReques
 }
 
 func (f *flipappsServer) sendText(txt string) (err error) {
-	err = f.flipdot.Text(txt, f.font)
+	err = f.flipdot.Text(txt, f.font, false)
 	return
 }
 
