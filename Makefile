@@ -19,7 +19,7 @@ endif
 # Generated protobufs
 PROTO_DIR=protos
 PROTO_SRCS=./flipdot/flipdot.pb.go ./flipapps/flipapps.pb.go
-PROTO_BUFS=$(subst .pg.go,.proto,$(PROTO_SRCS))
+PROTO_BUFS=$(subst .pb.go,.proto,$(PROTO_SRCS))
 MOCK_SRCS=$(subst .go,.mock.go,$(PROTO_SRCS)) ./flipdot/flipdot.mock.go
 
 # Generated mocks
