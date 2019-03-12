@@ -41,10 +41,10 @@ func TestSplitWords(t *testing.T) {
 func TestToToLines(t *testing.T) {
 	// Get test font
 	f := getFont()
-	// Get test drawer
-	d, err := createDrawer(f)
-	errorHandler(err)
-	tb := textBuilder{140, 17, f}
+	tb, ok := NewTextBuilder(140, 17, f).(*textBuilder)
+	if !ok {
+		t.Fatal("TextBuilder is not a textBuilder")
+	}
 
 	// Prepare test table
 	tables := []struct {
@@ -60,7 +60,7 @@ func TestToToLines(t *testing.T) {
 	}
 
 	for _, table := range tables {
-		lines, err := tb.toLines(*d, table.input)
+		lines, err := tb.toLines(table.input)
 		// Check operation passed
 		if err != nil {
 			t.Error(err)
