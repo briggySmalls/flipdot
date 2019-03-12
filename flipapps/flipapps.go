@@ -77,8 +77,8 @@ func (f *flipappsServer) run() {
 		case t := <-ticker.C:
 			// Only display the time if we've not paused the clock
 			if !pause {
-				// Print the time
-				f.sendText(t.Format("15:04:05"))
+				// Print the time (centred)
+				f.sendText(t.Format("15:04:05"), true)
 			}
 		}
 	}
@@ -90,7 +90,8 @@ func (f *flipappsServer) handleMessage(message MessageRequest) {
 	case *MessageRequest_Images:
 		err = f.sendImages(message.GetImages().Images)
 	case *MessageRequest_Text:
-		err = f.sendText(message.GetText())
+		// Send left-aligned text for messages
+		err = f.sendText(message.GetText(), false)
 	default:
 		err = status.Error(codes.InvalidArgument, "Neither images or text supplied")
 	}
@@ -99,8 +100,8 @@ func (f *flipappsServer) handleMessage(message MessageRequest) {
 }
 
 // Helper function to send text to the signs
-func (f *flipappsServer) sendText(txt string) (err error) {
-	err = f.flipdot.Text(txt, f.font, false)
+func (f *flipappsServer) sendText(txt string, center bool) (err error) {
+	err = f.flipdot.Text(txt, f.font, center)
 	return
 }
 
