@@ -57,6 +57,7 @@ func TestToToLines(t *testing.T) {
 			"This is a really really long string, maybe; it's four lines",
 			[]string{"This is a really", "really long", "string, maybe;", "it's four lines"},
 		},
+		{"This string\nhas\nnewlines.", []string{"This string", "has", "newlines."}},
 	}
 
 	for _, table := range tables {
