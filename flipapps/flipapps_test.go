@@ -49,7 +49,7 @@ func TestMessageText(t *testing.T) {
 	complete := make(chan struct{})
 	defer close(complete)
 	// Configure the mock (calls 'done' when executed)
-	mockAction := func(txt string, fnt font.Face) {
+	mockAction := func(txt string, fnt font.Face, centre bool) {
 		complete <- struct{}{}
 	}
 	mock.EXPECT().Text("test text", getTestFont(), false).Do(mockAction).Return(nil)
