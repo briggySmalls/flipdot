@@ -78,7 +78,7 @@ func TestImages(t *testing.T) {
 	// Create the text builder
 	var rowCount uint = 120
 	tb := NewTextBuilder(rowCount, 17, f)
-	images, err := tb.Images("Hello my name is Sam. How's tricks?")
+	images, err := tb.Images("Hello my name is Sam. How's tricks?", false)
 	if err != nil {
 		t.Fatalf("Image conversion returned error: %s", err)
 		return
