@@ -59,7 +59,7 @@ func (f *flipappsServer) SendMessage(ctx context.Context, request *MessageReques
 // Routine for handling queued messages
 func (f *flipappsServer) run() {
 	// Create a ticker
-	ticker := time.NewTicker(time.Second * 2)
+	ticker := time.NewTicker(time.Minute)
 	defer ticker.Stop()
 	pause := false
 	// Run forever
