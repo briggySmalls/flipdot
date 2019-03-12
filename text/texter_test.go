@@ -76,20 +76,50 @@ func TestImages(t *testing.T) {
 	// Get test font
 	f := getFont()
 	// Create the text builder
-	var rowCount uint = 120
-	tb := NewTextBuilder(rowCount, 17, f)
+	tb := NewTextBuilder(120, 17, f)
 	images, err := tb.Images("Hello my name is Sam. How's tricks?", false)
 	if err != nil {
 		t.Fatalf("Image conversion returned error: %s", err)
 		return
-	}
-	if len(images) != 3 {
+	} else if len(images) != 3 {
 		t.Fatalf("Incorrect number of images: %d", len(images))
 	}
 	for _, img := range images {
 		if !checkImage(img) {
 			t.Error("Image empty")
 		}
+	}
+}
+
+func TestCentring(t *testing.T) {
+	// Get test font
+	f := getFont()
+	// Create the text builder
+	var width uint = 20
+	tb := NewTextBuilder(width, 17, f)
+	// Write a vertical pipe (should be first pixels)
+	images, err := tb.Images("|", false)
+	if err != nil {
+		t.Fatalf("Image conversion returned error: %s", err)
+		return
+	} else if len(images) != 1 {
+		t.Fatalf("Incorrect number of images: %d", len(images))
+	}
+	// Check first pixels are populated
+	if (images[0].At(0, f.Metrics().Ascent.Round()) == color.RGBA{0, 0, 0, 0}) {
+		t.Error("Pixels not set in left-aligned image")
+	}
+	// Write a vertical pipe (should be middle pixels)
+	images, err = tb.Images("|", true)
+	if err != nil {
+		t.Fatalf("Image conversion returned error: %s", err)
+		return
+	} else if len(images) != 1 {
+		t.Fatalf("Incorrect number of images: %d", len(images))
+	}
+	// Check middle pixels are populated
+	if (images[0].At(int(width)/2, f.Metrics().Ascent.Round()) == color.RGBA{0, 0, 0, 0}) {
+		t.Error("Pixels not set in left-aligned image")
 	}
 }
 
