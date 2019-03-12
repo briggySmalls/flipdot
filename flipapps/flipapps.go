@@ -78,7 +78,7 @@ func (f *flipappsServer) run() {
 			// Only display the time if we've not paused the clock
 			if !pause {
 				// Print the time (centred)
-				f.sendText(t.Format("15:04:05"), true)
+				f.sendText(t.Format("Mon 1 Jan\n3:04 PM"), true)
 			}
 		}
 	}
