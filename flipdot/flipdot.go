@@ -92,7 +92,8 @@ func (f *flipdot) Draw(images []*Image) (err error) {
 // Draw some text
 func (f *flipdot) Text(txt string, font font.Face) (err error) {
 	// Create a text builder
-	f.textBuilder = text.NewTextBuilder(uint(f.signs[0].Width), uint(f.signs[0].Height), font)
+	width, height := f.Size()
+	f.textBuilder = text.NewTextBuilder(width, height, font)
 	// Convert the text to images
 	images, err := f.textBuilder.Images(txt)
 	if err != nil {
@@ -190,7 +191,8 @@ func (f *flipdot) sendImages(images []*Image) (err error) {
 // Send a set of images to available signs
 func (f *flipdot) sendFrame(images []*Image) (leftover []*Image, err error) {
 	leftover = images
-	blankImageData := make([]bool, f.signs[0].Width*f.signs[0].Height)
+	width, height := f.Size()
+	blankImageData := make([]bool, width*height)
 	for _, sign := range f.signNames {
 		// Send an empty image if there are none left (removes old messages)
 		if len(leftover) == 0 {
