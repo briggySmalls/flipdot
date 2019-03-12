@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"image"
 	"image/color"
-	"strings"
 
 	"github.com/golang/freetype/truetype"
+	"golang.org/x/exp/shiny/text"
 	"golang.org/x/image/font"
 	"golang.org/x/image/math/fixed"
 )
@@ -29,6 +29,7 @@ type TextBuilder interface {
 }
 
 func NewTextBuilder(width uint, height uint, font font.Face) TextBuilder {
+	// Create and return a textBuilder
 	return &textBuilder{
 		width:  width,
 		height: height,
@@ -43,6 +44,10 @@ type textBuilder struct {
 }
 
 func (tb *textBuilder) Images(text string, centre bool) ([]image.Image, error) {
+	// Split the string up into lines
+	lines, err := tb.toLines(text)
+	errorHandler(err)
+
 	// Create a drawer from the font
 	d, err := createDrawer(tb.font)
 	errorHandler(err)
@@ -52,9 +57,6 @@ func (tb *textBuilder) Images(text string, centre bool) ([]image.Image, error) {
 	if charHeight.Floor() > int(tb.height) {
 		return nil, fmt.Errorf("Font height %d larger than height %d", charHeight.Round(), tb.height)
 	}
-	// Split the string up into lines
-	lines, err := tb.toLines(*d, text)
-	errorHandler(err)
 	// Draw the string
 	var images []image.Image
 	for _, line := range lines {
@@ -75,28 +77,26 @@ func (tb *textBuilder) Images(text string, centre bool) ([]image.Image, error) {
 	return images, nil
 }
 
-func (tb *textBuilder) toLines(d font.Drawer, s string) ([]string, error) {
-	words := splitWords(s)
+// Wrap text to multiple lines based off font and pixel width
+func (tb *textBuilder) toLines(s string) ([]string, error) {
+	// Create a frame
+	var frame text.Frame
+	frame.SetFace(tb.font)
+	frame.SetMaxWidth(fixed.I(int(tb.width)))
+	// Update the frame with the new text
+	c := frame.NewCaret()
+	c.WriteString(s)
+	c.Close()
+	f := &frame
+	// Get the lines
 	var lines []string
-	start := 0
-	for end, word := range words {
-		// Build a query line
-		queryLine := strings.Join(words[start:end+1], " ")
-		// Determine if string fits
-		if d.MeasureString(queryLine) > fixed.I(int(tb.width)) {
-			// String doesn't fit on line
-			if end == 0 {
-				// Single word is too big for a line
-				return nil, fmt.Errorf("Word '%s' too large to fit on line of width %d", word, tb.width)
+	for p := f.FirstParagraph(); p != nil; p = p.Next(f) {
+		for l := p.FirstLine(f); l != nil; l = l.Next(f) {
+			for b := l.FirstBox(f); b != nil; b = b.Next(f) {
+				lines = append(lines, string(b.TrimmedText(f)[:]))
 			}
-			// The previous must have fit
-			lines = append(lines, strings.Join(words[start:end], " "))
-			// Start again
-			start = end
 		}
 	}
-	// Add any remaining lines
-	lines = append(lines, strings.TrimSpace(strings.Join(words[start:len(words)], " ")))
 	return lines, nil
 }
 
@@ -109,11 +109,6 @@ func createDrawer(face font.Face) (*font.Drawer, error) {
 		Face: face,
 		Dot:  fixed.Point26_6{X: 0, Y: m.Ascent},
 	}, nil
-}
-
-// Helper function to split words up
-func splitWords(s string) []string {
-	return strings.Fields(s)
 }
 
 func errorHandler(err error) {
