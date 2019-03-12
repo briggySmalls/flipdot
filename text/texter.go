@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"image"
 	"image/color"
-	"strings"
 
 	"github.com/golang/freetype/truetype"
 	"golang.org/x/exp/shiny/text"
@@ -110,11 +109,6 @@ func createDrawer(face font.Face) (*font.Drawer, error) {
 		Face: face,
 		Dot:  fixed.Point26_6{X: 0, Y: m.Ascent},
 	}, nil
-}
-
-// Helper function to split words up
-func splitWords(s string) []string {
-	return strings.Fields(s)
 }
 
 func errorHandler(err error) {

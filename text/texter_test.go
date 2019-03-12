@@ -21,23 +21,6 @@ func TestNewFace(t *testing.T) {
 	}
 }
 
-func TestSplitWords(t *testing.T) {
-	tables := []struct {
-		input  string
-		output []string
-	}{
-		{"this is a string", []string{"this", "is", "a", "string"}},
-		{"this, is. a: string", []string{"this,", "is.", "a:", "string"}},
-	}
-
-	for _, table := range tables {
-		calc := splitWords(table.input)
-		if !reflect.DeepEqual(calc, table.output) {
-			t.Errorf("SplitWords failed to split %s", table.input)
-		}
-	}
-}
-
 func TestToToLines(t *testing.T) {
 	// Get test font
 	f := getFont()
