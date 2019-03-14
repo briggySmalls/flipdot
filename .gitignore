@@ -1,0 +1,6 @@
+# Results of compilation
+bin/
+
+# Generated files
+*.mock.go
+*.pb.go

@@ -1,0 +1,4 @@
+# Ignore built output
+bin/
+**/*.pb.go
+**/*.mock.go
