@@ -1,0 +1,70 @@
+syntax = "proto3";
+
+package flipdot;
+
+service Flipdot {
+    rpc GetInfo (GetInfoRequest) returns (GetInfoResponse);
+    rpc Draw (DrawRequest) returns (DrawResponse);
+    rpc Test (TestRequest) returns (TestResponse);
+    rpc Light (LightRequest) returns (LightResponse);
+}
+
+message GetInfoRequest {
+}
+
+message GetInfoResponse {
+    message SignInfo {
+        string name = 1;
+        uint32 width = 2;
+        uint32 height = 3;
+    }
+    repeated SignInfo signs = 2;
+}
+
+message Image {
+    repeated bool data = 1; // Data of the image as a C-style array
+}
+
+/*
+ * Draw
+ */
+
+message DrawRequest {
+    string sign = 1; // ID of the sign to draw on
+    Image image = 2; // Flattened image C-style 2D array
+}
+
+message DrawResponse {
+}
+
+/*
+ * Test
+ */
+
+message TestRequest {
+    enum Action {
+        UNSPECIFIED = 0;
+        START = 1;
+        STOP = 2;
+    }
+    Action action = 1;
+}
+
+message TestResponse {
+}
+
+/*
+ * Light
+ */
+
+message LightRequest {
+    enum Status {
+        UNSPECIFIED = 0;
+        ON = 1;
+        OFF = 2;
+    }
+    Status status = 1;
+}
+
+message LightResponse {
+}
