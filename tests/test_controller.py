@@ -23,24 +23,32 @@ def pins():
 @pytest.fixture
 def controller(pins, port):
     # Create config for a sign
-    sign_config = SignConfig(
-        name='mysign', address=1, width=10, height=8, flip=True)
+    signs = [
+        SignConfig(
+            name='a', address=1, width=10, height=8, flip=True),
+        SignConfig(
+            name='b', address=2, width=10, height=8, flip=False)
+    ]
     # Create the controller
-    return FlipdotController(port=port, signs=[sign_config], pins=pins)
+    return FlipdotController(port=port, signs=signs, pins=pins)
 
 
 def test_get_info(controller):
     # Check we get the expected info back
     info = controller.get_info()
-    assert len(info) == 1
-    assert info[0].name == 'mysign'
+    assert len(info) == 2
+    assert info[0].name == 'a'
     assert info[0].width == 10
     assert info[0].height == 8
 
+    assert info[1].name == 'b'
+    assert info[1].width == 10
+    assert info[1].height == 8
+
 
 def test_get_specific_info(controller):
-    sign = controller.get_info(sign='mysign')
-    assert sign.name == 'mysign'
+    sign = controller.get_info(sign='b')
+    assert sign.name == 'b'
     assert sign.width == 10
     assert sign.height == 8
 

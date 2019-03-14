@@ -60,7 +60,7 @@ class FlipdotController:
             sign (str): The sign to display the image
             image (np.ndarray): The image to display
         """
-        logger.debug("draw(sign=%s, image=%s) called", sign, image)
+        logger.debug("draw(sign=%s) called", sign)
         self.sign_controller.draw_image(image, sign)
 
     def test(self, is_start: bool):

@@ -1,18 +1,21 @@
 # -*- coding: utf-8 -*-
 """Main module."""
 from concurrent import futures
+import logging
 
 import grpc
 import numpy as np
+from grpc_reflection.v1alpha import reflection
 
 from flipdot_controller.controller import FlipdotController
-from flipdot_controller.protos.flipdot_pb2 import (DrawResponse,
+from flipdot_controller.protos.flipdot_pb2 import (DESCRIPTOR, DrawResponse,
                                                    GetInfoResponse,
                                                    LightRequest, LightResponse,
                                                    TestRequest, TestResponse)
 from flipdot_controller.protos.flipdot_pb2_grpc import (FlipdotServicer,
                                                         add_FlipdotServicer_to_server)
 
+logger = logging.getLogger(__name__)
 
 class Server:
     def __init__(self,
@@ -25,7 +28,15 @@ class Server:
         self.server = grpc.server(
             futures.ThreadPoolExecutor(max_workers=max_workers))
         add_FlipdotServicer_to_server(self.servicer, self.server)
-        self.server.add_insecure_port('[::]:{}'.format(port))
+        # the reflection service will be aware of "Flipdot" and "ServerReflection" services.
+        service_names = (
+            DESCRIPTOR.services_by_name['Flipdot'].full_name,
+            reflection.SERVICE_NAME,
+        )
+        reflection.enable_server_reflection(service_names, self.server)
+        port_string = '[::]:{}'.format(port)
+        logger.debug("Starting server on port '{}'".format(port_string))
+        self.server.add_insecure_port(port_string)
 
     def start(self):
         self.server.start()

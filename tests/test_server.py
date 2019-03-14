@@ -51,6 +51,23 @@ def test_light_off(servicer, controller):
     controller.light.assert_called_with(False)
 
 
+def test_get_info(servicer, controller):
+    # Test getting some signs
+    test_input = [
+        SignInfo(name='test1', width=3, height=2),
+        SignInfo(name='test2', width=3, height=2),
+    ]
+    controller.get_info.return_value = test_input
+    # Send the request
+    response = servicer.GetInfo(None, None)
+    # Assert the response
+    assert len(response.signs) == 2
+    for expected, actual in zip(test_input, response.signs):
+        assert actual.name == expected.name
+        assert actual.width == expected.width
+        assert actual.height == expected.height
+
+
 def test_draw(servicer, controller):
     # Create a fake sign to return
     controller.get_info.return_value = SignInfo(name='test', width=3, height=2)

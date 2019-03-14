@@ -21,9 +21,9 @@ RUN printf "[global]\nextra-index-url=https://www.piwheels.org/simple\n" > /etc/
 RUN pip3 install wheel
 
 # Copy build package into a new image and install
-COPY --from=0 /package/dist/flipdot_controller*.tar.gz /bin/
-RUN pip3 install /bin/flipdot_controller*.tar.gz
-RUN rm -rf /bin/
+COPY --from=0 /package/dist/flipdot_controller*.tar.gz /app/
+RUN pip3 install /app/flipdot_controller*.tar.gz
+RUN rm -rf /app/
 
 COPY config.toml /app/config.toml
 WORKDIR /app/
