@@ -1,0 +1,17 @@
+version: 2
+jobs:
+  test-app:
+    docker:
+      - image: circleci/golang:1.9
+    working_directory: /go/src/github.com/briggySmalls/flipdot
+    steps:
+      - checkout
+      - run: cd app && go get -v -t -d ./...
+      - run: cd app && make test
+
+  test-driver:
+    docker:
+      - image: circleci/python:3
+    steps:
+      - checkout
+      - run: cd driver && pip install tox && tox
