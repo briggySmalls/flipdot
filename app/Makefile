@@ -17,7 +17,7 @@ ifdef IS_PI
 endif
 
 # Generated protobufs
-PROTO_DIR=protos
+PROTO_DIR=../protos
 PROTO_SRCS=./flipdot/flipdot.pb.go ./flipapps/flipapps.pb.go
 PROTO_BUFS=$(subst .pb.go,.proto,$(PROTO_SRCS))
 MOCK_SRCS=$(subst .go,.mock.go,$(PROTO_SRCS)) ./flipdot/flipdot.mock.go
@@ -61,8 +61,12 @@ $(LOCAL_EXE): $(PROGRAM_SRCS)
 	$(ENVS) go build $(BUILD_ARGS) ./main.go
 
 %.pb.go: %.proto
-	@echo Generating: $<
-	protoc $(addprefix -I ,$(dir $(PROTO_BUFS))) --go_out=plugins=grpc:../../.. $<
+	@echo Generating: $@
+	protoc $(addprefix -I ,$(dir $(PROTO_BUFS))) --go_out=plugins=grpc:$(GOPATH)/src $<
+
+%.proto:
+	@echo Copying protobuf: $(notdir $@)
+	cp $(PROTO_DIR)/$(notdir $@) $@
 
 %.mock.go: %.go
 	mockgen -source $< -package $(lastword $(subst /, ,$(dir $<))) > $@
