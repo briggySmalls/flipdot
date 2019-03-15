@@ -2,9 +2,15 @@ version: 2
 jobs:
   test-app:
     docker:
-      - image: circleci/golang:1.9
+      - image: circleci/golang:1.9-stretch
     working_directory: /go/src/github.com/briggySmalls/flipdot
     steps:
+      - run:
+          name: Install protobuf compiler
+          command: apt-get update && apt-get install -yq protobuf-compiler
+      - run:
+          name: Install protobuf for go
+          command: go get -u github.com/golang/protobuf/protoc-gen-go
       - checkout
       - run: cd app && go get -v -t -d ./...
       - run: cd app && make test
