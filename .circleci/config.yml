@@ -7,20 +7,31 @@ jobs:
     steps:
       - run:
           name: Install protobuf compiler
-          command: apt-get update && apt-get install -yq protobuf-compiler
+          command: sudo apt-get update && sudo apt-get install -yq protobuf-compiler
       - run:
           name: Install protobuf for go
           command: go get -u github.com/golang/protobuf/protoc-gen-go
+      - run:
+          name: Install mocking
+          command: |
+            go get github.com/golang/mock/gomock &&
+            go install github.com/golang/mock/mockgen
       - checkout
-      - run: cd app && go get -v -t -d ./...
-      - run: cd app && make test
+      - run:
+          working_directory: app
+          command: go get -v -t -d ./...
+      - run:
+          working_directory: app
+          command: make test
 
   test-driver:
     docker:
-      - image: circleci/python:3
+      - image: python:3
     steps:
       - checkout
-      - run: cd driver && pip install tox && tox
+      - run:
+          working_directory: driver
+          command: pip install tox && tox
 
 workflows:
   version: 2
