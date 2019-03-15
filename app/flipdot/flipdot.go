@@ -7,7 +7,7 @@ import (
 	"image/color"
 	"time"
 
-	"github.com/briggySmalls/flipapp/text"
+	"github.com/briggySmalls/flipdot/app/text"
 	"golang.org/x/image/font"
 )
 

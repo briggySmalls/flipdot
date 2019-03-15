@@ -30,9 +30,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/briggySmalls/flipapp/flipapps"
-	"github.com/briggySmalls/flipapp/flipdot"
-	"github.com/briggySmalls/flipapp/text"
+	"github.com/briggySmalls/flipdot/app/flipapps"
+	"github.com/briggySmalls/flipdot/app/flipdot"
+	"github.com/briggySmalls/flipdot/app/text"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
