@@ -7,7 +7,7 @@ import (
 
 	"google.golang.org/grpc/codes"
 
-	"github.com/briggySmalls/flipapp/flipdot"
+	"github.com/briggySmalls/flipdot/app/flipdot"
 	"golang.org/x/image/font"
 	"google.golang.org/grpc/status"
 )
