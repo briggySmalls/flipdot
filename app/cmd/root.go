@@ -70,19 +70,16 @@ var rootCmd = &cobra.Command{
 			flipClient,
 			time.Duration(config.frameDurationSecs)*time.Second)
 		errorHandler(err)
-		// Create a flipdot server
-		server := flipapps.NewFlipappsServer(
+		// Create a flipapps server
+		grpcServer := flipapps.NewRpcFlipappsServer(
 			flipdot,
-			readFont(config.fontFile, config.fontSize))
-		// create a gRPC server object
-		grpcServer := grpc.NewServer()
-		// attach the Ping service to the server
-		flipapps.RegisterFlipAppsServer(grpcServer, server)
+			readFont(config.fontFile, config.fontSize),
+		)
 		// Create a listener on TCP port
 		lis, err := net.Listen("tcp", fmt.Sprintf(config.serverAddress))
 		errorHandler(err)
 		// Start the server
-		// Register reflection service on gRPC server.
+		// Register reflection service on gRPC server (for debugging).
 		reflection.Register(grpcServer)
 		if err := grpcServer.Serve(lis); err != nil {
 			log.Fatalf("failed to serve: %s", err)

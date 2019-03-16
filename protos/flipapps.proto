@@ -6,14 +6,25 @@ option go_package = "github.com/briggySmalls/flipdot/app/flipapps";
 import "flipdot.proto";
 
 service FlipApps {
+    rpc Authenticate (AuthenticateRequest) returns (AuthenticateResponse);
     rpc GetInfo (flipdot.GetInfoRequest) returns (flipdot.GetInfoResponse);
     rpc SendMessage (MessageRequest) returns (MessageResponse);
+}
+
+message AuthenticateRequest {
+    string username = 1;
+    string password = 2;
+}
+
+message AuthenticateResponse {
+    string token = 1;
 }
 
 message Images {
     repeated flipdot.Image images = 1; // Collection of images to show
 }
 
+// Request to display a message on the signs
 message MessageRequest {
     string from = 1; // Person message is from
     oneof payload {
@@ -22,5 +33,6 @@ message MessageRequest {
     }
 }
 
+// Response to message request
 message MessageResponse {
 }
