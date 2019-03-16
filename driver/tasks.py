@@ -27,7 +27,7 @@ PYTHON_DIRS = [str(d) for d in [SOURCE_DIR, TEST_DIR]]
 PROTO_DIR = ROOT_DIR.joinpath("../protos").absolute()
 PROTO_OUT_DIR = ROOT_DIR.joinpath("flipdot_controller/protos")
 PROTOBUF_SPEC = PROTO_DIR.joinpath("flipdot.proto")
-DOCKER_IMAGE="briggysmalls/flipdot_controller"
+DOCKER_IMAGE = "briggysmalls/flipdot_controller"
 
 
 @task(help={'check': "Checks if source is formatted without applying changes"})
@@ -37,8 +37,11 @@ def format(c, check=False):
     """
     python_dirs_string = " ".join(PYTHON_DIRS)
     # Run yapf
-    yapf_options = '--recursive {} --exclude {}/*.py'.format('--diff' if check else '--in-place', PROTO_OUT_DIR)
-    c.run("yapf {} {}".format(yapf_options, python_dirs_string))
+    yapf_options = '--recursive {} {}'.format(
+        '--diff' if check else '--in-place',
+        " ".join(["--exclude '*{}'".format(t) for t in ["_pb2.py", "_pb2_grpc.py"]]))
+    yapf_command = "yapf {} {}".format(yapf_options, python_dirs_string)
+    c.run(yapf_command)
     # Run isort
     isort_options = '--recursive {}'.format(
         '--check-only' if check else '')
