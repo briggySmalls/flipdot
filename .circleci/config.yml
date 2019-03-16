@@ -14,7 +14,8 @@ jobs:
       - run: ls ./driver/dist
       - persist_to_workspace:
           root: ./driver/dist
-          path: ./flipdot_controller*.tar.gz
+          paths:
+            - flipdot_controller*.tar.gz
   # Test the driver
   test-driver:
     docker:
