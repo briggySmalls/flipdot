@@ -22,6 +22,10 @@ authForm.addEventListener('submit', function(event) {
     request.setPassword(data.get('password'));
     // Send the request
     client.authenticate(request, {}, (err, response) => {
+        if (err != null) {
+            console.log(err);
+            return;
+        }
         // Save the token globally
         token = response.token;
         console.log(token);
@@ -41,6 +45,10 @@ messageForm.addEventListener('submit', function(event) {
     request.setText(data.get('text'));
     // Send the request
     client.sendMessage(request, {'token': token}, (err, response) => {
+        if (err != null) {
+            console.log(err);
+            return;
+        }
         console.log(response);
     });
 });
