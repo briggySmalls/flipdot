@@ -1,0 +1,3 @@
+dist/
+*_pb.js
+node_modules/
