@@ -59,11 +59,11 @@ func (f *flipappsServer) Authenticate(_ context.Context, request *AuthenticateRe
 	if request.Password != appPassword {
 		return nil, status.Error(codes.Unauthenticated, "Incorrect password")
 	}
+
 	// Create a new token object, specifying signing method and claims
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"exp": time.Now().Add(tokenDuration).Unix(),
 	})
-
 	// Sign and get the complete encoded token as a string using the secret
 	tokenString, err := token.SignedString(appSecret)
 	if err != nil {
@@ -125,7 +125,7 @@ func unaryAuthInterceptor(ctx context.Context, req interface{}, info *grpc.Unary
 	// First, check this isn't an auth call itself
 	if info.FullMethod == fmt.Sprintf("/%s/%s", _FlipApps_serviceDesc.ServiceName, "Authenticate") {
 		// We don't need to check for tokens here
-		return nil, nil
+		return handler(ctx, req)
 	}
 	// Try to pull out token from metadata
 	md, ok := metadata.FromIncomingContext(ctx)
@@ -150,7 +150,7 @@ func unaryAuthInterceptor(ctx context.Context, req interface{}, info *grpc.Unary
 		return nil, status.Error(codes.Unauthenticated, "Could not parse token")
 	}
 	// Check claims are valid
-	if claims, ok := token.Claims.(jwt.MapClaims); !ok || !token.Valid {
+	if _, ok := token.Claims.(jwt.MapClaims); !ok || !token.Valid {
 		return nil, status.Error(codes.Unauthenticated, "Invalid/expired token")
 	}
 	// Execute the usual RPC clal
