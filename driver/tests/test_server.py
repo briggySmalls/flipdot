@@ -7,8 +7,8 @@ import numpy as np
 import pytest
 
 from flipdot_controller.controller import SignInfo
-from flipdot_controller.protos.flipdot_pb2 import (DrawRequest, Image,
-                                                   LightRequest, TestRequest)
+from flipdot_controller.protos.flipdot_pb2 import (
+    DrawRequest, Image, LightRequest, TestRequest)
 from flipdot_controller.server import Servicer
 
 

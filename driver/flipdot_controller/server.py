@@ -8,12 +8,11 @@ import numpy as np
 from grpc_reflection.v1alpha import reflection
 
 from flipdot_controller.controller import FlipdotController
-from flipdot_controller.protos.flipdot_pb2 import (DESCRIPTOR, DrawResponse,
-                                                   GetInfoResponse,
-                                                   LightRequest, LightResponse,
-                                                   TestRequest, TestResponse)
-from flipdot_controller.protos.flipdot_pb2_grpc import (FlipdotServicer,  # noqa: E501
-                                                        add_FlipdotServicer_to_server)
+from flipdot_controller.protos.flipdot_pb2 import (
+    DESCRIPTOR, DrawResponse, GetInfoResponse, LightRequest, LightResponse,
+    TestRequest, TestResponse)
+from flipdot_controller.protos.flipdot_pb2_grpc import (
+    FlipdotServicer, add_FlipdotServicer_to_server)
 
 logger = logging.getLogger(__name__)
 
