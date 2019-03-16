@@ -5,6 +5,7 @@ EXE_FILENAME=flipapp
 LOCAL_EXE=$(BIN_DIR)/$(EXE_FILENAME)
 GLOBAL_EXE=$(GOPATH)/bin/$(EXE_FILENAME)
 BUILD_ARGS?=
+DOCKER_TAG?=latest
 
 # Cross-compilation
 PI_OS=linux
@@ -55,6 +56,11 @@ clean:
 	rm -rf $(BIN_DIR)
 	rm -f $(PROTO_SRCS) $(MOCK_SRCS)
 
+docker:
+	cp .dockerignore ..
+	docker build -t briggysmalls/flipapp:$(DOCKER_TAG) -f Dockerfile ..
+	rm ../.dockerignore
+
 ## PATTERN/SUB-RULES
 
 $(LOCAL_EXE): $(PROGRAM_SRCS)
@@ -73,4 +79,4 @@ $(PROTO_SRCS): $(PROTO_BUFS)
 print-%:
 	@echo $*=$($*)
 
-.PHONY: clean format test
+.PHONY: clean format test docker

@@ -27,7 +27,7 @@ PYTHON_DIRS = [str(d) for d in [SOURCE_DIR, TEST_DIR]]
 PROTO_DIR = ROOT_DIR.joinpath("../protos").absolute()
 PROTO_OUT_DIR = ROOT_DIR.joinpath("flipdot_controller/protos")
 PROTOBUF_SPEC = PROTO_DIR.joinpath("flipdot.proto")
-
+DOCKER_IMAGE="briggysmalls/flipdot_controller"
 
 @task(help={'check': "Checks if source is formatted without applying changes"})
 def format(c, check=False):
@@ -183,3 +183,11 @@ def release(c):
     Make a release of the python package to pypi
     """
     c.run("twine upload dist/*")
+
+
+@task
+def docker(c, tag="latest"):
+    """
+    Build docker image for project
+    """
+    c.run("docker build -t {}:{} -f Dockerfile ..".format(DOCKER_IMAGE, tag))
