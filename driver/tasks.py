@@ -36,7 +36,7 @@ def format(c, check=False):
     """
     python_dirs_string = " ".join(PYTHON_DIRS)
     # Run yapf
-    yapf_options = '--recursive {} --exclude {}'.format('--diff' if check else '--in-place', PROTO_OUT_DIR)
+    yapf_options = '--recursive {} --exclude {}/*.py'.format('--diff' if check else '--in-place', PROTO_OUT_DIR)
     c.run("yapf {} {}".format(yapf_options, python_dirs_string))
     # Run isort
     isort_options = '--recursive {}'.format(
