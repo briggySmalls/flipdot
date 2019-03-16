@@ -26,7 +26,7 @@ jobs:
       - run: docker login -u $DOCKER_USER -p $DOCKER_PASS
       - checkout
       # build the application image
-      - run: docker build -t briggySmalls/flipdot_controller:latest -t briggySmalls/flipdot_controller:$CIRCLE_SHA1 -f ./driver/Dockerfile ./driver
+      - run: docker build -t briggysmalls/flipdot_controller:latest -t briggysmalls/flipdot_controller:$CIRCLE_SHA1 -f ./driver/Dockerfile ./driver
       # deploy the image
       - run: |
           docker push briggySmalls/flipdot_controller:$CIRCLE_SHA1 &&
@@ -65,7 +65,7 @@ jobs:
       - run: docker login -u $DOCKER_USER -p $DOCKER_PASS
       - checkout
       # build the application image
-      - run: docker build -t briggySmalls/flipapp:latest -t briggySmalls/flipapp:$CIRCLE_SHA1 -f ./app/Dockerfile ./app
+      - run: docker build -t briggysmalls/flipapp:latest -t briggysmalls/flipapp:$CIRCLE_SHA1 -f ./app/Dockerfile ./app
       # deploy the image
       - run: |
           docker push briggySmalls/flipapp:$CIRCLE_SHA1 &&
