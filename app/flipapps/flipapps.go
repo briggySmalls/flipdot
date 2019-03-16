@@ -136,25 +136,34 @@ func (f *flipappsServer) unaryAuthInterceptor(ctx context.Context, req interface
 	if len(md["token"]) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Badly formatted metadata (missing token)")
 	}
+	// Check the token
+	err := f.checkToken(md["token"][0])
+	if err != nil {
+		return nil, err
+	}
+	// Execute the usual RPC clal
+	return handler(ctx, req)
+}
+
+func (f *flipappsServer) checkToken(t string) error {
 	// Parse JWT token
-	token, err := jwt.Parse(md["token"][0], func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.Parse(t, func(token *jwt.Token) (interface{}, error) {
 		// Don't forget to validate the alg is what you expect:
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, status.Errorf(codes.InvalidArgument, "Unexpected signing method: %v", token.Header["alg"])
 		}
 		// Return secret key for parsing with
-		return f.appSecret, nil
+		return []byte(f.appSecret), nil
 	})
 	// Indicate if we are happy with the result
 	if err != nil {
-		return nil, status.Error(codes.Unauthenticated, "Could not parse token")
+		return status.Errorf(codes.Unauthenticated, "Could not parse token: %s", t)
 	}
 	// Check claims are valid
 	if _, ok := token.Claims.(jwt.MapClaims); !ok || !token.Valid {
-		return nil, status.Error(codes.Unauthenticated, "Invalid/expired token")
+		return status.Error(codes.Unauthenticated, "Invalid/expired token")
 	}
-	// Execute the usual RPC clal
-	return handler(ctx, req)
+	return nil
 }
 
 func (f *flipappsServer) handleMessage(message MessageRequest) {

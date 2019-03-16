@@ -115,8 +115,8 @@ func init() {
 	flags.StringP("font-file", "f", "", "path to font .ttf file to display text with")
 	flags.Float32P("font-size", "p", 0, "point size to obtain font face from font file")
 	flags.Float32P("frame-duration", "d", 5, "Duration (in seconds) to display each frame of a message")
-	flags.StringP("app-secret", "sec", "", "secret used to sign JWTs with")
-	flags.StringP("app-password", "pass", "", "password required for authorisation")
+	flags.String("app-secret", "", "secret used to sign JWTs with")
+	flags.String("app-password", "", "password required for authorisation")
 
 	// Add all flags to config
 	viper.BindPFlags(flags)

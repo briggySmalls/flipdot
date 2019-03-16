@@ -37,11 +37,15 @@ func TestAuthenticate(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	// Assert we got an
+	// Assert we got a token back
 	if response.Token == "" {
 		t.Error("Failed to return token")
 	}
-
+	// Assert we can roudtrip the token
+	if flipapps.(*flipappsServer).checkToken(response.Token) != nil {
+		t.Error("Failed to check token")
+	}
+	return
 }
 
 func TestGetInfo(t *testing.T) {
