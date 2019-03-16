@@ -83,8 +83,5 @@ workflows:
       - docker-app
   driver:
     jobs:
-      - gen-driver
-      - test-driver:
-          requires:
-            - gen-driver
+      - test-driver
       - docker-driver
