@@ -25,6 +25,8 @@ jobs:
       # Login with credentials stored in the UI
       - run: docker login -u $DOCKER_USER -p $DOCKER_PASS
       - checkout
+      # Prepare qemu
+      - run: docker run --rm --privileged multiarch/qemu-user-static:register --reset
       # build the application image
       - run: docker build -t briggysmalls/flipdot_controller:latest -t briggysmalls/flipdot_controller:$CIRCLE_SHA1 -f ./driver/Dockerfile .
       # deploy the image
