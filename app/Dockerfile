@@ -17,7 +17,7 @@ RUN make build IS_PI=TRUE
 FROM scratch
 
 # Copy in executable and font
-COPY --from=builder /go/src/github.com/briggySmalls/flipapp/bin/flipapp /go/bin/flipapp
+COPY --from=builder /go/src/github.com/briggySmalls/flipdot/app/bin/flipapp /go/bin/flipapp
 COPY ./Smirnof.ttf /app/
 COPY ./config.yaml /app/
 
