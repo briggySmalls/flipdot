@@ -21,6 +21,9 @@ const (
 	tokenDuration    = time.Hour
 )
 
+var appPassword = os.Getenv("APP_PASSWORD")
+var appSecret = os.Getenv("APP_SECRET")
+
 func NewRpcFlipappsServer(flipdot flipdot.Flipdot, font font.Face) (grpcServer *grpc.Server) {
 	// Create a flipdot server
 	server := NewFlipappsServer(flipdot, font)
@@ -38,8 +41,6 @@ func NewFlipappsServer(flipdot flipdot.Flipdot, font font.Face) FlipAppsServer {
 		flipdot:      flipdot,
 		font:         font,
 		messageQueue: make(chan MessageRequest, messageQueueSize),
-		password:     os.Getenv("APP_PASSWORD"),
-		secretKey:    os.Getenv("APP_SECRET"),
 	}
 	// Run the queue pump
 	go server.run()
@@ -51,13 +52,11 @@ type flipappsServer struct {
 	flipdot      flipdot.Flipdot
 	font         font.Face
 	messageQueue chan MessageRequest
-	password     string
-	secretKey    string
 }
 
 func (f *flipappsServer) Authenticate(_ context.Context, request *AuthenticateRequest) (*AuthenticateResponse, error) {
 	// Confirm the password is correct
-	if request.Password != f.password {
+	if request.Password != appPassword {
 		return nil, status.Error(codes.Unauthenticated, "Incorrect password")
 	}
 	// Create a new token object, specifying signing method and claims
@@ -66,7 +65,7 @@ func (f *flipappsServer) Authenticate(_ context.Context, request *AuthenticateRe
 	})
 
 	// Sign and get the complete encoded token as a string using the secret
-	tokenString, err := token.SignedString(f.secretKey)
+	tokenString, err := token.SignedString(appSecret)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "Failed to create authentication token")
 	}
@@ -122,7 +121,7 @@ func (f *flipappsServer) run() {
 }
 
 // Check that all RPC calls are authorized
-func (f *flipappsServer) unaryAuthInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+func unaryAuthInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 	// First, check this isn't an auth call itself
 	if info.FullMethod == fmt.Sprintf("/%s/%s", _FlipApps_serviceDesc.ServiceName, "Authenticate") {
 		// We don't need to check for tokens here
@@ -144,7 +143,7 @@ func (f *flipappsServer) unaryAuthInterceptor(ctx context.Context, req interface
 			return nil, status.Errorf(codes.InvalidArgument, "Unexpected signing method: %v", token.Header["alg"])
 		}
 		// Return secret key for parsing with
-		return f.secretKey, nil
+		return appSecret, nil
 	})
 	// Indicate if we are happy with the result
 	if err != nil {
