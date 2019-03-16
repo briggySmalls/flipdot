@@ -29,6 +29,7 @@ PROTO_OUT_DIR = ROOT_DIR.joinpath("flipdot_controller/protos")
 PROTOBUF_SPEC = PROTO_DIR.joinpath("flipdot.proto")
 DOCKER_IMAGE="briggysmalls/flipdot_controller"
 
+
 @task(help={'check': "Checks if source is formatted without applying changes"})
 def format(c, check=False):
     """
@@ -190,4 +191,7 @@ def docker(c, tag="latest"):
     """
     Build docker image for project
     """
+    parent_dockerignore = ROOT_DIR.parent.joinpath(".dockerignore")
+    shutil.copy(ROOT_DIR.joinpath(".dockerignore"), parent_dockerignore)
     c.run("docker build -t {}:{} -f Dockerfile ..".format(DOCKER_IMAGE, tag))
+    parent_dockerignore.unlink()
