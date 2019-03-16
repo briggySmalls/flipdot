@@ -12,8 +12,7 @@ service FlipApps {
 }
 
 message AuthenticateRequest {
-    string username = 1;
-    string password = 2;
+    string password = 1;
 }
 
 message AuthenticateResponse {
