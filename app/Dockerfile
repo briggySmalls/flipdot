@@ -18,8 +18,8 @@ FROM scratch
 
 # Copy in executable and font
 COPY --from=builder /go/src/github.com/briggySmalls/flipdot/app/bin/flipapp /go/bin/flipapp
-COPY ./Smirnof.ttf /app/
-COPY ./config.yaml /app/
+COPY ./app/Smirnof.ttf /app/
+COPY ./app/config.yaml /app/
 
 # Run the go program
 ENTRYPOINT ["/go/bin/flipapp"]

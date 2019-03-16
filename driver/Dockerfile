@@ -25,7 +25,7 @@ COPY --from=0 /package/driver/dist/flipdot_controller*.tar.gz /app/
 RUN pip3 install /app/flipdot_controller*.tar.gz
 RUN rm -rf /app/
 
-COPY config.toml /app/config.toml
+COPY ./driver/config.toml /app/config.toml
 WORKDIR /app/
 ENTRYPOINT []
 CMD ["flipdot_controller", "--config", "config.toml"]
