@@ -31,13 +31,13 @@ jobs:
       - run: docker build -t briggysmalls/flipdot_controller:latest -t briggysmalls/flipdot_controller:$CIRCLE_SHA1 -f ./driver/Dockerfile .
       # deploy the image
       - run: |
-          docker push briggySmalls/flipdot_controller:$CIRCLE_SHA1 &&
-          docker push briggySmalls/flipdot_controller:latest
+          docker push briggysmalls/flipdot_controller:$CIRCLE_SHA1 &&
+          docker push briggysmalls/flipdot_controller:latest
   # Build and test the app
   test-app:
     docker:
       - image: circleci/golang:1.9-stretch
-    working_directory: /go/src/github.com/briggySmalls/flipdot
+    working_directory: /go/src/github.com/briggysmalls/flipdot
     steps:
       - run:
           name: Install protobuf compiler
@@ -70,8 +70,8 @@ jobs:
       - run: docker build -t briggysmalls/flipapp:latest -t briggysmalls/flipapp:$CIRCLE_SHA1 -f ./app/Dockerfile .
       # deploy the image
       - run: |
-          docker push briggySmalls/flipapp:$CIRCLE_SHA1 &&
-          docker push briggySmalls/flipapp:latest
+          docker push briggysmalls/flipapp:$CIRCLE_SHA1 &&
+          docker push briggysmalls/flipapp:latest
 
 workflows:
   version: 2
