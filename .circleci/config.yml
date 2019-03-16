@@ -1,38 +1,23 @@
 version: 2
 
 jobs:
-  # Generate the protobuf sources and make an source distribution
-  gen-driver:
-    docker:
-      - image: python:3.7-stretch
-    steps:
-      - run: pip install invoke grpcio-tools
-      - checkout
-      - run:
-          command: invoke dist
-          working_directory: driver
-      - run: ls ./driver/dist
-      - persist_to_workspace:
-          root: ./driver/dist
-          paths:
-            - flipdot_controller*.tar.gz
   # Test the driver
   test-driver:
     docker:
-      - image: balenalib/raspberrypi3:stretch
+      - image: python:3.6
     steps:
-      # Prepare python environment (see driver/Dockerfile for rationale)
-      - run: |
-          apt-get update &&
-          apt-get install -yq libatlas3-base python3 python3-pip python3-setuptools
-      # Make piwheels available
-      - run: printf "[global]\nextra-index-url=https://www.piwheels.org/simple\n" > /etc/pip.conf
-      # Extract source distribution (if we install it we lose tests)
-      - attach_workspace:
-          at: /tmp/dist
-      - run: tar xvzf /tmp/dist/flipdot_controller*.tar.gz
+      # Install generation and test tools
+      - run: pip install tox invoke grpcio-tools
+      # Checkout code
+      - checkout
+      # Generate source
+      - run:
+          command: invoke proto
+          working_directory: driver
       # Run tests
-      - run: python setup.py test
+      - run:
+          command: tox
+          working_directory: driver
   # Build driver docker container
   docker-driver:
     machine: true
