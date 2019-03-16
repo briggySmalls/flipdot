@@ -11,6 +11,7 @@ jobs:
       - run:
           command: invoke dist
           working_directory: driver
+      - run: ls ./driver/dist
       - persist_to_workspace:
           root: ./driver/dist
           path: ./flipdot_controller*.tar.gz
