@@ -78,8 +78,14 @@ workflows:
   app:
     jobs:
       - test-app
-      - docker-app
+      - docker-app:
+          filters:
+              branches:
+                only: master
   driver:
     jobs:
       - test-driver
-      - docker-driver
+      - docker-driver:
+          filters:
+            branches:
+              only: master
