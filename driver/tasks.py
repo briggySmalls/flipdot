@@ -36,7 +36,7 @@ def format(c, check=False):
     """
     python_dirs_string = " ".join(PYTHON_DIRS)
     # Run yapf
-    yapf_options = '--recursive {}'.format('--diff' if check else '--in-place')
+    yapf_options = '--recursive {} --exclude {}'.format('--diff' if check else '--in-place', PROTO_OUT_DIR)
     c.run("yapf {} {}".format(yapf_options, python_dirs_string))
     # Run isort
     isort_options = '--recursive {}'.format(
@@ -49,8 +49,8 @@ def lint(c):
     """
     Lint code
     """
-    c.run("flake8 {}".format(SOURCE_DIR))
-    c.run("pylint {}".format(SOURCE_DIR))
+    c.run("flake8 {} --exclude {}".format(SOURCE_DIR, PROTO_OUT_DIR))
+    c.run("pylint {} --ignore {}".format(SOURCE_DIR, PROTO_OUT_DIR))
 
 
 @task
