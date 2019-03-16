@@ -51,16 +51,12 @@ jobs:
       - checkout
       - run:
           name: Install app dependencies
-          working_directory: app
           command: go get -v -t -d ./...
+          working_directory: app
       - run:
           name: Run tests
-          working_directory: app
           command: make test
-      # Make isolated environment
-      # See: https://circleci.com/docs/2.0/building-docker-images/
-      - setup_remote_docker:
-          docker_layer_caching: true
+          working_directory: app
   # Dockerise the app
   docker-app:
     machine: true
