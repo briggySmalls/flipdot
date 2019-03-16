@@ -19,7 +19,7 @@ class ConfigParser:
 
     @staticmethod
     def create(file: Path):
-        return ConfigParser(toml.load(file))
+        return ConfigParser(toml.load(str(file)))
 
     def _validate(self):
         self._assert_not_missing('serial_port')
