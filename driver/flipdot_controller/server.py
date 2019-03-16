@@ -18,6 +18,13 @@ logger = logging.getLogger(__name__)
 
 
 class Server:
+    """Helper for starting gRPC server with Flipdot service
+
+    Attributes:
+        server (grpc.Server): The gRPC server
+        servicer (Servicer): The Flipdot servicer
+    """
+
     def __init__(self,
                  controller: FlipdotController,
                  max_workers=10,
@@ -40,13 +47,28 @@ class Server:
         self.server.add_insecure_port(port_string)
 
     def start(self):
+        """Starts the server listening
+        """
         self.server.start()
 
     def stop(self, grace=0):
+        """Stops the server
+
+        Args:
+            grace (int, optional): A duration of time in seconds or None.
+        """
         self.server.stop(grace)
 
 
 class Servicer(FlipdotServicer):
+    """Servicers for the Flipdot service
+    Generally just forwards on calls to the controller, and creates appropriate
+    error codes
+
+    Attributes:
+        controller (FlipdotController): The controller to forward calls to
+    """
+
     def __init__(self, controller: FlipdotController):
         self.controller = controller
 
