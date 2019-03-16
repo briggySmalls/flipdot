@@ -36,7 +36,7 @@ class Server:
         )
         reflection.enable_server_reflection(service_names, self.server)
         port_string = '[::]:{}'.format(port)
-        logger.debug("Starting server on port '{}'".format(port_string))
+        logger.debug("Starting server on port '%s'", port_string)
         self.server.add_insecure_port(port_string)
 
     def start(self):
@@ -56,7 +56,7 @@ class Servicer(FlipdotServicer):
         # Build a response
         response = GetInfoResponse()
         for sign_info in info:
-            sign = response.signs.add()
+            sign = response.signs.add()  # pylint: disable=E1101
             sign.name = sign_info.name
             sign.width = sign_info.width
             sign.height = sign_info.height
@@ -74,21 +74,21 @@ class Servicer(FlipdotServicer):
         return DrawResponse()
 
     def Test(self, request, context) -> TestResponse:
-        if (request.action != TestRequest.START
-                and request.action != TestRequest.STOP):
+        if (request.action != TestRequest.START  # noqa pylint: disable=E1101
+                and request.action != TestRequest.STOP):  # noqa pylint: disable=E1101
             context.set_code(grpc.StatusCode.INVALID_ARGUMENT)
             context.set_details("Unexpected action {}".format(request.action))
             return TestResponse()
 
-        self.controller.test(request.action == TestRequest.START)
+        self.controller.test(request.action == TestRequest.START)  # noqa pylint: disable=E1101
         return TestResponse()
 
     def Light(self, request, context):
-        if (request.status != LightRequest.ON
-                and request.status != LightRequest.OFF):
+        if (request.status != LightRequest.ON  # noqa pylint: disable=E1101
+                and request.status != LightRequest.OFF):  # noqa pylint: disable=E1101
             context.set_code(grpc.StatusCode.INVALID_ARGUMENT)
             context.set_details("Unexpected status {}".format(request.status))
             return LightResponse()
 
-        self.controller.light(request.status == LightRequest.ON)
+        self.controller.light(request.status == LightRequest.ON)  # noqa pylint: disable=E1101
         return LightResponse()
