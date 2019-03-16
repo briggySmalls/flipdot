@@ -10,11 +10,39 @@ import (
 	gomock "github.com/golang/mock/gomock"
 	"golang.org/x/image/font"
 	"golang.org/x/image/font/inconsolata"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 const (
 	contextTimeoutS = 1
 )
+
+func TestAuthenticate(t *testing.T) {
+	ctrl, _, flipapps := createTestObjects(t)
+	defer ctrl.Finish()
+	// Run the command
+	ctx, cancel := getContext()
+	defer cancel()
+	response, err := flipapps.Authenticate(ctx, &AuthenticateRequest{Password: "wrong"})
+	if err == nil {
+		t.Fatal("Failed to detect failed password")
+	}
+	if s, ok := status.FromError(err); !ok || s.Code() != codes.Unauthenticated {
+		t.Errorf("Failed to assign appropriate error code: %s", s.Code())
+	}
+	// Now get it right
+	response, err = flipapps.Authenticate(ctx, &AuthenticateRequest{Password: "password"})
+	// Assert the return values
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Assert we got an
+	if response.Token == "" {
+		t.Error("Failed to return token")
+	}
+
+}
 
 func TestGetInfo(t *testing.T) {
 	ctrl, mock, flipapps := createTestObjects(t)
@@ -84,7 +112,7 @@ func createTestObjects(t *testing.T) (*gomock.Controller, *flipdot.MockFlipdot, 
 	ctrl := gomock.NewController(t)
 	mock := flipdot.NewMockFlipdot(ctrl)
 	// Create object under test
-	flipapps := NewFlipappsServer(mock, getTestFont())
+	flipapps := NewFlipappsServer(mock, getTestFont(), "secret", "password")
 	return ctrl, mock, flipapps
 }
 

@@ -3,7 +3,6 @@ package flipapps
 import (
 	context "context"
 	fmt "fmt"
-	"os"
 	"time"
 
 	grpc "google.golang.org/grpc"
@@ -21,28 +20,27 @@ const (
 	tokenDuration    = time.Hour
 )
 
-var appPassword = os.Getenv("APP_PASSWORD")
-var appSecret = os.Getenv("APP_SECRET")
-
-func NewRpcFlipappsServer(flipdot flipdot.Flipdot, font font.Face) (grpcServer *grpc.Server) {
+func NewRpcFlipappsServer(flipdot flipdot.Flipdot, font font.Face, secret, password string) (grpcServer *grpc.Server) {
 	// Create a flipdot server
-	server := NewFlipappsServer(flipdot, font)
+	server := NewFlipappsServer(flipdot, font, secret, password)
 	// create a gRPC server object
-	grpcServer = grpc.NewServer(grpc.UnaryInterceptor(unaryAuthInterceptor))
+	grpcServer = grpc.NewServer(grpc.UnaryInterceptor(server.(*flipappsServer).unaryAuthInterceptor))
 	// attach the FlipApps service to the server
 	RegisterFlipAppsServer(grpcServer, server)
 	return grpcServer
 }
 
 // Create a new server
-func NewFlipappsServer(flipdot flipdot.Flipdot, font font.Face) FlipAppsServer {
+func NewFlipappsServer(flipdot flipdot.Flipdot, font font.Face, secret, password string) FlipAppsServer {
 	// Create a flipdot controller
 	server := &flipappsServer{
 		flipdot:      flipdot,
 		font:         font,
 		messageQueue: make(chan MessageRequest, messageQueueSize),
+		appSecret:    secret,
+		appPassword:  password,
 	}
-	// Run the queue pump
+	// Run the queue pump concurrently
 	go server.run()
 	// Return the server
 	return server
@@ -52,11 +50,13 @@ type flipappsServer struct {
 	flipdot      flipdot.Flipdot
 	font         font.Face
 	messageQueue chan MessageRequest
+	appSecret    string
+	appPassword  string
 }
 
 func (f *flipappsServer) Authenticate(_ context.Context, request *AuthenticateRequest) (*AuthenticateResponse, error) {
 	// Confirm the password is correct
-	if request.Password != appPassword {
+	if request.Password != f.appPassword {
 		return nil, status.Error(codes.Unauthenticated, "Incorrect password")
 	}
 
@@ -65,7 +65,7 @@ func (f *flipappsServer) Authenticate(_ context.Context, request *AuthenticateRe
 		"exp": time.Now().Add(tokenDuration).Unix(),
 	})
 	// Sign and get the complete encoded token as a string using the secret
-	tokenString, err := token.SignedString(appSecret)
+	tokenString, err := token.SignedString([]byte(f.appSecret))
 	if err != nil {
 		return nil, status.Error(codes.Internal, "Failed to create authentication token")
 	}
@@ -121,7 +121,7 @@ func (f *flipappsServer) run() {
 }
 
 // Check that all RPC calls are authorized
-func unaryAuthInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+func (f *flipappsServer) unaryAuthInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 	// First, check this isn't an auth call itself
 	if info.FullMethod == fmt.Sprintf("/%s/%s", _FlipApps_serviceDesc.ServiceName, "Authenticate") {
 		// We don't need to check for tokens here
@@ -143,7 +143,7 @@ func unaryAuthInterceptor(ctx context.Context, req interface{}, info *grpc.Unary
 			return nil, status.Errorf(codes.InvalidArgument, "Unexpected signing method: %v", token.Header["alg"])
 		}
 		// Return secret key for parsing with
-		return appSecret, nil
+		return f.appSecret, nil
 	})
 	// Indicate if we are happy with the result
 	if err != nil {

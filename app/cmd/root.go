@@ -49,6 +49,8 @@ type config struct {
 	fontFile          string
 	fontSize          float64
 	frameDurationSecs int
+	appSecret         string
+	appPassword       string
 }
 
 // rootCmd represents the base command when called without any subcommands
@@ -74,6 +76,8 @@ var rootCmd = &cobra.Command{
 		grpcServer := flipapps.NewRpcFlipappsServer(
 			flipdot,
 			readFont(config.fontFile, config.fontSize),
+			config.appSecret,
+			config.appPassword,
 		)
 		// Create a listener on TCP port
 		lis, err := net.Listen("tcp", fmt.Sprintf(config.serverAddress))
@@ -111,6 +115,8 @@ func init() {
 	flags.StringP("font-file", "f", "", "path to font .ttf file to display text with")
 	flags.Float32P("font-size", "p", 0, "point size to obtain font face from font file")
 	flags.Float32P("frame-duration", "d", 5, "Duration (in seconds) to display each frame of a message")
+	flags.StringP("app-secret", "sec", "", "secret used to sign JWTs with")
+	flags.StringP("app-password", "pass", "", "password required for authorisation")
 
 	// Add all flags to config
 	viper.BindPFlags(flags)
@@ -151,6 +157,8 @@ func validateConfig() config {
 	fontFile := viper.GetString("font-file")
 	fontSize := viper.GetFloat64("font-size")
 	frameDuration := viper.GetInt("frame-duration")
+	appSecret := viper.GetString("app-secret")
+	appPassword := viper.GetString("app-password")
 
 	if serverAddress == "" {
 		errorHandler(fmt.Errorf("server-address cannot be: %s", serverAddress))
@@ -163,6 +171,12 @@ func validateConfig() config {
 	}
 	if fontFile == "" {
 		errorHandler(fmt.Errorf("font-file cannot be: %s", fontFile))
+	}
+	if appSecret == "" {
+		errorHandler(fmt.Errorf("app-secret cannot be: %s", appSecret))
+	}
+	if appPassword == "" {
+		errorHandler(fmt.Errorf("app-password cannot be: %s", appPassword))
 	}
 
 	fmt.Println("")
@@ -179,6 +193,8 @@ func validateConfig() config {
 		fontFile:          fontFile,
 		fontSize:          fontSize,
 		frameDurationSecs: frameDuration,
+		appSecret:         appSecret,
+		appPassword:       appPassword,
 	}
 }
 

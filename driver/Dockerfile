@@ -22,6 +22,7 @@ RUN pip3 install wheel
 
 # Copy build package into a new image and install
 COPY --from=0 /package/driver/dist/flipdot_controller*.tar.gz /app/
+
 RUN pip3 install /app/flipdot_controller*.tar.gz
 RUN rm -rf /app/
 
