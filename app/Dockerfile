@@ -2,12 +2,12 @@
 FROM golang:alpine AS builder
 # Install git for fetching the dependencies
 RUN apk update && apk add --no-cache git make protobuf
-WORKDIR $GOPATH/src/github.com/briggySmalls/flipapp
 
 # Get the protobuf source generator (do this prior to copy)
 RUN go get -u github.com/golang/protobuf/protoc-gen-go
 # Fetch other dependencies using go get
-COPY . .
+COPY . $GOPATH/src/github.com/briggySmalls/flipdot
+WORKDIR $GOPATH/src/github.com/briggySmalls/flipdot/app
 RUN go get -d -v
 
 # Build the binary

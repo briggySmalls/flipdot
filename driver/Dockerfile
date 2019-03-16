@@ -3,7 +3,7 @@ FROM python:3.7-stretch
 # Prepare package (generate source)
 RUN pip install invoke grpcio-tools
 COPY . /package/
-WORKDIR /package/
+WORKDIR /package/driver
 # Build package into a distribution
 RUN invoke dist
 
@@ -21,7 +21,7 @@ RUN printf "[global]\nextra-index-url=https://www.piwheels.org/simple\n" > /etc/
 RUN pip3 install wheel
 
 # Copy build package into a new image and install
-COPY --from=0 /package/dist/flipdot_controller*.tar.gz /app/
+COPY --from=0 /package/driver/dist/flipdot_controller*.tar.gz /app/
 RUN pip3 install /app/flipdot_controller*.tar.gz
 RUN rm -rf /app/
 
