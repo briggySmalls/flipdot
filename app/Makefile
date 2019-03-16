@@ -19,7 +19,7 @@ endif
 # Generated protobufs
 PROTO_DIR=../protos
 PROTO_SRCS=./flipdot/flipdot.pb.go ./flipapps/flipapps.pb.go
-PROTO_BUFS=$(subst .pb.go,.proto,$(PROTO_SRCS))
+PROTO_BUFS=$(addprefix $(PROTO_DIR)/,$(notdir $(PROTO_SRCS:.pb.go=.proto)))
 MOCK_SRCS=$(subst .go,.mock.go,$(PROTO_SRCS)) ./flipdot/flipdot.mock.go
 
 # Generated mocks
@@ -60,13 +60,11 @@ clean:
 $(LOCAL_EXE): $(PROGRAM_SRCS)
 	$(ENVS) go build $(BUILD_ARGS) ./main.go
 
-%.pb.go: %.proto
+$(PROTO_SRCS): $(PROTO_BUFS)
 	@echo Generating: $@
-	protoc $(addprefix -I ,$(dir $(PROTO_BUFS))) --go_out=plugins=grpc:$(GOPATH)/src $<
-
-%.proto:
-	@echo Copying protobuf: $(notdir $@)
-	cp $(PROTO_DIR)/$(notdir $@) $@
+	for proto in $^; do \
+		protoc $(addprefix -I , $(PROTO_DIR)) --go_out=plugins=grpc:$(GOPATH)/src $$proto; \
+	done
 
 %.mock.go: %.go
 	mockgen -source $< -package $(lastword $(subst /, ,$(dir $<))) > $@
