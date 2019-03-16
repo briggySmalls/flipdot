@@ -37,7 +37,7 @@ jobs:
   test-app:
     docker:
       - image: circleci/golang:1.9-stretch
-    working_directory: /go/src/github.com/briggySmalls/flipdot
+    working_directory: /go/src/github.com/briggysmalls/flipdot
     steps:
       - run:
           name: Install protobuf compiler

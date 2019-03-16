@@ -20,13 +20,8 @@ requirements = [
     'protobuf>=3.6.0',
     'toml>=0.10.0',
     'grpcio-reflection>=1.19.0',
+    'RPi.GPIO>=0.6.5; platform_machine=="armv7l"',
 ]
-
-extra_requirements = {
-    ':platform_machine == armv7l:': [
-        'RPi.GPIO>=0.6.5',
-    ]
-}
 
 setup_requirements = ['pytest-runner', ]
 
@@ -53,7 +48,6 @@ setup(
         ],
     },
     install_requires=requirements,
-    extras_requires=extra_requirements,
     license="MIT license",
     long_description=readme + '\n\n' + history,
     include_package_data=True,

@@ -16,12 +16,12 @@ proto: $(PROTO_SRCS)
 $(OUTPUT): $(PROTO_SRCS)
 	npx webpack client.js
 
-%_pb.js %_grpc_web_pb.js: %.proto
+%_pb.js %_grpc_web_pb.js: $(PROTO_BUFS)
 	protoc \
 		$(addprefix -I ,$(dir $(PROTO_BUFS))) \
 		--js_out=import_style=commonjs:. \
 		--grpc-web_out=import_style=commonjs,mode=grpcwebtext:. \
-		$<
+		$^
 
 %.proto:
 	cp $(PROTO_DIR)/$(notdir $@) $@
