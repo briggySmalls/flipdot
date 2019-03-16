@@ -1,0 +1,91 @@
+version: 2
+
+jobs:
+  # Test the driver
+  test-driver:
+    docker:
+      - image: python:3.6
+    steps:
+      # Install generation and test tools
+      - run: pip install tox invoke grpcio-tools
+      # Checkout code
+      - checkout
+      # Generate source
+      - run:
+          command: invoke proto
+          working_directory: driver
+      # Run tests
+      - run:
+          command: tox
+          working_directory: driver
+  # Build driver docker container
+  docker-driver:
+    machine: true
+    steps:
+      # Login with credentials stored in the UI
+      - run: docker login -u $DOCKER_USER -p $DOCKER_PASS
+      - checkout
+      # Prepare qemu
+      - run: docker run --rm --privileged multiarch/qemu-user-static:register --reset
+      # build the application image
+      - run: docker build -t briggysmalls/flipdot_controller:latest -t briggysmalls/flipdot_controller:$CIRCLE_SHA1 -f ./driver/Dockerfile .
+      # deploy the image
+      - run: |
+          docker push briggysmalls/flipdot_controller:$CIRCLE_SHA1 &&
+          docker push briggysmalls/flipdot_controller:latest
+  # Build and test the app
+  test-app:
+    docker:
+      - image: circleci/golang:1.9-stretch
+    working_directory: /go/src/github.com/briggySmalls/flipdot
+    steps:
+      - run:
+          name: Install protobuf compiler
+          command: |
+            sudo apt-get update &&
+            sudo apt-get install -yq protobuf-compiler
+      - run:
+          name: Install protobuf & mockgen go packages
+          command: |
+            go get github.com/golang/mock/gomock &&
+            go install github.com/golang/mock/mockgen &&
+            go get -u github.com/golang/protobuf/protoc-gen-go
+      - checkout
+      - run:
+          name: Install app dependencies
+          command: go get -v -t -d ./...
+          working_directory: app
+      - run:
+          name: Run tests
+          command: make test
+          working_directory: app
+  # Dockerise the app
+  docker-app:
+    machine: true
+    steps:
+      # Login with credentials stored in the UI
+      - run: docker login -u $DOCKER_USER -p $DOCKER_PASS
+      - checkout
+      # build the application image
+      - run: docker build -t briggysmalls/flipapp:latest -t briggysmalls/flipapp:$CIRCLE_SHA1 -f ./app/Dockerfile .
+      # deploy the image
+      - run: |
+          docker push briggysmalls/flipapp:$CIRCLE_SHA1 &&
+          docker push briggysmalls/flipapp:latest
+
+workflows:
+  version: 2
+  app:
+    jobs:
+      - test-app
+      - docker-app:
+          filters:
+              branches:
+                only: master
+  driver:
+    jobs:
+      - test-driver
+      - docker-driver:
+          filters:
+            branches:
+              only: master

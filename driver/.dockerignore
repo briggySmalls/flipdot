@@ -1,10 +1,12 @@
 # NOTE: this dockerignore is actually designed to apply to parent folder
 # Copy with with a symlink when required
 
-app/bin/
-app/**/*.pb.go
-app/**/*.mock.go
+driver/.eggs
+driver/.pytest_cache
+driver/.tox
+driver/*.egg-info
 
 # Ignore other repos
-driver/
+
+app/
 web/

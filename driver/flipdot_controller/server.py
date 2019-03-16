@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Main module."""
-from concurrent import futures
 import logging
+from concurrent import futures
 
 import grpc
 import numpy as np
@@ -12,10 +12,11 @@ from flipdot_controller.protos.flipdot_pb2 import (DESCRIPTOR, DrawResponse,
                                                    GetInfoResponse,
                                                    LightRequest, LightResponse,
                                                    TestRequest, TestResponse)
-from flipdot_controller.protos.flipdot_pb2_grpc import (FlipdotServicer,
+from flipdot_controller.protos.flipdot_pb2_grpc import (FlipdotServicer,  # noqa: E501
                                                         add_FlipdotServicer_to_server)
 
 logger = logging.getLogger(__name__)
+
 
 class Server:
     def __init__(self,
@@ -28,7 +29,8 @@ class Server:
         self.server = grpc.server(
             futures.ThreadPoolExecutor(max_workers=max_workers))
         add_FlipdotServicer_to_server(self.servicer, self.server)
-        # the reflection service will be aware of "Flipdot" and "ServerReflection" services.
+        # the reflection service will be aware of "Flipdot" and
+        # "ServerReflection" services.
         service_names = (
             DESCRIPTOR.services_by_name['Flipdot'].full_name,
             reflection.SERVICE_NAME,
@@ -67,7 +69,7 @@ class Servicer(FlipdotServicer):
         # Reconstruct image
         image = np.array(
             request.image.data, dtype=bool).reshape((sign_info.height,
-                                                sign_info.width))
+                                                     sign_info.width))
         # Send the command
         self.controller.draw(request.sign, image)
         return DrawResponse()

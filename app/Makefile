@@ -5,6 +5,7 @@ EXE_FILENAME=flipapp
 LOCAL_EXE=$(BIN_DIR)/$(EXE_FILENAME)
 GLOBAL_EXE=$(GOPATH)/bin/$(EXE_FILENAME)
 BUILD_ARGS?=
+DOCKER_TAG?=latest
 
 # Cross-compilation
 PI_OS=linux
@@ -19,7 +20,7 @@ endif
 # Generated protobufs
 PROTO_DIR=../protos
 PROTO_SRCS=./flipdot/flipdot.pb.go ./flipapps/flipapps.pb.go
-PROTO_BUFS=$(subst .pb.go,.proto,$(PROTO_SRCS))
+PROTO_BUFS=$(addprefix $(PROTO_DIR)/,$(notdir $(PROTO_SRCS:.pb.go=.proto)))
 MOCK_SRCS=$(subst .go,.mock.go,$(PROTO_SRCS)) ./flipdot/flipdot.mock.go
 
 # Generated mocks
@@ -55,18 +56,21 @@ clean:
 	rm -rf $(BIN_DIR)
 	rm -f $(PROTO_SRCS) $(MOCK_SRCS)
 
+docker:
+	cp .dockerignore ..
+	docker build -t briggysmalls/flipapp:$(DOCKER_TAG) -f Dockerfile ..
+	rm ../.dockerignore
+
 ## PATTERN/SUB-RULES
 
 $(LOCAL_EXE): $(PROGRAM_SRCS)
 	$(ENVS) go build $(BUILD_ARGS) ./main.go
 
-%.pb.go: %.proto
+$(PROTO_SRCS): $(PROTO_BUFS)
 	@echo Generating: $@
-	protoc $(addprefix -I ,$(dir $(PROTO_BUFS))) --go_out=plugins=grpc:$(GOPATH)/src $<
-
-%.proto:
-	@echo Copying protobuf: $(notdir $@)
-	cp $(PROTO_DIR)/$(notdir $@) $@
+	for proto in $^; do \
+		protoc $(addprefix -I , $(PROTO_DIR)) --go_out=plugins=grpc:$(GOPATH)/src $$proto; \
+	done
 
 %.mock.go: %.go
 	mockgen -source $< -package $(lastword $(subst /, ,$(dir $<))) > $@
@@ -75,4 +79,4 @@ $(LOCAL_EXE): $(PROGRAM_SRCS)
 print-%:
 	@echo $*=$($*)
 
-.PHONY: clean format test
+.PHONY: clean format test docker
