@@ -24,10 +24,8 @@ def pins():
 def controller(pins, port):
     # Create config for a sign
     signs = [
-        SignConfig(
-            name='a', address=1, width=10, height=8, flip=True),
-        SignConfig(
-            name='b', address=2, width=10, height=8, flip=False)
+        SignConfig(name='a', address=1, width=10, height=8, flip=True),
+        SignConfig(name='b', address=2, width=10, height=8, flip=False)
     ]
     # Create the controller
     return FlipdotController(port=port, signs=signs, pins=pins)
