@@ -27,7 +27,7 @@ authForm.addEventListener('submit', function(event) {
             return;
         }
         // Save the token globally
-        token = response.token;
+        token = response.getToken();
         console.log(token);
     });
 });
