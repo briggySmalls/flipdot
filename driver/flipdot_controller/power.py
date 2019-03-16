@@ -1,11 +1,11 @@
 from collections import namedtuple
 
-import RPi.GPIO as GPIO
+import RPi.GPIO as GPIO  # pylint: disable=E0401
 
 PinConfig = namedtuple("PinConfig", ['sign', 'light'])
 
 
-class PowerManager(object):
+class PowerManager:
     def __init__(self, pins: PinConfig):
         GPIO.setmode(GPIO.BOARD)
         self.pins = pins

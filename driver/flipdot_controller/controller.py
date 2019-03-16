@@ -50,9 +50,11 @@ class FlipdotController:
     def get_info(self, sign=None) -> Union[Sequence[SignInfo], SignInfo]:
         logger.debug("get_info(sign=%s) called", sign)
         info = {}
-        for name, s in self.sign_controller.signs.items():
+        for name, query_sign in self.sign_controller.signs.items():
             info[name] = SignInfo(
-                name=name, width=s.width, height=s.height)
+                name=query_sign.name,
+                width=query_sign.width,
+                height=query_sign.height)
         return list(info.values()) if sign is None else info[sign]
 
     def draw(self, sign: str, image: np.ndarray):

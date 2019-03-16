@@ -37,4 +37,4 @@ def main(config):
 
 
 if __name__ == "__main__":
-    sys.exit(main())  # pragma: no cover
+    sys.exit(main())  # pylint: disable=E1120
