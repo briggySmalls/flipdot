@@ -1,5 +1,50 @@
 version: 2
+
 jobs:
+  # Generate the protobuf sources and make an source distribution
+  gen-driver:
+    docker:
+      - image: python:3.7-stretch
+    steps:
+      - run: pip install invoke grpcio-tools
+      - checkout
+      - run:
+          command: invoke dist
+          working_directory: driver
+      - persist_to_workspace:
+          root: ./driver/dist
+          path: ./flipdot_controller*.tar.gz
+  # Test the driver
+  test-driver:
+    docker:
+      - image: balenalib/raspberrypi3:stretch
+    steps:
+      # Prepare python environment (see driver/Dockerfile for rationale)
+      - run: |
+          apt-get update &&
+          apt-get install -yq libatlas3-base python3 python3-pip python3-setuptools
+      # Make piwheels available
+      - run: printf "[global]\nextra-index-url=https://www.piwheels.org/simple\n" > /etc/pip.conf
+      # Extract source distribution (if we install it we lose tests)
+      - attach_workspace:
+          at: /tmp/dist
+      - run: tar xvzf /tmp/dist/flipdot_controller*.tar.gz
+      # Run tests
+      - run: python setup.py test
+  # Build driver docker container
+  docker-driver:
+    machine: true
+    steps:
+      # Login with credentials stored in the UI
+      - run: docker login -u $DOCKER_USER -p $DOCKER_PASS
+      - checkout
+      # build the application image
+      - run: docker build -t briggySmalls/flipdot_controller:latest -t briggySmalls/flipdot_controller:$CIRCLE_SHA1 -f ./driver/Dockerfile ./driver
+      # deploy the image
+      - run: |
+          docker push briggySmalls/flipdot_controller:$CIRCLE_SHA1 &&
+          docker push briggySmalls/flipdot_controller:latest
+  # Build and test the app
   test-app:
     docker:
       - image: circleci/golang:1.9-stretch
@@ -7,35 +52,52 @@ jobs:
     steps:
       - run:
           name: Install protobuf compiler
-          command: sudo apt-get update && sudo apt-get install -yq protobuf-compiler
+          command: |
+            sudo apt-get update &&
+            sudo apt-get install -yq protobuf-compiler
       - run:
-          name: Install protobuf for go
-          command: go get -u github.com/golang/protobuf/protoc-gen-go
-      - run:
-          name: Install mocking
+          name: Install protobuf & mockgen go packages
           command: |
             go get github.com/golang/mock/gomock &&
-            go install github.com/golang/mock/mockgen
+            go install github.com/golang/mock/mockgen &&
+            go get -u github.com/golang/protobuf/protoc-gen-go
       - checkout
       - run:
+          name: Install app dependencies
           working_directory: app
           command: go get -v -t -d ./...
       - run:
+          name: Run tests
           working_directory: app
           command: make test
-
-  test-driver:
-    docker:
-      - image: python:3
+      # Make isolated environment
+      # See: https://circleci.com/docs/2.0/building-docker-images/
+      - setup_remote_docker:
+          docker_layer_caching: true
+  # Dockerise the app
+  docker-app:
+    machine: true
     steps:
+      # Login with credentials stored in the UI
+      - run: docker login -u $DOCKER_USER -p $DOCKER_PASS
       - checkout
-      - run:
-          working_directory: driver
-          command: pip install tox && tox
+      # build the application image
+      - run: docker build -t briggySmalls/flipapp:latest -t briggySmalls/flipapp:$CIRCLE_SHA1 -f ./app/Dockerfile ./app
+      # deploy the image
+      - run: |
+          docker push briggySmalls/flipapp:$CIRCLE_SHA1 &&
+          docker push briggySmalls/flipapp:latest
 
 workflows:
   version: 2
-  test:
+  app:
     jobs:
       - test-app
-      - test-driver
+      - docker-app
+  driver:
+    jobs:
+      - gen-driver
+      - test-driver:
+          requires:
+            - gen-driver
+      - docker-driver
