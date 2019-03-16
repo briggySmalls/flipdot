@@ -13,7 +13,7 @@ app: $(OUTPUT)
 
 proto: $(PROTO_SRCS)
 
-$(OUTPUT): $(PROTO_SRCS)
+$(OUTPUT): $(PROTO_SRCS) client.js index.html
 	npx webpack client.js
 
 %_pb.js %_grpc_web_pb.js: $(PROTO_BUFS)
