@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Main module."""
-from concurrent import futures
 import logging
+from concurrent import futures
 
 import grpc
 import numpy as np
@@ -16,6 +16,7 @@ from flipdot_controller.protos.flipdot_pb2_grpc import (FlipdotServicer,
                                                         add_FlipdotServicer_to_server)
 
 logger = logging.getLogger(__name__)
+
 
 class Server:
     def __init__(self,
@@ -67,7 +68,7 @@ class Servicer(FlipdotServicer):
         # Reconstruct image
         image = np.array(
             request.image.data, dtype=bool).reshape((sign_info.height,
-                                                sign_info.width))
+                                                     sign_info.width))
         # Send the command
         self.controller.draw(request.sign, image)
         return DrawResponse()
