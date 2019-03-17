@@ -69,9 +69,7 @@ class FlipdotController:
         info = {}
         for name, query_sign in self.sign_controller.signs.items():
             info[name] = SignInfo(
-                name=query_sign.name,
-                width=query_sign.width,
-                height=query_sign.height)
+                name=name, width=query_sign.width, height=query_sign.height)
         return list(info.values()) if sign is None else info[sign]
 
     def draw(self, sign: str, image: np.ndarray):
