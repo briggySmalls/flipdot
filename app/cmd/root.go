@@ -36,6 +36,7 @@ import (
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/stianeikeland/go-rpio"
 	"golang.org/x/image/font"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -51,6 +52,8 @@ type config struct {
 	frameDurationSecs int
 	appSecret         string
 	appPassword       string
+	buttonPin         uint8
+	ledPin            uint8
 }
 
 // rootCmd represents the base command when called without any subcommands
@@ -58,7 +61,7 @@ var rootCmd = &cobra.Command{
 	Use:   "flipapp",
 	Short: "Application to display clock and messages on flipdot displays",
 	Run: func(cmd *cobra.Command, args []string) {
-		// Parse config
+		// Pull out config (from args/env/config file)
 		config := validateConfig()
 
 		// Create a gRPC connection to the remote flipdot server
@@ -75,6 +78,11 @@ var rootCmd = &cobra.Command{
 		// Create an application, and start it running
 		app := flipapps.NewApplication(flipdot, time.Minute, readFont(config.fontFile, config.fontSize))
 		go app.Run()
+		// Enable GPIO pin control
+		err = rpio.Open()
+		errorHandler(err)
+		defer rpio.Close()
+
 		// Create a flipapps server
 		grpcServer := flipapps.NewRpcServer(
 			config.appSecret,
@@ -120,6 +128,8 @@ func init() {
 	flags.Float32P("frame-duration", "d", 5, "Duration (in seconds) to display each frame of a message")
 	flags.String("app-secret", "", "secret used to sign JWTs with")
 	flags.String("app-password", "", "password required for authorisation")
+	flags.Uint8("button-pin", 0, "GPIO pin that reads button state")
+	flags.Uint8("led-pin", 0, "GPIO pin that illuminates button")
 
 	// Add all flags to config
 	viper.BindPFlags(flags)
@@ -162,6 +172,8 @@ func validateConfig() config {
 	frameDuration := viper.GetInt("frame-duration")
 	appSecret := viper.GetString("app-secret")
 	appPassword := viper.GetString("app-password")
+	buttonPin := viper.GetInt("button-pin")
+	ledPin := viper.GetInt("led-pin")
 
 	if serverAddress == "" {
 		errorHandler(fmt.Errorf("server-address cannot be: %s", serverAddress))
@@ -189,6 +201,8 @@ func validateConfig() config {
 	fmt.Printf("font-file: %s\n", fontFile)
 	fmt.Printf("font-size: %f\n", fontSize)
 	fmt.Printf("frame-duration: %d\n", frameDuration)
+	fmt.Printf("button-pin: %d\n", buttonPin)
+	fmt.Printf("led-pin: %d\n", ledPin)
 
 	return config{
 		clientAddress:     clientAddress,
@@ -198,6 +212,8 @@ func validateConfig() config {
 		frameDurationSecs: frameDuration,
 		appSecret:         appSecret,
 		appPassword:       appPassword,
+		buttonPin:         uint8(buttonPin),
+		ledPin:            uint8(ledPin),
 	}
 }
 
