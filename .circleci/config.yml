@@ -45,11 +45,16 @@ jobs:
             sudo apt-get update &&
             sudo apt-get install -yq protobuf-compiler
       - run:
-          name: Install protobuf & mockgen go packages
+          name: Install protobuf & mock go packages
           command: |
             go get github.com/golang/mock/gomock &&
-            go install github.com/golang/mock/mockgen &&
             go get -u github.com/golang/protobuf/protoc-gen-go
+      - run:
+          name: Checkout working version of mockgen
+          command: |
+            cd $GOPATH/src/github.com/golang/mock &&
+            git checkout v1.2.0 &&
+            go install github.com/golang/mock/mockgen
       - checkout
       - run:
           name: Install app dependencies
