@@ -11,6 +11,8 @@ import (
 
 	"github.com/briggySmalls/flipdot/app/flipdot"
 	"github.com/dgrijalva/jwt-go"
+	"github.com/stianeikeland/go-rpio"
+	"golang.org/x/image/font"
 	"google.golang.org/grpc/status"
 )
 
@@ -37,6 +39,14 @@ func NewServer(secret, password string, messageQueue chan MessageRequest, signsI
 		messageQueue: messageQueue,
 		signsInfo:    signsInfo,
 	}
+	// Configure GPIOs to trigger on button press
+	server.buttonPin.Detect(rpio.RiseEdge)
+	server.ledPin.Output()
+	server.ledPin.Low()
+	// Run the queue pump concurrently
+	pressed := make(chan MessageRequest)
+	go server.watchButton(pressed)
+	go server.run(pressed)
 	// Return the server
 	return server
 }
@@ -80,13 +90,32 @@ func (f *flipappsServer) GetInfo(_ context.Context, _ *flipdot.GetInfoRequest) (
 func (f *flipappsServer) SendMessage(ctx context.Context, request *MessageRequest) (response *MessageResponse, err error) {
 	switch request.Payload.(type) {
 	case *MessageRequest_Images, *MessageRequest_Text:
+		// Enqueue message
 		f.messageQueue <- *request
+		// Indicate a message is received
+		f.ledPin.High()
 	default:
 		err = status.Error(codes.InvalidArgument, "Neither images or text supplied")
 	}
 	response = &MessageResponse{}
 	return
 }
+
+func (f *flipappsServer) watchButton(messages chan MessageRequest) {
+for {
+if f.buttonPin.EdgeDetected() {
+select {
+case message := <-f.messageQueue:
+// Button has been pressed, pass on message
+messages <- message
+default:
+// No messages left, turn off LED
+f.ledPin.Low()
+}
+}
+}
+}
+
 
 // Interceptor that checks all RPC calls are authorized
 func (f *flipappsServer) unaryAuthInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
