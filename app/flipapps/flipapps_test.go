@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stianeikeland/go-rpio"
+
 	"github.com/briggySmalls/flipdot/app/flipdot"
 	gomock "github.com/golang/mock/gomock"
 	"golang.org/x/image/font"
@@ -20,11 +22,12 @@ const (
 
 // Tests for passing authentication
 func TestPassAuthenticate(t *testing.T) {
-	ctrl, _, flipapps := createTestObjects(t)
+	ctrl, _, buttonPin, ledPin, flipapps := createTestObjects(t)
 	defer ctrl.Finish()
 	// Run the command
 	ctx, cancel := getContext()
 	defer cancel()
+	buttonPin.EXPECT().Detect(rpio.RiseEdge)
 	response, err := flipapps.Authenticate(ctx, &AuthenticateRequest{Password: "password"})
 	// Assert the return values
 	if err != nil {
@@ -43,11 +46,12 @@ func TestPassAuthenticate(t *testing.T) {
 
 // Tests for failing authentication (bad password)
 func TestFailAuthenticate(t *testing.T) {
-	ctrl, _, flipapps := createTestObjects(t)
+	ctrl, _, buttonPin, _, flipapps := createTestObjects(t)
 	defer ctrl.Finish()
 	// Run the command
 	ctx, cancel := getContext()
 	defer cancel()
+	buttonPin.Detect(rpio.RiseEdge)
 	_, err := flipapps.Authenticate(ctx, &AuthenticateRequest{Password: "wrong"})
 	if err == nil {
 		t.Fatal("Failed to detect failed password")
@@ -120,13 +124,16 @@ func getTestFont() font.Face {
 	return inconsolata.Regular8x16
 }
 
-func createTestObjects(t *testing.T) (*gomock.Controller, *flipdot.MockFlipdot, FlipAppsServer) {
+func createTestObjects(t *testing.T) (*gomock.Controller, *flipdot.MockFlipdot, *MockPin, *MockPin, FlipAppsServer) {
 	// Create a mock
 	ctrl := gomock.NewController(t)
 	mock := flipdot.NewMockFlipdot(ctrl)
+	// Create mock pins
+	mockbutton := NewMockPin(ctrl)
+	mockLed := NewMockPin(ctrl)
 	// Create object under test
-	flipapps := NewFlipappsServer(mock, getTestFont(), "secret", "password", 1, 2)
-	return ctrl, mock, flipapps
+	flipapps := NewFlipappsServer(mock, getTestFont(), "secret", "password", mockbutton, mockLed)
+	return ctrl, mock, mockbutton, mockLed, flipapps
 }
 
 // Get a simple context for sending requests via gRPC
