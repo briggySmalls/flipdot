@@ -11,23 +11,30 @@ import (
 )
 
 const (
-	messageQueueSize = 20
+	messageInSize = 20
 )
 
 type application struct {
-	flipdot      flipdot.Flipdot
-	tickPeriod   time.Duration
-	font         font.Face
-	MessageQueue chan MessageRequest
+	flipdot       flipdot.Flipdot
+	buttonManager ButtonManager
+	tickPeriod    time.Duration
+	font          font.Face
+	// Externally-visible channel for adding messages to the application
+	MessagesIn chan MessageRequest
+	// Staging channel used by application internally
+	messagesPending chan MessageRequest
+	ShowMessage     chan struct{}
 }
 
 // Creates and initialises a new Application
-func NewApplication(flipdot flipdot.Flipdot, tickPeriod time.Duration, font font.Face) application {
+func NewApplication(flipdot flipdot.Flipdot, buttonManager ButtonManager, tickPeriod time.Duration, font font.Face) application {
 	return application{
-		flipdot:      flipdot,
-		tickPeriod:   tickPeriod,
-		font:         font,
-		MessageQueue: make(chan MessageRequest, messageQueueSize),
+		flipdot:         flipdot,
+		buttonManager:   buttonManager,
+		tickPeriod:      tickPeriod,
+		font:            font,
+		MessagesIn:      make(chan MessageRequest, messageInSize),
+		messagesPending: make(chan MessageRequest, messageInSize),
 	}
 }
 
@@ -37,21 +44,46 @@ func (s *application) Run() {
 	ticker := time.NewTicker(s.tickPeriod)
 	defer ticker.Stop()
 	pause := false
+
 	// Run forever
 	for {
 		select {
-		// Handle message, if available
-		case message, open := <-s.MessageQueue:
-			if !open {
-				// No more messages to handle
+		case message, ok := <-s.MessagesIn:
+			if !ok {
+				// There will be no more messages to handle
+				// TODO: check if there are any pending message that we should wait for
 				return
 			}
-			// Pause clock whilst we handle a message
-			pause = true
-			// Handle message
-			s.handleMessage(message)
-			// Unpause clock
-			pause = false
+			// Externally queued message is available
+			// Pass to internal buffer
+			s.messagesPending <- message
+			// We have at least one message, so light LED
+			s.buttonManager.WriteLed(true)
+		// Handle user signal to display message
+		case _, ok := <-s.ShowMessage:
+			if !ok {
+				// There will be no more show-message requests
+				return
+			}
+			// Check if there are pending messages
+			select {
+			case message, ok := <-s.messagesPending:
+				if !ok {
+					// There will be no more message requests
+					return
+				}
+				// We have a message waiting, so display it
+				pause = true // Pause clock whilst we handle a message
+				// Handle message
+				s.handleMessage(message)
+				// Unpause clock
+				pause = false
+			default:
+				// No message waiting, so skip
+				// Also update the LED to indicate no more messages
+				s.buttonManager.WriteLed(false)
+				continue
+			}
 		// Otherwise display the time
 		case t := <-ticker.C:
 			// Only display the time if we've not paused the clock

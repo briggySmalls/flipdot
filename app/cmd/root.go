@@ -75,19 +75,22 @@ var rootCmd = &cobra.Command{
 			flipClient,
 			time.Duration(config.frameDurationSecs)*time.Second)
 		errorHandler(err)
-		// Create an application, and start it running
-		app := flipapps.NewApplication(flipdot, time.Minute, readFont(config.fontFile, config.fontSize))
-		go app.Run()
-		// Enable GPIO pin control
+		// Create a button manager
 		err = rpio.Open()
 		errorHandler(err)
 		defer rpio.Close()
+		ledPin := flipapps.NewOutputPin(config.ledPin)
+		buttonPin := flipapps.NewTriggerPin(config.buttonPin, rpio.RiseEdge)
+		bm := flipapps.NewButtonManager(buttonPin, ledPin)
+		// Create an application, and start it running
+		app := flipapps.NewApplication(flipdot, bm, time.Minute, readFont(config.fontFile, config.fontSize))
+		go app.Run()
 
 		// Create a flipapps server
 		grpcServer := flipapps.NewRpcServer(
 			config.appSecret,
 			config.appPassword,
-			app.MessageQueue,
+			app.MessagesIn,
 			flipdot.Signs(),
 		)
 		// Create a listener on TCP port
