@@ -35,6 +35,7 @@ func NewApplication(flipdot flipdot.Flipdot, buttonManager ButtonManager, tickPe
 		font:            font,
 		MessagesIn:      make(chan MessageRequest, messageInSize),
 		messagesPending: make(chan MessageRequest, messageInSize),
+		ShowMessage:     make(chan struct{}),
 	}
 }
 
