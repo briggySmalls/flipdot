@@ -1,6 +1,10 @@
 package flipapps
 
-import "github.com/stianeikeland/go-rpio"
+import (
+	"log"
+
+	"github.com/stianeikeland/go-rpio"
+)
 
 type TriggerPin interface {
 	EdgeDetected() bool
@@ -56,6 +60,7 @@ func NewButtonManager(buttonPin TriggerPin, ledPin OutputPin) ButtonManager {
 
 func (b *buttonManager) Run() {
 	// Run control loop
+	log.Println("Button manager loop starting...")
 	for {
 		select {
 		case <-b.done:
@@ -65,6 +70,7 @@ func (b *buttonManager) Run() {
 		default:
 			// Check if button status has changed
 			if b.buttonPin.EdgeDetected() {
+				log.Println("Button press detected")
 				b.buttonPressed <- struct{}{}
 			}
 		}
