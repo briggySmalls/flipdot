@@ -31,6 +31,8 @@ func NewTriggerPin(pinNum uint8, edge rpio.Edge) TriggerPin {
 	// Create the pin
 	p := rpio.Pin(pinNum)
 	// Configure the pin
+	p.Input()
+	p.PullDown()
 	p.Detect(edge)
 	return p
 }
