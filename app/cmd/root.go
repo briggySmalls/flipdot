@@ -72,8 +72,9 @@ var rootCmd = &cobra.Command{
 			flipClient,
 			time.Duration(config.frameDurationSecs)*time.Second)
 		errorHandler(err)
-		// Create an application
+		// Create an application, and start it running
 		app := flipapps.NewApplication(flipdot, time.Minute, readFont(config.fontFile, config.fontSize))
+		go app.Run()
 		// Create a flipapps server
 		grpcServer := flipapps.NewRpcServer(
 			config.appSecret,
