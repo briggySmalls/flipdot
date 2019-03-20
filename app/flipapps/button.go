@@ -54,15 +54,17 @@ func NewButtonManager(buttonPin TriggerPin, ledPin OutputPin) ButtonManager {
 
 func (b *buttonManager) Run() {
 	// Run control loop
-	select {
-	case <-b.done:
-		// We've been asked to stop, shut 'pressed' channel
-		close(b.buttonPressed)
-		return
-	default:
-		// Check if button status has changed
-		if b.buttonPin.EdgeDetected() {
-			b.buttonPressed <- struct{}{}
+	for {
+		select {
+		case <-b.done:
+			// We've been asked to stop, shut 'pressed' channel
+			close(b.buttonPressed)
+			return
+		default:
+			// Check if button status has changed
+			if b.buttonPin.EdgeDetected() {
+				b.buttonPressed <- struct{}{}
+			}
 		}
 	}
 }

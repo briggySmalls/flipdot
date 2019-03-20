@@ -82,6 +82,8 @@ func TestMessageText(t *testing.T) {
 	// Create a channel to signal the test is complete
 	textWritten := make(chan struct{})
 	defer close(textWritten)
+	defer close(app.MessagesIn)
+	defer close(app.ShowMessage)
 	// Configure the mock (calls 'done' when executed)
 	fakeBm.EXPECT().WriteLed(true)
 	fakeFlipdot.EXPECT().Text("test text", getTestFont(), false).Do(func(txt string, fnt font.Face, centre bool) {
@@ -98,7 +100,6 @@ func TestMessageText(t *testing.T) {
 	select {
 	case <-textWritten:
 		// Completed successfully, stop the app
-		close(app.MessagesIn)
 		return
 	case <-time.After(time.Second):
 		// Timeout before we completed

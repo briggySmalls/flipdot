@@ -33,7 +33,7 @@ func TestButtonPressed(t *testing.T) {
 	fakeButtonPin := NewMockTriggerPin(ctrl)
 	// Configure mock to expect calls
 	gomock.InOrder(
-		fakeButtonPin.EXPECT().EdgeDetected().Times(100).Return(false),
+		fakeButtonPin.EXPECT().EdgeDetected().Times(10).Return(false),
 		fakeButtonPin.EXPECT().EdgeDetected().Times(1).Return(true),
 		fakeButtonPin.EXPECT().EdgeDetected().AnyTimes().Return(false),
 	)
