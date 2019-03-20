@@ -2,6 +2,7 @@ package flipapps
 
 import (
 	fmt "fmt"
+	"log"
 	"time"
 
 	"github.com/briggySmalls/flipdot/app/flipdot"
@@ -42,6 +43,7 @@ func NewApplication(flipdot flipdot.Flipdot, buttonManager ButtonManager, tickPe
 // Routine for handling queued messages
 func (s *application) Run() {
 	// Create a ticker
+	log.Println("Starting application loop...")
 	ticker := time.NewTicker(s.tickPeriod)
 	defer ticker.Stop()
 	pause := false
@@ -56,6 +58,7 @@ func (s *application) Run() {
 				return
 			}
 			// Externally queued message is available
+			log.Println("Message received")
 			// Pass to internal buffer
 			s.messagesPending <- message
 			// We have at least one message, so light LED
@@ -66,6 +69,7 @@ func (s *application) Run() {
 				// There will be no more show-message requests
 				return
 			}
+			log.Println("Show message request")
 			// Check if there are pending messages
 			select {
 			case message, ok := <-s.messagesPending:
@@ -73,6 +77,7 @@ func (s *application) Run() {
 					// There will be no more message requests
 					return
 				}
+				log.Println("Displaying message")
 				// We have a message waiting, so display it
 				pause = true // Pause clock whilst we handle a message
 				// Handle message
@@ -81,6 +86,7 @@ func (s *application) Run() {
 				pause = false
 			default:
 				// No message waiting, so skip
+				log.Println("No more messages")
 				// Also update the LED to indicate no more messages
 				s.buttonManager.WriteLed(false)
 				continue
@@ -89,6 +95,7 @@ func (s *application) Run() {
 		case t := <-ticker.C:
 			// Only display the time if we've not paused the clock
 			if !pause {
+				log.Println("Tick event")
 				// Print the time (centred)
 				s.sendText(t.Format("Mon 1 Jan\n3:04 PM"), true)
 			}
