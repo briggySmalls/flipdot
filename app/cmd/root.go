@@ -58,10 +58,10 @@ var rootCmd = &cobra.Command{
 	Use:   "flipapp",
 	Short: "Application to display clock and messages on flipdot displays",
 	Run: func(cmd *cobra.Command, args []string) {
-		// Root function
+		// Parse config
 		config := validateConfig()
 
-		// Create a gRPC connection
+		// Create a gRPC connection to the remote flipdot server
 		connection, err := grpc.Dial(fmt.Sprintf(config.clientAddress), grpc.WithInsecure())
 		errorHandler(err)
 		// Create a flipdot client
@@ -72,12 +72,14 @@ var rootCmd = &cobra.Command{
 			flipClient,
 			time.Duration(config.frameDurationSecs)*time.Second)
 		errorHandler(err)
+		// Create an application
+		app := flipapps.NewApplication(flipdot, time.Minute, readFont(config.fontFile, config.fontSize))
 		// Create a flipapps server
-		grpcServer := flipapps.NewRpcFlipappsServer(
-			flipdot,
-			readFont(config.fontFile, config.fontSize),
+		grpcServer := flipapps.NewRpcServer(
 			config.appSecret,
 			config.appPassword,
+			app.MessageQueue,
+			flipdot.Signs(),
 		)
 		// Create a listener on TCP port
 		lis, err := net.Listen("tcp", fmt.Sprintf(config.serverAddress))
