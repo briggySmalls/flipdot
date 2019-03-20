@@ -3,3 +3,5 @@ server-address: 0.0.0.0:5002
 font-file: /app/Smirnof.ttf
 font-size: 8
 frame-duration: 5
+led-pin: 6
+button-pin: 5
