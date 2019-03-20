@@ -7,22 +7,30 @@ import (
 	gomock "github.com/golang/mock/gomock"
 )
 
-func TestLightLed(t *testing.T) {
+func TestActive(t *testing.T) {
 	// Create fake buttons
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	fakeLedPin := NewMockOutputPin(ctrl)
 	fakeButtonPin := NewMockTriggerPin(ctrl)
 	// Create a button manager
-	bm := NewButtonManager(fakeButtonPin, fakeLedPin)
+	bm := NewButtonManager(fakeButtonPin, fakeLedPin, time.Microsecond)
 	// Configure mock to expect calls
-	gomock.InOrder(
-		fakeLedPin.EXPECT().High(),
-		fakeLedPin.EXPECT().Low(),
-	)
+	done := make(chan struct{})
+	fakeLedPin.EXPECT().Low().Times(2)
+	fakeButtonPin.EXPECT().EdgeDetected().AnyTimes().Return(false)
+	fakeLedPin.EXPECT().Toggle().Do(func() {
+		done <- struct{}{}
+	})
 	// Simulate a call to turn on the LED
-	bm.WriteLed(true)
-	bm.WriteLed(false)
+	bm.SetState(Active)
+	// Wait for results
+	select {
+	case <-done:
+		return
+	case <-time.After(time.Second * 5):
+		t.Fatal("No pressed event detected")
+	}
 }
 
 func TestButtonPressed(t *testing.T) {
@@ -32,17 +40,16 @@ func TestButtonPressed(t *testing.T) {
 	fakeLedPin := NewMockOutputPin(ctrl)
 	fakeButtonPin := NewMockTriggerPin(ctrl)
 	// Configure mock to expect calls
-	gomock.InOrder(
-		fakeButtonPin.EXPECT().EdgeDetected().Times(10).Return(false),
-		fakeButtonPin.EXPECT().EdgeDetected().Times(1).Return(true),
-		fakeButtonPin.EXPECT().EdgeDetected().AnyTimes().Return(false),
-	)
+	fakeLedPin.EXPECT().Low().Times(2)
+	fakeButtonPin.EXPECT().EdgeDetected().AnyTimes().Return(false).Return(false).Return(true)
+	fakeLedPin.EXPECT().Toggle().AnyTimes()
 	// Create a button manager and start the app
-	bm := NewButtonManager(fakeButtonPin, fakeLedPin)
-	go bm.Run()
+	bm := NewButtonManager(fakeButtonPin, fakeLedPin, time.Microsecond)
+	bm.SetState(Active)
 	// Check that a single 'pressed' event was sent
 	select {
 	case <-bm.GetChannel():
+		// Button pressed
 		return
 	case <-time.After(time.Second * 5):
 		t.Fatal("No pressed event detected")

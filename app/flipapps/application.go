@@ -18,36 +18,34 @@ const (
 type application struct {
 	flipdot       flipdot.Flipdot
 	buttonManager ButtonManager
-	tickPeriod    time.Duration
 	font          font.Face
 	// Externally-visible channel for adding messages to the application
 	MessagesIn chan MessageRequest
-	// Staging channel used by application internally
-	messagesPending chan MessageRequest
-	ShowMessage     chan struct{}
 }
 
 // Creates and initialises a new Application
 func NewApplication(flipdot flipdot.Flipdot, buttonManager ButtonManager, tickPeriod time.Duration, font font.Face) application {
-	return application{
-		flipdot:         flipdot,
-		buttonManager:   buttonManager,
-		tickPeriod:      tickPeriod,
-		font:            font,
-		MessagesIn:      make(chan MessageRequest, messageInSize),
-		messagesPending: make(chan MessageRequest, messageInSize),
-		ShowMessage:     make(chan struct{}),
+	app := application{
+		flipdot:       flipdot,
+		buttonManager: buttonManager,
+		font:          font,
+		MessagesIn:    make(chan MessageRequest, messageInSize),
 	}
+	go app.run(tickPeriod)
+	return app
 }
 
 // Routine for handling queued messages
-func (s *application) Run() {
+func (s *application) run(tickPeriod time.Duration) {
 	// Create a ticker
 	log.Println("Starting application loop...")
-	ticker := time.NewTicker(s.tickPeriod)
-	defer ticker.Stop()
 	pause := false
-
+	ticker := time.NewTicker(tickPeriod)
+	defer ticker.Stop()
+	// Create intermediate message queue
+	pendingMessages := make(chan MessageRequest, messageInSize)
+	// Get queue for button presses
+	buttonPressed := s.buttonManager.GetChannel()
 	// Run forever
 	for {
 		select {
@@ -60,19 +58,15 @@ func (s *application) Run() {
 			// Externally queued message is available
 			log.Println("Message received")
 			// Pass to internal buffer
-			s.messagesPending <- message
-			// We have at least one message, so light LED
-			s.buttonManager.WriteLed(true)
+			pendingMessages <- message
+			// We have at least one message, so activate button
+			s.buttonManager.SetState(Active)
 		// Handle user signal to display message
-		case _, ok := <-s.ShowMessage:
-			if !ok {
-				// There will be no more show-message requests
-				return
-			}
+		case <-buttonPressed:
 			log.Println("Show message request")
 			// Check if there are pending messages
 			select {
-			case message, ok := <-s.messagesPending:
+			case message, ok := <-pendingMessages:
 				if !ok {
 					// There will be no more message requests
 					return
@@ -88,7 +82,7 @@ func (s *application) Run() {
 				// No message waiting, so skip
 				log.Println("No more messages")
 				// Also update the LED to indicate no more messages
-				s.buttonManager.WriteLed(false)
+				s.buttonManager.SetState(Inactive)
 				continue
 			}
 		// Otherwise display the time
