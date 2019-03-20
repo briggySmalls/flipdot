@@ -12,10 +12,8 @@ import (
 
 func TestTickText(t *testing.T) {
 	// Create mocks
-	ctrl, fakeFlipdot, _, app := createAppTestObjects(t, time.Millisecond)
+	ctrl, fakeFlipdot, fakeBm, app := createAppTestObjects(t, time.Millisecond)
 	defer ctrl.Finish()
-	// Start the app running
-	go app.Run()
 	// Create a channel to signal the test is complete
 	textWritten := make(chan struct{})
 	defer close(textWritten)
@@ -29,6 +27,7 @@ func TestTickText(t *testing.T) {
 		// Finish up
 		textWritten <- struct{}{}
 	}
+	fakeBm.EXPECT().GetChannel()
 	fakeFlipdot.EXPECT().Text(gomock.Any(), getTestFont(), true).Do(mockAction).Return(nil)
 	// Wait until the message is handled, or timeout
 	select {
@@ -42,17 +41,16 @@ func TestTickText(t *testing.T) {
 	}
 }
 
-func TestLightOn(t *testing.T) {
+func TestMessageTextQueued(t *testing.T) {
 	// Create mocks
 	ctrl, _, fakeBm, app := createAppTestObjects(t, time.Hour)
 	defer ctrl.Finish()
-	// Start the app running
-	go app.Run()
 	// Create a channel to signal the test is complete
 	messageAdded := make(chan struct{})
 	defer close(messageAdded)
-	// Configure mock to expect a call to light button LED
-	fakeBm.EXPECT().WriteLed(true).Do(func(status bool) {
+	// Configure mock to expect a call to activate button
+	fakeBm.EXPECT().GetChannel()
+	fakeBm.EXPECT().SetState(Active).Do(func(state State) {
 		messageAdded <- struct{}{}
 	})
 	// Send the message
@@ -73,29 +71,31 @@ func TestLightOn(t *testing.T) {
 	}
 }
 
-func TestMessageText(t *testing.T) {
+func TestMessageTextSent(t *testing.T) {
 	// Create mocks
 	ctrl, fakeFlipdot, fakeBm, app := createAppTestObjects(t, time.Hour)
 	defer ctrl.Finish()
-	// Start the app running
-	go app.Run()
 	// Create a channel to signal the test is complete
 	textWritten := make(chan struct{})
 	defer close(textWritten)
 	defer close(app.MessagesIn)
-	defer close(app.ShowMessage)
+	// Create a channel to signal a button press
+	buttonPress := make(chan struct{})
 	// Configure the mock (calls 'done' when executed)
-	fakeBm.EXPECT().WriteLed(true)
+	fakeBm.EXPECT().GetChannel().Return(buttonPress)
+	fakeBm.EXPECT().SetState(Active)
+	fakeBm.EXPECT().SetState(Inactive)
 	fakeFlipdot.EXPECT().Text("test text", getTestFont(), false).Do(func(txt string, fnt font.Face, centre bool) {
 		textWritten <- struct{}{}
 	}).Return(nil)
-	// Send the message
-	message := MessageRequest{
+
+	// Send a message to start the test
+	app.MessagesIn <- MessageRequest{
 		From:    "briggySmalls",
 		Payload: &MessageRequest_Text{"test text"},
 	}
-	app.MessagesIn <- message
-	app.ShowMessage <- struct{}{}
+	// Then send a button press
+	buttonPress <- struct{}{}
 	// Wait until the message is handled, or timeout
 	select {
 	case <-textWritten:
