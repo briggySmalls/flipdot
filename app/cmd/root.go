@@ -80,8 +80,8 @@ var rootCmd = &cobra.Command{
 		errorHandler(err)
 		defer rpio.Close()
 		ledPin := flipapps.NewOutputPin(config.ledPin)
-		buttonPin := flipapps.NewTriggerPin(config.buttonPin, rpio.RiseEdge)
-		bm := flipapps.NewButtonManager(buttonPin, ledPin, time.Second)
+		buttonPin := flipapps.NewTriggerPin(config.buttonPin, rpio.FallEdge)
+		bm := flipapps.NewButtonManager(buttonPin, ledPin, time.Second, time.Millisecond*500)
 		// Create an application
 		app := flipapps.NewApplication(flipdot, bm, time.Minute, readFont(config.fontFile, config.fontSize))
 		// Create a flipapps server

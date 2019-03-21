@@ -8,6 +8,7 @@ import (
 )
 
 type State uint8
+type DebounceState uint8
 
 const (
 	Active State = iota
@@ -15,8 +16,19 @@ const (
 	Stopped
 )
 
+const (
+	Off DebounceState = iota
+	Transitioning
+	On
+)
+
+const (
+	debouncedCount = 10
+)
+
 type TriggerPin interface {
 	EdgeDetected() bool
+	Read() rpio.State
 }
 
 type OutputPin interface {
@@ -33,8 +45,7 @@ type buttonManager struct {
 	// Internal channel to change state
 	stateChanger chan State
 	// Internal record of state
-	state     State
-	frequency time.Duration
+	state State
 }
 
 type ButtonManager interface {
@@ -60,17 +71,16 @@ func NewOutputPin(pinNum uint8) OutputPin {
 	return p
 }
 
-func NewButtonManager(buttonPin TriggerPin, ledPin OutputPin, frequency time.Duration) ButtonManager {
+func NewButtonManager(buttonPin TriggerPin, ledPin OutputPin, flashFreq, debounceFreq time.Duration) ButtonManager {
 	manager := buttonManager{
 		buttonPressed: make(chan struct{}),
 		stateChanger:  make(chan State),
 		buttonPin:     buttonPin,
 		ledPin:        ledPin,
 		state:         Inactive,
-		frequency:     frequency,
 	}
 	// Start the manager control loop
-	go manager.run()
+	go manager.run(flashFreq, debounceFreq)
 	// Return the manager
 	return &manager
 }
@@ -85,11 +95,16 @@ func (b *buttonManager) SetState(state State) {
 	}
 }
 
-func (b *buttonManager) run() {
+func (b *buttonManager) run(flashFreq time.Duration, debounceTime time.Duration) {
 	// Run control loop
 	log.Println("Button manager loop starting...")
 	b.ledPin.Low() // Ensure LED off
-	ticker := time.NewTicker(b.frequency)
+	flashTicker := time.NewTicker(flashFreq)
+
+	// Debounce-releated stuff
+	debounceTicker := time.NewTicker(debounceTime / debouncedCount)
+	var debounceCounter uint16
+	debounceState := Off
 	for {
 		select {
 		case state, ok := <-b.stateChanger:
@@ -100,18 +115,36 @@ func (b *buttonManager) run() {
 			}
 			b.state = state
 			log.Printf("State updated to %d", b.state)
-			// Ensure LED is not illuminated
-			b.ledPin.Low()
-		case <-ticker.C:
+			if b.state == Inactive {
+				// Ensure LED is not illuminated
+				b.ledPin.Low()
+			}
+		case <-flashTicker.C:
 			if b.state == Active {
 				// Toggle LED illumination on tick
 				b.ledPin.Toggle()
 			}
-		default:
+		case <-debounceTicker.C:
 			// Check if button status has changed
-			if b.state == Active && b.buttonPin.EdgeDetected() {
-				log.Println("Button press detected")
-				b.buttonPressed <- struct{}{}
+			if b.state == Active {
+				pinState := b.buttonPin.Read()
+				if debounceState == Off && pinState == rpio.High {
+					// Start counter (we've transitioned)
+					debounceState = Transitioning
+					debounceCounter = 0
+				} else if debounceState == Transitioning {
+					if pinState == rpio.High {
+						// Increment counter
+						debounceCounter++
+						if debounceCounter == debouncedCount {
+							log.Println("Button press detected")
+							b.buttonPressed <- struct{}{}
+						}
+					} else {
+						// Reset state (press aborted)
+						debounceState = Off
+					}
+				}
 			}
 		}
 	}
