@@ -53,13 +53,12 @@ type ButtonManager interface {
 	GetChannel() chan struct{}
 }
 
-func NewTriggerPin(pinNum uint8, edge rpio.Edge) TriggerPin {
+func NewTriggerPin(pinNum uint8) TriggerPin {
 	// Create the pin
 	p := rpio.Pin(pinNum)
 	// Configure the pin
 	p.Input()
 	p.PullDown()
-	p.Detect(edge)
 	return p
 }
 
