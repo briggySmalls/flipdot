@@ -43,7 +43,7 @@ import (
 )
 
 const (
-	buttonDebounceDuration = time.Millisecond * 10
+	buttonDebounceDuration = time.Millisecond * 50
 )
 
 var cfgFile string
