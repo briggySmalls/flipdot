@@ -76,6 +76,8 @@ func (s *application) run(tickPeriod time.Duration) {
 				pause = true // Pause clock whilst we handle a message
 				// Handle message
 				s.handleMessage(message)
+				// TOOD: Check if any messages are left, if not then disable button
+				// s.buttonManager.SetState(Inactive)
 				// Unpause clock
 				pause = false
 			default:
