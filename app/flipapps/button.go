@@ -19,7 +19,7 @@ const (
 const (
 	Off DebounceState = iota
 	Transitioning
-	On
+	Triggered
 )
 
 const (
@@ -102,8 +102,7 @@ func (b *buttonManager) run(flashFreq time.Duration, debounceTime time.Duration)
 
 	// Debounce-releated stuff
 	debounceTicker := time.NewTicker(debounceTime / debouncedCount)
-	var debounceCounter uint16
-	debounceState := Off
+	debouncer := debouncer{state: Off, debouncedCount: debouncedCount}
 	for {
 		select {
 		case state, ok := <-b.stateChanger:
@@ -126,27 +125,56 @@ func (b *buttonManager) run(flashFreq time.Duration, debounceTime time.Duration)
 		case <-debounceTicker.C:
 			// Check if button status has changed
 			if b.state == Active {
+				// Read the button state
 				pinState := b.buttonPin.Read()
-				if debounceState == Off && pinState == rpio.High {
-					// Start counter (we've transitioned)
-					debounceState = Transitioning
-					debounceCounter = 0
-				} else if debounceState == Transitioning {
-					if pinState == rpio.High {
-						// Increment counter
-						debounceCounter++
-						if debounceCounter == debouncedCount {
-							log.Println("Button press detected")
-							b.buttonPressed <- struct{}{}
-						}
-					} else {
-						// Reset state (press aborted)
-						debounceState = Off
-					}
+				// Pass it to the debouncer
+				if debouncer.debounce(pinState == rpio.High) {
+					log.Println("Button press detected")
+					b.buttonPressed <- struct{}{}
 				}
 			}
 		}
 	}
+}
+
+type debouncer struct {
+	// Internal state of the debouncer
+	state DebounceState
+	// Counter for the number of consecutive positive signal counts
+	counter uint16
+	// Number of consecutive counts considered to be 'debounced'
+	debouncedCount uint16
+}
+
+// Debounces an input boolan, returning the debounced signal
+func (d *debouncer) debounce(value bool) bool {
+	switch d.state {
+	case Off:
+		if value {
+			// Start counter (we've transitioned)
+			d.state = Transitioning
+			d.counter = 0
+		}
+	case Transitioning:
+		if value {
+			// Increment counter
+			d.counter++
+			if d.counter == d.debouncedCount {
+				// Sufficient consecutive high signals
+				d.state = Triggered
+				return true
+			}
+		} else {
+			// Reset state (press aborted)
+			d.state = Off
+		}
+	case Triggered:
+		if !value {
+			// Button has returned to off
+			d.state = Off
+		}
+	}
+	return false
 }
 
 func (b *buttonManager) GetChannel() chan struct{} {
