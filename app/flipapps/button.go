@@ -23,7 +23,7 @@ const (
 )
 
 const (
-	debouncedCount = 10
+	debouncedCount = 50
 )
 
 type TriggerPin interface {
