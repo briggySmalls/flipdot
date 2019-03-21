@@ -42,6 +42,10 @@ import (
 	"google.golang.org/grpc/reflection"
 )
 
+const (
+	buttonDebounceDuration = time.Millisecond * 10
+)
+
 var cfgFile string
 
 type config struct {
@@ -81,7 +85,7 @@ var rootCmd = &cobra.Command{
 		defer rpio.Close()
 		ledPin := flipapps.NewOutputPin(config.ledPin)
 		buttonPin := flipapps.NewTriggerPin(config.buttonPin, rpio.FallEdge)
-		bm := flipapps.NewButtonManager(buttonPin, ledPin, time.Second, time.Millisecond*500)
+		bm := flipapps.NewButtonManager(buttonPin, ledPin, time.Second, buttonDebounceDuration)
 		// Create an application
 		app := flipapps.NewApplication(flipdot, bm, time.Minute, readFont(config.fontFile, config.fontSize))
 		// Create a flipapps server
