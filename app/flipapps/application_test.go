@@ -81,10 +81,10 @@ func TestMessageTextSent(t *testing.T) {
 	defer close(app.MessagesIn)
 	// Create a channel to signal a button press
 	buttonPress := make(chan struct{})
-	// Configure the mock (calls 'done' when executed)
+	// Configure the mocks
 	fakeBm.EXPECT().GetChannel().Return(buttonPress)
-	fakeBm.EXPECT().SetState(Active)
 	fakeBm.EXPECT().SetState(Inactive)
+	fakeBm.EXPECT().SetState(Active)
 	fakeFlipdot.EXPECT().Text("test text", getTestFont(), false).Do(func(txt string, fnt font.Face, centre bool) {
 		textWritten <- struct{}{}
 	}).Return(nil)

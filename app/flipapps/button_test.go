@@ -14,7 +14,7 @@ func TestActive(t *testing.T) {
 	fakeLedPin := NewMockOutputPin(ctrl)
 	fakeButtonPin := NewMockTriggerPin(ctrl)
 	// Create a button manager
-	bm := NewButtonManager(fakeButtonPin, fakeLedPin, time.Microsecond)
+	bm := NewButtonManager(fakeButtonPin, fakeLedPin, time.Microsecond, time.Millisecond*500)
 	// Configure mock to expect calls
 	done := make(chan struct{})
 	fakeLedPin.EXPECT().Low().Times(2)
@@ -41,10 +41,10 @@ func TestButtonPressed(t *testing.T) {
 	fakeButtonPin := NewMockTriggerPin(ctrl)
 	// Configure mock to expect calls
 	fakeLedPin.EXPECT().Low().Times(2)
-	fakeButtonPin.EXPECT().EdgeDetected().AnyTimes().Return(false).Return(false).Return(true)
+	fakeButtonPin.EXPECT().Read().AnyTimes().Return(false).Return(false).Return(true)
 	fakeLedPin.EXPECT().Toggle().AnyTimes()
 	// Create a button manager and start the app
-	bm := NewButtonManager(fakeButtonPin, fakeLedPin, time.Microsecond)
+	bm := NewButtonManager(fakeButtonPin, fakeLedPin, time.Microsecond, time.Microsecond)
 	bm.SetState(Active)
 	// Check that a single 'pressed' event was sent
 	select {
