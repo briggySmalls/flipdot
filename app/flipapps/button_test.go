@@ -4,6 +4,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stianeikeland/go-rpio"
+
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -14,22 +16,25 @@ func TestActive(t *testing.T) {
 	fakeLedPin := NewMockOutputPin(ctrl)
 	fakeButtonPin := NewMockTriggerPin(ctrl)
 	// Create a button manager
-	bm := NewButtonManager(fakeButtonPin, fakeLedPin, time.Microsecond, time.Millisecond*500)
-	// Configure mock to expect calls
-	done := make(chan struct{})
-	fakeLedPin.EXPECT().Low().Times(2)
-	fakeButtonPin.EXPECT().EdgeDetected().AnyTimes().Return(false)
-	fakeLedPin.EXPECT().Toggle().Do(func() {
-		done <- struct{}{}
-	})
+	flashPeriod := time.Millisecond
+	bm := NewButtonManager(fakeButtonPin, fakeLedPin, flashPeriod, time.Hour)
+
+	// Configure mocks
+	callCount := 0
+	gomock.InOrder(
+		fakeLedPin.EXPECT().Low(),
+		fakeLedPin.EXPECT().Toggle().AnyTimes().Do(func() {
+			callCount++
+		}),
+	)
+	// fakeButtonPin.EXPECT().Read().AnyTimes() // Tested properly elsewhere
 	// Simulate a call to turn on the LED
 	bm.SetState(Active)
+	multiple := 10
+	time.Sleep(flashPeriod * time.Duration(multiple))
 	// Wait for results
-	select {
-	case <-done:
-		return
-	case <-time.After(time.Second * 5):
-		t.Fatal("No pressed event detected")
+	if callCount < multiple-1 || callCount > multiple+1 {
+		t.Errorf("Unexpected Toggle() call count %d", callCount)
 	}
 }
 
@@ -40,11 +45,18 @@ func TestButtonPressed(t *testing.T) {
 	fakeLedPin := NewMockOutputPin(ctrl)
 	fakeButtonPin := NewMockTriggerPin(ctrl)
 	// Configure mock to expect calls
-	fakeLedPin.EXPECT().Low().Times(2)
-	fakeButtonPin.EXPECT().Read().AnyTimes().Return(false).Return(false).Return(true)
-	fakeLedPin.EXPECT().Toggle().AnyTimes()
+	fakeLedPin.EXPECT().Low()
+	fakeLedPin.EXPECT().Toggle().AnyTimes() // We test this properly in another test
+	start := time.Now()
+	fakeButtonPin.EXPECT().Read().AnyTimes().DoAndReturn(func() rpio.State {
+		runtime := time.Now().Sub(start)
+		if runtime > time.Millisecond && runtime < time.Millisecond*4 {
+			return rpio.High
+		}
+		return rpio.Low
+	})
 	// Create a button manager and start the app
-	bm := NewButtonManager(fakeButtonPin, fakeLedPin, time.Microsecond, time.Microsecond)
+	bm := NewButtonManager(fakeButtonPin, fakeLedPin, time.Hour, time.Millisecond)
 	bm.SetState(Active)
 	// Check that a single 'pressed' event was sent
 	select {
