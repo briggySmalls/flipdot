@@ -20,7 +20,7 @@ func TestTickText(t *testing.T) {
 	// Configure the mock (calls 'done' when executed)
 	mockAction := func(txt string, fnt font.Face, centre bool) {
 		// Assert that the string is as expected
-		_, err := time.Parse("Mon 2 Jan\n3:04 PM", txt)
+		_, err := time.Parse("Mon 2 Jan\n3:04 pm", txt)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -83,11 +83,11 @@ func TestMessageTextSent(t *testing.T) {
 	buttonPress := make(chan struct{})
 	// Configure the mocks
 	fakeBm.EXPECT().GetChannel().Return(buttonPress)
-	fakeBm.EXPECT().SetState(Inactive)
 	fakeBm.EXPECT().SetState(Active)
-	fakeFlipdot.EXPECT().Text("test text", getTestFont(), false).Do(func(txt string, fnt font.Face, centre bool) {
+	fakeFlipdot.EXPECT().Text("test text", getTestFont(), false).Return(nil)
+	fakeBm.EXPECT().SetState(Inactive).Do(func(State) {
 		textWritten <- struct{}{}
-	}).Return(nil)
+	})
 
 	// Send a message to start the test
 	app.MessagesIn <- MessageRequest{
@@ -101,7 +101,7 @@ func TestMessageTextSent(t *testing.T) {
 	case <-textWritten:
 		// Completed successfully, stop the app
 		return
-	case <-time.After(time.Second):
+	case <-time.After(time.Second * 5):
 		// Timeout before we completed
 		t.Fatal("Timeout before expected call")
 	}

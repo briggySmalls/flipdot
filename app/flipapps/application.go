@@ -7,8 +7,6 @@ import (
 
 	"github.com/briggySmalls/flipdot/app/flipdot"
 	"golang.org/x/image/font"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 const (
@@ -43,7 +41,7 @@ func (s *application) run(tickPeriod time.Duration) {
 	ticker := time.NewTicker(tickPeriod)
 	defer ticker.Stop()
 	// Create intermediate message queue
-	pendingMessages := make(chan MessageRequest, messageInSize)
+	pendingMessages := make([]MessageRequest, 0)
 	// Get queue for button presses
 	buttonPressed := s.buttonManager.GetChannel()
 	// Run forever
@@ -58,34 +56,24 @@ func (s *application) run(tickPeriod time.Duration) {
 			// Externally queued message is available
 			log.Println("Message received")
 			// Pass to internal buffer
-			pendingMessages <- message
+			pendingMessages = append(pendingMessages, message)
 			// We have at least one message, so activate button
 			s.buttonManager.SetState(Active)
 		// Handle user signal to display message
 		case <-buttonPressed:
 			log.Println("Show message request")
 			// Check if there are pending messages
-			select {
-			case message, ok := <-pendingMessages:
-				if !ok {
-					// There will be no more message requests
-					return
-				}
+			if len(pendingMessages) > 0 {
 				log.Println("Displaying message")
-				// We have a message waiting, so display it
-				pause = true // Pause clock whilst we handle a message
-				// Handle message
+				// Pop message
+				message := pendingMessages[0]
+				pendingMessages := pendingMessages[1:]
+				// Display message
 				s.handleMessage(message)
-				// TOOD: Check if any messages are left, if not then disable button
-				// s.buttonManager.SetState(Inactive)
-				// Unpause clock
-				pause = false
-			default:
-				// No message waiting, so skip
-				log.Println("No more messages")
-				// Also update the LED to indicate no more messages
-				s.buttonManager.SetState(Inactive)
-				continue
+				// Check if any messages are left, if not then disable button
+				if len(pendingMessages) == 0 {
+					s.buttonManager.SetState(Inactive)
+				}
 			}
 		// Otherwise display the time
 		case t := <-ticker.C:
@@ -93,7 +81,7 @@ func (s *application) run(tickPeriod time.Duration) {
 			if !pause {
 				log.Println("Tick event")
 				// Print the time (centred)
-				s.sendText(t.Format("Mon 1 Jan\n3:04 PM"), true)
+				s.sendText(t.Format("Mon 1 Jan\n3:04 pm"), true)
 			}
 		}
 	}
@@ -109,7 +97,7 @@ func (s *application) handleMessage(message MessageRequest) {
 		// Send left-aligned text for messages
 		err = s.sendText(message.GetText(), false)
 	default:
-		err = status.Error(codes.InvalidArgument, "Neither images or text supplied")
+		err = fmt.Errorf("Neither images or text supplied")
 	}
 	// Handle errors
 	errorHandler(err)
