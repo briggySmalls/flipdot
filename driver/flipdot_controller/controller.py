@@ -28,8 +28,10 @@ class FlipdotController:
 
         # Create signs
         for sign_config in signs:
-            sign = HanoverSign(**sign_config._asdict())
-            self.sign_controller.add_sign(sign)
+            config = sign_config._asdict()
+            name = config.pop("name")
+            sign = HanoverSign(**config)
+            self.sign_controller.add_sign(name, sign)
 
         # Create a power manager
         self.power_manager = PowerManager(pins)
@@ -48,9 +50,9 @@ class FlipdotController:
     def get_info(self, sign=None) -> Union[Sequence[SignInfo], SignInfo]:
         logger.debug("get_info(sign=%s) called", sign)
         info = {}
-        for s in self.sign_controller._signs.values():
-            info[s.name] = SignInfo(
-                name=s.name, width=s.width, height=s.height)
+        for name, s in self.sign_controller.signs.items():
+            info[name] = SignInfo(
+                name=name, width=s.width, height=s.height)
         return list(info.values()) if sign is None else info[sign]
 
     def draw(self, sign: str, image: np.ndarray):
