@@ -11,14 +11,15 @@ def test_simple_config(tmp_path):
         sign=40
         light=38
 
-        [signs]
-        [signs.top]
+        [[signs]]
+        name="top"
         address=1
         width=84
         height=7
         flip=true
 
-        [signs.bottom]
+        [[signs]]
+        name="bottom"
         address=2
         width=12
         height=18

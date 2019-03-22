@@ -31,12 +31,14 @@ class ConfigParser:
                 "light_pin not supplied in pins")
         self._assert_not_missing('signs')
         _assert(len(self._config['signs']) > 0, "No signs supplied")
-        for name, sign in self._config['signs'].items():
+        for i, sign in enumerate(self._config['signs']):
+            _assert('name' in sign,
+                    "Name missing from sign at index {}".format(i))
             _assert('address' in sign,
-                    "Address missing from sign {}".format(name))
-            _assert('width' in sign, "Width missing from sign {}".format(name))
+                    "Address missing from sign {}".format(sign["name"]))
+            _assert('width' in sign, "Width missing from sign {}".format(sign["name"]))
             _assert('height' in sign,
-                    "Height missing from sign {}".format(name))
+                    "Height missing from sign {}".format(sign["name"]))
 
     @property
     def basic_config(self):
@@ -53,8 +55,8 @@ class ConfigParser:
     @property
     def signs_config(self) -> Sequence[SignConfig]:
         return [
-            SignConfig(name=name, **sign_config)
-            for name, sign_config in self._config['signs'].items()
+            SignConfig(**sign_config)
+            for sign_config in self._config['signs']
         ]
 
     def _assert_not_missing(self, field):
