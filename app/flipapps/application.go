@@ -65,14 +65,16 @@ func (s *application) run(tickPeriod time.Duration) {
 			// Check if there are pending messages
 			if len(pendingMessages) > 0 {
 				log.Println("Displaying message")
+				// Disable button whilst we show a message
+				s.buttonManager.SetState(Inactive)
 				// Pop message
 				message := pendingMessages[0]
-				pendingMessages := pendingMessages[1:]
+				pendingMessages = pendingMessages[1:]
 				// Display message
 				s.handleMessage(message)
-				// Check if any messages are left, if not then disable button
-				if len(pendingMessages) == 0 {
-					s.buttonManager.SetState(Inactive)
+				// Reenable button if there are more messages
+				if len(pendingMessages) > 0 {
+					s.buttonManager.SetState(Active)
 				}
 			}
 		// Otherwise display the time
