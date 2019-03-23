@@ -21,7 +21,7 @@ endif
 PROTO_DIR=../protos
 PROTO_SRCS=./flipdot/flipdot.pb.go ./flipapps/flipapps.pb.go
 PROTO_BUFS=$(addprefix $(PROTO_DIR)/,$(notdir $(PROTO_SRCS:.pb.go=.proto)))
-MOCK_SRCS=$(subst .go,.mock.go,$(PROTO_SRCS)) ./flipdot/flipdot.mock.go
+MOCK_SRCS=$(subst .go,.mock.go,$(PROTO_SRCS)) ./flipdot/flipdot.mock.go ./flipapps/button.mock.go
 
 # Generated mocks
 MOCKED_CLASS=FlipdotClient

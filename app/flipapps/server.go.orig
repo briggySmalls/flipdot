@@ -11,6 +11,8 @@ import (
 
 	"github.com/briggySmalls/flipdot/app/flipdot"
 	"github.com/dgrijalva/jwt-go"
+	"github.com/stianeikeland/go-rpio"
+	"golang.org/x/image/font"
 	"google.golang.org/grpc/status"
 )
 
@@ -18,7 +20,11 @@ const (
 	tokenDuration = time.Hour // Duration before JWT expiry
 )
 
+<<<<<<< HEAD:app/flipapps/server.go
 func NewRpcServer(secret, password string, messageQueue chan MessageRequest, signsInfo []*flipdot.GetInfoResponse_SignInfo) (grpcServer *grpc.Server) {
+=======
+func NewRpcFlipappsServer(flipdot flipdot.Flipdot, font font.Face, secret, password string, buttonPin, ledPin Pin) (grpcServer *grpc.Server) {
+>>>>>>> WIP: big dump:app/flipapps/flipapps.go
 	// Create a flipdot server
 	server := NewServer(secret, password, messageQueue, signsInfo)
 	// create a gRPC server object
@@ -29,7 +35,11 @@ func NewRpcServer(secret, password string, messageQueue chan MessageRequest, sig
 }
 
 // Create a new server
+<<<<<<< HEAD:app/flipapps/server.go
 func NewServer(secret, password string, messageQueue chan MessageRequest, signsInfo []*flipdot.GetInfoResponse_SignInfo) FlipAppsServer {
+=======
+func NewFlipappsServer(flipdot flipdot.Flipdot, font font.Face, secret, password string, buttonPin, ledPin Pin) FlipAppsServer {
+>>>>>>> WIP: big dump:app/flipapps/flipapps.go
 	// Create a flipdot controller
 	server := &flipappsServer{
 		appSecret:    secret,
@@ -37,6 +47,14 @@ func NewServer(secret, password string, messageQueue chan MessageRequest, signsI
 		messageQueue: messageQueue,
 		signsInfo:    signsInfo,
 	}
+	// Configure GPIOs to trigger on button press
+	server.buttonPin.Detect(rpio.RiseEdge)
+	server.ledPin.Output()
+	server.ledPin.Low()
+	// Run the queue pump concurrently
+	pressed := make(chan MessageRequest)
+	go server.watchButton(pressed)
+	go server.run(pressed)
 	// Return the server
 	return server
 }
@@ -46,8 +64,15 @@ type flipappsServer struct {
 	appPassword string
 	// Channel to which new messages are sent
 	messageQueue chan MessageRequest
+<<<<<<< HEAD:app/flipapps/server.go
 	// Information on connected signs
 	signsInfo []*flipdot.GetInfoResponse_SignInfo
+=======
+	appSecret    string
+	appPassword  string
+	buttonPin    Pin
+	ledPin       Pin
+>>>>>>> WIP: big dump:app/flipapps/flipapps.go
 }
 
 // Handler for client request to authenticate (obtain JWT token)
@@ -82,12 +107,30 @@ func (f *flipappsServer) SendMessage(ctx context.Context, request *MessageReques
 	case *MessageRequest_Images, *MessageRequest_Text:
 		// Enqueue message
 		f.messageQueue <- *request
+		// Indicate a message is received
+		f.ledPin.High()
 	default:
 		err = status.Error(codes.InvalidArgument, "Neither images or text supplied")
 	}
 	response = &MessageResponse{}
 	return
 }
+
+func (f *flipappsServer) watchButton(messages chan MessageRequest) {
+for {
+if f.buttonPin.EdgeDetected() {
+select {
+case message := <-f.messageQueue:
+// Button has been pressed, pass on message
+messages <- message
+default:
+// No messages left, turn off LED
+f.ledPin.Low()
+}
+}
+}
+}
+
 
 // Interceptor that checks all RPC calls are authorized
 func (f *flipappsServer) unaryAuthInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
