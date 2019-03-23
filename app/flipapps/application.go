@@ -3,9 +3,12 @@ package flipapps
 import (
 	fmt "fmt"
 	"log"
+	"image"
+	"image/color"
 	"time"
 
 	"github.com/briggySmalls/flipdot/app/flipdot"
+	"github.com/briggySmalls/flipdot/app/text"
 	"golang.org/x/image/font"
 )
 
@@ -106,14 +109,65 @@ func (s *application) handleMessage(message MessageRequest) {
 }
 
 // Helper function to send text to the signs
-func (s *application) sendText(txt string, center bool) (err error) {
-	err = s.flipdot.Text(txt, s.font, center)
+func (s *application) sendText(txt string, centre bool) (err error) {
+	// Create a text builder
+	width, height := s.flipdot.Size()
+	textBuilder := text.NewTextBuilder(width, height, s.font)
+	// Convert the text to images
+	images, err := textBuilder.Images(txt, centre)
+	if err != nil {
+		return
+	}
+	// Convert the images to C form
+	var packedImages []*flipdot.Image
+	for _, img := range images {
+		packedImages = append(packedImages, &flipdot.Image{Data: Slice(img)})
+	}
+	// Send the text
+	err = s.flipdot.Draw(packedImages)
 	return
 }
 
 // Helper function to send images to the signs
 func (s *application) sendImages(images []*flipdot.Image) (err error) {
 	err = s.flipdot.Draw(images)
+	return
+}
+
+// Packs an image into a C-style boolean array
+func Slice(image image.Image) []bool {
+	bgColor := color.Gray{0}
+	// Create an array for the image
+	rows := image.Bounds().Dy()
+	cols := image.Bounds().Dx()
+	binImage := make([]bool, rows*cols)
+	for r := 0; r < rows; r++ {
+		for c := 0; c < cols; c++ {
+			binImage[r*cols+c] = image.At(c, r) != bgColor
+		}
+	}
+	return binImage
+}
+
+// Unpacks a C-style array of booleans into an image
+func UnSlice(data []bool, width, height int) (img image.Image, err error) {
+	if width*height != len(data) {
+		err = fmt.Errorf("Width %d, height %d incompatible with data length %d",
+			width, height, len(data))
+		return
+	}
+	grey := image.NewGray(image.Rect(0, 0, width, height))
+	for r := 0; r < height; r++ {
+		for c := 0; c < width; c++ {
+			var colour color.Gray
+			if data[r*width+c] {
+				colour = color.Gray{255}
+			} else {
+				colour = color.Gray{0}
+			}
+			grey.SetGray(c, r, colour)
+		}
+	}
 	return
 }
 

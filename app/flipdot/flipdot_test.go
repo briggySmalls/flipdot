@@ -2,9 +2,6 @@ package flipdot
 
 import (
 	"fmt"
-	"image"
-	"image/color"
-	"image/draw"
 	reflect "reflect"
 	"testing"
 	"time"
@@ -165,26 +162,6 @@ func TestDifferentSignsCaught(t *testing.T) {
 	}
 }
 
-// Test building text into images and sending them
-func TestText(t *testing.T) {
-	ctrl, mock := createMock(t)
-	defer ctrl.Finish()
-	// Configure the mock
-	text_response := DrawResponse{}
-	info_response := getStandardSignsResponse()
-	gomock.InOrder(
-		mock.EXPECT().GetInfo(gomock.Any(), gomock.Any()).Return(&info_response, nil),
-		mock.EXPECT().Draw(gomock.Any(), RequestDrawImage("top", nil)).Return(&text_response, nil),
-		mock.EXPECT().Draw(gomock.Any(), RequestDrawImage("bottom", nil)).Return(&text_response, nil),
-		mock.EXPECT().Draw(gomock.Any(), RequestDrawImage("top", nil)).Return(&text_response, nil),
-		mock.EXPECT().Draw(gomock.Any(), RequestDrawImage("bottom", nil)).Return(&text_response, nil),
-	)
-	// Run the test
-	runTest(func(f Flipdot) error {
-		return f.Text("Hello my name is Sam. How's tricks?", getFont(), false)
-	}, mock, t)
-}
-
 func TestDraw(t *testing.T) {
 	ctrl, mock := createMock(t)
 	defer ctrl.Finish()
@@ -216,38 +193,6 @@ func TestDraw(t *testing.T) {
 	runTest(func(f Flipdot) error {
 		return f.Draw(images)
 	}, mock, t)
-}
-
-func TestSlice(t *testing.T) {
-	// Prepare test table
-	tables := []struct {
-		input  image.Image
-		output []bool
-	}{
-		{createTestImage(color.Gray{1}, image.Rect(0, 0, 2, 3)), []bool{true, true, true, true, true, true}},
-		{createTestImage(color.Gray{0}, image.Rect(0, 0, 3, 3)), []bool{false, false, false, false, false, false, false, false, false}},
-	}
-	for _, table := range tables {
-		slice := Slice(table.input)
-		if !reflect.DeepEqual(slice, table.output) {
-			t.Errorf("Image %s not sliced correctly", table.input)
-		}
-		bounds := table.input.Bounds()
-		width := bounds.Max.X - bounds.Min.X
-		height := bounds.Max.Y - bounds.Min.Y
-		unslice, err := UnSlice(slice, width, height)
-		if err != nil {
-			t.Error("Failed to unslice slice")
-		}
-		reflect.DeepEqual(unslice, table.input)
-	}
-}
-
-func createTestImage(c color.Color, r image.Rectangle) image.Image {
-	// Draw the image
-	dst := image.NewGray(r)
-	draw.Draw(dst, dst.Bounds(), image.NewUniform(c), image.Point{X: 0, Y: 0}, draw.Src)
-	return dst
 }
 
 // Helper function to create a mock FlipdotClient
