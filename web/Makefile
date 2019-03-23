@@ -13,14 +13,14 @@ app: $(OUTPUT)
 
 proto: $(PROTO_SRCS)
 
-$(OUTPUT): $(PROTO_SRCS) client.js index.html
-	npx webpack client.js
+$(OUTPUT): $(PROTO_SRCS) ./src/client.js ./src/index.html
+	npx webpack
 
 %_pb.js %_grpc_web_pb.js: $(PROTO_BUFS)
 	protoc \
 		$(addprefix -I ,$(dir $(PROTO_BUFS))) \
-		--js_out=import_style=commonjs:. \
-		--grpc-web_out=import_style=commonjs,mode=grpcwebtext:. \
+		--js_out=import_style=commonjs:src \
+		--grpc-web_out=import_style=commonjs,mode=grpcwebtext:src \
 		$^
 
 %.proto:
