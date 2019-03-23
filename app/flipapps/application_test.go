@@ -22,12 +22,9 @@ func TestTickText(t *testing.T) {
 	textWritten := make(chan struct{})
 	defer close(textWritten)
 	// Configure the mock (calls 'done' when executed)
-	mockAction := func(txt string, fnt font.Face, centre bool) {
-		// Assert that the string is as expected
-		_, err := time.Parse("Mon 2 Jan\n3:04 pm", txt)
-		if err != nil {
-			t.Fatal(err)
-		}
+	mockAction := func(images []*flipdot.Image) {
+		// Assert that the images are as expected
+
 		// Finish up
 		textWritten <- struct{}{}
 	}
@@ -88,7 +85,12 @@ func TestMessageTextSent(t *testing.T) {
 	// Configure the mocks
 	fakeBm.EXPECT().GetChannel().Return(buttonPress)
 	fakeBm.EXPECT().SetState(Active)
-	fakeFlipdot.EXPECT().Text("test text", getTestFont(), false).Return(nil)
+	fakeFlipdot.EXPECT().Draw(gomock.Any()).Do(func(images []*flipdot.Image) {
+		// Check image
+		if len(images) != 1 {
+			t.Errorf("Unexpected number of images: %d", len(images))
+		}
+	}).Return(nil)
 	fakeBm.EXPECT().SetState(Inactive).Do(func(State) {
 		textWritten <- struct{}{}
 	})
