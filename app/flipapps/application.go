@@ -2,13 +2,12 @@ package flipapps
 
 import (
 	fmt "fmt"
-	"log"
 	"image"
 	"image/color"
+	"log"
 	"time"
 
 	"github.com/briggySmalls/flipdot/app/flipdot"
-	"github.com/briggySmalls/flipdot/app/text"
 	"golang.org/x/image/font"
 )
 
@@ -19,7 +18,7 @@ const (
 type application struct {
 	flipdot       flipdot.Flipdot
 	buttonManager ButtonManager
-	font          font.Face
+	imager        Imager
 	// Externally-visible channel for adding messages to the application
 	MessagesIn chan MessageRequest
 }
@@ -29,7 +28,7 @@ func NewApplication(flipdot flipdot.Flipdot, buttonManager ButtonManager, tickPe
 	app := application{
 		flipdot:       flipdot,
 		buttonManager: buttonManager,
-		font:          font,
+		imager:        NewImager(font),
 		MessagesIn:    make(chan MessageRequest, messageInSize),
 	}
 	go app.run(tickPeriod)
@@ -106,26 +105,6 @@ func (s *application) handleMessage(message MessageRequest) {
 	}
 	// Handle errors
 	errorHandler(err)
-}
-
-// Helper function to send text to the signs
-func (s *application) sendText(txt string, centre bool) (err error) {
-	// Create a text builder
-	width, height := s.flipdot.Size()
-	textBuilder := text.NewTextBuilder(width, height, s.font)
-	// Convert the text to images
-	images, err := textBuilder.Images(txt, centre)
-	if err != nil {
-		return
-	}
-	// Convert the images to C form
-	var packedImages []*flipdot.Image
-	for _, img := range images {
-		packedImages = append(packedImages, &flipdot.Image{Data: Slice(img)})
-	}
-	// Send the text
-	err = s.flipdot.Draw(packedImages)
-	return
 }
 
 // Helper function to send images to the signs
