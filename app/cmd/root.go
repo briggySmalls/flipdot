@@ -52,6 +52,7 @@ type config struct {
 	appPassword       string
 	buttonPin         uint8
 	ledPin            uint8
+	statusImage       string
 }
 
 // rootCmd represents the base command when called without any subcommands
@@ -78,7 +79,7 @@ var rootCmd = &cobra.Command{
 		font, err := readFont(config.fontFile, config.fontSize)
 		// Create imager
 		width, height := flipdot.Size()
-		imager, err := createImager("./bell.png", font, width, height, uint(len(flipdot.Signs())))
+		imager, err := createImager(config.statusImage, font, width, height, uint(len(flipdot.Signs())))
 		errorHandler(err)
 		// Create an application
 		app := flipapps.NewApplication(flipdot, bm, time.Minute, imager)
@@ -121,6 +122,7 @@ func init() {
 	flags.String("app-password", "", "password required for authorisation")
 	flags.Uint8("button-pin", 0, "GPIO pin that reads button state")
 	flags.Uint8("led-pin", 0, "GPIO pin that illuminates button")
+	flags.String("status-image", "", "Image to indicate new message status")
 
 	// Add all flags to config
 	viper.BindPFlags(flags)
@@ -165,6 +167,7 @@ func validateConfig() config {
 	appPassword := viper.GetString("app-password")
 	buttonPin := viper.GetInt("button-pin")
 	ledPin := viper.GetInt("led-pin")
+	statusImage := viper.GetString("status-image")
 
 	if serverAddress == "" {
 		errorHandler(fmt.Errorf("server-address cannot be: %s", serverAddress))
@@ -184,6 +187,9 @@ func validateConfig() config {
 	if appPassword == "" {
 		errorHandler(fmt.Errorf("app-password cannot be: %s", appPassword))
 	}
+	if statusImage == "" {
+		errorHandler(fmt.Errorf("status-iamge cannot be: %s", statusImage))
+	}
 
 	fmt.Println("")
 	fmt.Println("Starting server with the following configuration:")
@@ -194,6 +200,7 @@ func validateConfig() config {
 	fmt.Printf("frame-duration: %d\n", frameDuration)
 	fmt.Printf("button-pin: %d\n", buttonPin)
 	fmt.Printf("led-pin: %d\n", ledPin)
+	fmt.Printf("status-image: %s\n", statusImage)
 
 	return config{
 		clientAddress:     clientAddress,
@@ -205,6 +212,7 @@ func validateConfig() config {
 		appPassword:       appPassword,
 		buttonPin:         uint8(buttonPin),
 		ledPin:            uint8(ledPin),
+		statusImage:       statusImage,
 	}
 }
 
