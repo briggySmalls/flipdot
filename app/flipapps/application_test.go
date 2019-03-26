@@ -16,7 +16,7 @@ import (
 
 func TestTickText(t *testing.T) {
 	// Create mocks
-	ctrl, fakeFlipdot, fakeBm, app := createAppTestObjects(t, time.Millisecond)
+	ctrl, fakeFlipdot, fakeBm, app := createAppTestObjects(t, time.Millisecond*3)
 	defer ctrl.Finish()
 	// Create a channel to signal the test is complete
 	textWritten := make(chan struct{})
@@ -143,7 +143,9 @@ func createAppTestObjects(t *testing.T, tickTime time.Duration) (*gomock.Control
 	fakeFlipdot := flipdot.NewMockFlipdot(ctrl)
 	fakeBm := NewMockButtonManager(ctrl)
 	// Create object under test
-	app := NewApplication(fakeFlipdot, fakeBm, tickTime, getTestFont())
+	fakeFlipdot.EXPECT().Size()
+	fakeFlipdot.EXPECT().Signs()
+	app := NewApplication(fakeFlipdot, fakeBm, tickTime, getTestFont(), nil)
 	return ctrl, fakeFlipdot, fakeBm, app
 }
 

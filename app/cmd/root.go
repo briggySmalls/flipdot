@@ -22,6 +22,8 @@ package cmd
 
 import (
 	"fmt"
+	"image"
+	"image/png"
 	"io/ioutil"
 	"log"
 	"net"
@@ -86,8 +88,11 @@ var rootCmd = &cobra.Command{
 		ledPin := flipapps.NewOutputPin(config.ledPin)
 		buttonPin := flipapps.NewTriggerPin(config.buttonPin)
 		bm := flipapps.NewButtonManager(buttonPin, ledPin, time.Second, buttonDebounceDuration)
+		// Read in status image
+		statusImage, err := readImage("./bell.png")
+		errorHandler(err)
 		// Create an application
-		app := flipapps.NewApplication(flipdot, bm, time.Minute, readFont(config.fontFile, config.fontSize))
+		app := flipapps.NewApplication(flipdot, bm, time.Minute, readFont(config.fontFile, config.fontSize), statusImage)
 		// Create a flipapps server
 		grpcServer := flipapps.NewRpcServer(
 			config.appSecret,
@@ -239,4 +244,18 @@ func errorHandler(err error) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func readImage(filename string) (image image.Image, err error) {
+	// Read the image from disk
+	file, err := os.Open(filename)
+	if err != nil {
+		return
+	}
+	// Interpret as an image
+	image, err = png.Decode(file)
+	if err != nil {
+		return
+	}
+	return
 }

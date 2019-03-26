@@ -3,9 +3,7 @@ package flipapps
 import (
 	fmt "fmt"
 	"image"
-	"image/png"
 	"log"
-	"os"
 	"time"
 
 	"github.com/briggySmalls/flipdot/app/flipdot"
@@ -26,13 +24,10 @@ type application struct {
 }
 
 // Creates and initialises a new Application
-func NewApplication(flipdot flipdot.Flipdot, buttonManager ButtonManager, tickPeriod time.Duration, font font.Face) application {
+func NewApplication(flipdot flipdot.Flipdot, buttonManager ButtonManager, tickPeriod time.Duration, font font.Face, statusImage image.Image) application {
 	// Create a text builder
 	width, height := flipdot.Size()
 	textBuilder := text.NewTextBuilder(width, height, font)
-	// Create the status image
-	statusImage, err := readStatusImage("./bell.png")
-	errorHandler(err)
 	app := application{
 		flipdot:       flipdot,
 		buttonManager: buttonManager,
@@ -127,23 +122,9 @@ func (s *application) sendImages(images []*flipdot.Image) (err error) {
 	return
 }
 
-func readStatusImage(filename string) (image image.Image, err error) {
-	// Read the image from disk
-	file, err := os.Open(filename)
-	if err != nil {
-		return
-	}
-	// Interpret as an image
-	image, err = png.Decode(file)
-	if err != nil {
-		return
-	}
-	return
-}
-
 // In-queue error handler
 func errorHandler(err error) {
 	if err != nil {
-		fmt.Printf("Runtime error: %s", err)
+		panic(err)
 	}
 }
