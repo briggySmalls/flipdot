@@ -2,13 +2,10 @@ package flipapps
 
 import (
 	fmt "fmt"
-	"image"
 	"log"
 	"time"
 
 	"github.com/briggySmalls/flipdot/app/flipdot"
-	"github.com/briggySmalls/flipdot/app/text"
-	"golang.org/x/image/font"
 )
 
 const (
@@ -20,22 +17,27 @@ type application struct {
 	buttonManager ButtonManager
 	imager        Imager
 	// Externally-visible channel for adding messages to the application
-	MessagesIn chan MessageRequest
+	messagesIn chan MessageRequest
+}
+
+type Application interface {
+	GetMessagesChannel() chan MessageRequest
 }
 
 // Creates and initialises a new Application
-func NewApplication(flipdot flipdot.Flipdot, buttonManager ButtonManager, tickPeriod time.Duration, font font.Face, statusImage image.Image) application {
-	// Create a text builder
-	width, height := flipdot.Size()
-	textBuilder := text.NewTextBuilder(width, height, font)
+func NewApplication(flipdot flipdot.Flipdot, buttonManager ButtonManager, tickPeriod time.Duration, imager Imager) Application {
 	app := application{
 		flipdot:       flipdot,
 		buttonManager: buttonManager,
-		imager:        NewImager(textBuilder, statusImage, uint(len(flipdot.Signs()))),
-		MessagesIn:    make(chan MessageRequest, messageInSize),
+		imager:        imager,
+		messagesIn:    make(chan MessageRequest, messageInSize),
 	}
 	go app.run(tickPeriod)
-	return app
+	return &app
+}
+
+func (a *application) GetMessagesChannel() chan MessageRequest {
+	return a.messagesIn
 }
 
 // Routine for handling queued messages
@@ -52,7 +54,7 @@ func (s *application) run(tickPeriod time.Duration) {
 	// Run forever
 	for {
 		select {
-		case message, ok := <-s.MessagesIn:
+		case message, ok := <-s.messagesIn:
 			if !ok {
 				// There will be no more messages to handle
 				// TODO: check if there are any pending message that we should wait for

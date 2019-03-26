@@ -22,26 +22,18 @@ package cmd
 
 import (
 	"fmt"
-	"image"
-	"image/png"
-	"io/ioutil"
 	"log"
 	"net"
 	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/briggySmalls/flipdot/app/flipapps"
 	"github.com/briggySmalls/flipdot/app/flipdot"
-	"github.com/briggySmalls/flipdot/app/text"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/stianeikeland/go-rpio"
-	"golang.org/x/image/font"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/reflection"
 )
 
 const (
@@ -69,47 +61,36 @@ var rootCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		// Pull out config (from args/env/config file)
 		config := validateConfig()
-
-		// Create a gRPC connection to the remote flipdot server
-		connection, err := grpc.Dial(fmt.Sprintf(config.clientAddress), grpc.WithInsecure())
+		// Create a client
+		client, err := createClient(config.clientAddress)
 		errorHandler(err)
-		// Create a flipdot client
-		flipClient := flipdot.NewFlipdotClient(connection)
-
 		// Create a flipdot controller
 		flipdot, err := flipdot.NewFlipdot(
-			flipClient,
+			client,
 			time.Duration(config.frameDurationSecs)*time.Second)
 		errorHandler(err)
 		// Create a button manager
 		err = rpio.Open()
 		errorHandler(err)
 		defer rpio.Close()
-		ledPin := flipapps.NewOutputPin(config.ledPin)
-		buttonPin := flipapps.NewTriggerPin(config.buttonPin)
-		bm := flipapps.NewButtonManager(buttonPin, ledPin, time.Second, buttonDebounceDuration)
-		// Read in status image
-		statusImage, err := readImage("./bell.png")
+		bm := createButtonManager(config.ledPin, config.buttonPin)
+		// Get font
+		font, err := readFont(config.fontFile, config.fontSize)
+		// Create imager
+		width, height := flipdot.Size()
+		imager, err := createImager("./bell.png", font, width, height, uint(len(flipdot.Signs())))
 		errorHandler(err)
 		// Create an application
-		app := flipapps.NewApplication(flipdot, bm, time.Minute, readFont(config.fontFile, config.fontSize), statusImage)
+		app := flipapps.NewApplication(flipdot, bm, time.Minute, imager)
 		// Create a flipapps server
-		grpcServer := flipapps.NewRpcServer(
-			config.appSecret,
-			config.appPassword,
-			app.MessagesIn,
-			flipdot.Signs(),
-		)
+		server := createServer(config.appSecret, config.appPassword, app.GetMessagesChannel(), flipdot.Signs())
+		// Run server
 		// Create a listener on TCP port
 		lis, err := net.Listen("tcp", fmt.Sprintf(config.serverAddress))
 		errorHandler(err)
-		// Start the server
-		// Register reflection service on gRPC server (for debugging).
-		reflection.Register(grpcServer)
-		if err := grpcServer.Serve(lis); err != nil {
+		if err := server.Serve(lis); err != nil {
 			log.Fatalf("failed to serve: %s", err)
 		}
-
 	},
 }
 
@@ -227,35 +208,9 @@ func validateConfig() config {
 	}
 }
 
-// Load font from disk
-func readFont(filename string, size float64) font.Face {
-	file, err := filepath.Abs(filename)
-	errorHandler(err)
-	data, err := ioutil.ReadFile(file)
-	errorHandler(err)
-	// Create the font face from the file
-	face, err := text.NewFace(data, size)
-	errorHandler(err)
-	return face
-}
-
 // Generic error handler
 func errorHandler(err error) {
 	if err != nil {
 		panic(err)
 	}
-}
-
-func readImage(filename string) (image image.Image, err error) {
-	// Read the image from disk
-	file, err := os.Open(filename)
-	if err != nil {
-		return
-	}
-	// Interpret as an image
-	image, err = png.Decode(file)
-	if err != nil {
-		return
-	}
-	return
 }
