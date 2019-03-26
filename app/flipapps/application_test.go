@@ -127,14 +127,6 @@ func TestSlice(t *testing.T) {
 		if !reflect.DeepEqual(slice, table.output) {
 			t.Errorf("Image %s not sliced correctly", table.input)
 		}
-		bounds := table.input.Bounds()
-		width := bounds.Max.X - bounds.Min.X
-		height := bounds.Max.Y - bounds.Min.Y
-		unslice, err := UnSlice(slice, width, height)
-		if err != nil {
-			t.Error("Failed to unslice slice")
-		}
-		reflect.DeepEqual(unslice, table.input)
 	}
 }
 

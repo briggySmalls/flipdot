@@ -2,6 +2,10 @@ package flipapps
 
 import (
 	fmt "fmt"
+	"image/color"
+
+	"image"
+	"time"
 
 	"github.com/briggySmalls/flipdot/app/flipdot"
 	"github.com/briggySmalls/flipdot/app/text"
@@ -9,19 +13,20 @@ import (
 
 type Imager interface {
 	Message(sender, message string) ([]*flipdot.Image, error)
-	Clock() ([]*flipdot.Image, error)
+	Clock(time time.Time, isMessagesAvailable bool) ([]*flipdot.Image, error)
 }
 
 type imager struct {
-	builder   text.TextBuilder
-	signCount uint
+	builder     text.TextBuilder
+	signCount   uint
+	statusImage image.Image
 }
 
-func NewImager(builder text.TextBuilder, statusImage Image, signCount uint) {
+func NewImager(builder text.TextBuilder, statusImage image.Image, signCount uint) Imager {
 	return &imager{
-		builder:   builder,
-		signCount: signCount,
-		statusImage: Image,
+		builder:     builder,
+		signCount:   signCount,
+		statusImage: statusImage,
 	}
 }
 
@@ -33,45 +38,53 @@ func (i *imager) Message(sender, message string) (images []*flipdot.Image, err e
 		return
 	}
 	// Add empty images to fill frame, if necessary
-	for len(senderImages)%i.signCount != 0 {
-		senderImages = append(senderImages, i.builder.Images("", false))
+	for uint(len(senderImages))%i.signCount != 0 {
+		var emptyImage []image.Image
+		emptyImage, err = i.builder.Images("", false)
+		if err != nil {
+			return
+		}
+		senderImages = append(senderImages, emptyImage[0])
 	}
 	// Convert the text to images
-	messageImages, err := textBuilder.Images(txt, true)
+	messageImages, err := i.builder.Images(message, true)
 	if err != nil {
 		return
 	}
 	// Combine the image sets
-	images := append(senderImages, messageImages...)
+	srcImages := append(senderImages, messageImages...)
 	// Convert the images to C form
-	var packedImages []*flipdot.Image
-	for _, img := range images {
-		packedImages = append(packedImages, &flipdot.Image{Data: Slice(img)})
-	}
-	// Send the text
-	err = s.flipdot.Draw(packedImages)
+	images = convertImages(srcImages)
 	return
 }
 
-func (i *imager) Clock(time time.Time, isMessagesAvailable bool) {
+func (i *imager) Clock(time time.Time, isMessagesAvailable bool) (images []*flipdot.Image, err error) {
 	// Get images that represent the time
-	images, err := i.builder.Images(t.Format("Mon 1 Jan\n3:04 pm"), true)
-	// Add status if necessary
-	if isMessagesAvailable {
-		images[0]
-	}
+	srcImages, err := i.builder.Images(time.Format("Mon 1 Jan\n3:04 pm"), true)
+	errorHandler(err)
+	// TODO: Add status if necessary
+	images = convertImages(srcImages)
+	return
 }
 
-func readStatusImage(filename string) (image Image, err error) {
-	// Read the image from disk
-	file, err := os.Open(filename)
-    if err != nil {
-        return
-    }
-	// Interpret as an image
-	image, err := png.Decode(file)
-    if err != nil {
-        return
-    }
+// Packs an image into a C-style boolean array
+func Slice(image image.Image) []bool {
+	bgColor := color.Gray{0}
+	// Create an array for the image
+	rows := image.Bounds().Dy()
+	cols := image.Bounds().Dx()
+	binImage := make([]bool, rows*cols)
+	for r := 0; r < rows; r++ {
+		for c := 0; c < cols; c++ {
+			binImage[r*cols+c] = image.At(c, r) != bgColor
+		}
+	}
+	return binImage
+}
+
+func convertImages(inImages []image.Image) (outImages []*flipdot.Image) {
+	for _, img := range inImages {
+		outImages = append(outImages, &flipdot.Image{Data: Slice(img)})
+	}
 	return
 }

@@ -3,11 +3,13 @@ package flipapps
 import (
 	fmt "fmt"
 	"image"
-	"image/color"
+	"image/png"
 	"log"
+	"os"
 	"time"
 
 	"github.com/briggySmalls/flipdot/app/flipdot"
+	"github.com/briggySmalls/flipdot/app/text"
 	"golang.org/x/image/font"
 )
 
@@ -25,10 +27,16 @@ type application struct {
 
 // Creates and initialises a new Application
 func NewApplication(flipdot flipdot.Flipdot, buttonManager ButtonManager, tickPeriod time.Duration, font font.Face) application {
+	// Create a text builder
+	width, height := flipdot.Size()
+	textBuilder := text.NewTextBuilder(width, height, font)
+	// Create the status image
+	statusImage, err := readStatusImage("./bell.png")
+	errorHandler(err)
 	app := application{
 		flipdot:       flipdot,
 		buttonManager: buttonManager,
-		imager:        NewImager(font),
+		imager:        NewImager(textBuilder, statusImage, uint(len(flipdot.Signs()))),
 		MessagesIn:    make(chan MessageRequest, messageInSize),
 	}
 	go app.run(tickPeriod)
@@ -85,7 +93,10 @@ func (s *application) run(tickPeriod time.Duration) {
 			if !pause {
 				log.Println("Tick event")
 				// Print the time (centred)
-				s.sendText(t.Format("Mon 1 Jan\n3:04 pm"), true)
+				images, err := s.imager.Clock(t, true)
+				errorHandler(err)
+				err = s.flipdot.Draw(images)
+				errorHandler(err)
 			}
 		}
 	}
@@ -98,8 +109,11 @@ func (s *application) handleMessage(message MessageRequest) {
 	case *MessageRequest_Images:
 		err = s.sendImages(message.GetImages().Images)
 	case *MessageRequest_Text:
-		// Send left-aligned text for messages
-		err = s.sendText(message.GetText(), false)
+		// Create images from message
+		images, err := s.imager.Message(message.From, message.GetText())
+		errorHandler(err)
+		// Send images
+		s.sendImages(images)
 	default:
 		err = fmt.Errorf("Neither images or text supplied")
 	}
@@ -113,39 +127,16 @@ func (s *application) sendImages(images []*flipdot.Image) (err error) {
 	return
 }
 
-// Packs an image into a C-style boolean array
-func Slice(image image.Image) []bool {
-	bgColor := color.Gray{0}
-	// Create an array for the image
-	rows := image.Bounds().Dy()
-	cols := image.Bounds().Dx()
-	binImage := make([]bool, rows*cols)
-	for r := 0; r < rows; r++ {
-		for c := 0; c < cols; c++ {
-			binImage[r*cols+c] = image.At(c, r) != bgColor
-		}
-	}
-	return binImage
-}
-
-// Unpacks a C-style array of booleans into an image
-func UnSlice(data []bool, width, height int) (img image.Image, err error) {
-	if width*height != len(data) {
-		err = fmt.Errorf("Width %d, height %d incompatible with data length %d",
-			width, height, len(data))
+func readStatusImage(filename string) (image image.Image, err error) {
+	// Read the image from disk
+	file, err := os.Open(filename)
+	if err != nil {
 		return
 	}
-	grey := image.NewGray(image.Rect(0, 0, width, height))
-	for r := 0; r < height; r++ {
-		for c := 0; c < width; c++ {
-			var colour color.Gray
-			if data[r*width+c] {
-				colour = color.Gray{255}
-			} else {
-				colour = color.Gray{0}
-			}
-			grey.SetGray(c, r, colour)
-		}
+	// Interpret as an image
+	image, err = png.Decode(file)
+	if err != nil {
+		return
 	}
 	return
 }
