@@ -81,8 +81,9 @@ var rootCmd = &cobra.Command{
 		width, height := flipdot.Size()
 		imager, err := createImager(config.statusImage, font, width, height, uint(len(flipdot.Signs())))
 		errorHandler(err)
-		// Create an application
-		app := flipapps.NewApplication(flipdot, bm, time.Minute, imager)
+		// Create and start application
+		app := flipapps.NewApplication(flipdot, bm, imager)
+		go app.Run(time.Minute)
 		// Create a flipapps server
 		server := createServer(config.appSecret, config.appPassword, app.GetMessagesChannel(), flipdot.Signs())
 		// Run server

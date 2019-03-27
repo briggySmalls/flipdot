@@ -22,17 +22,17 @@ type application struct {
 
 type Application interface {
 	GetMessagesChannel() chan MessageRequest
+	Run(tickPeriod time.Duration)
 }
 
 // Creates and initialises a new Application
-func NewApplication(flipdot flipdot.Flipdot, buttonManager ButtonManager, tickPeriod time.Duration, imager Imager) Application {
+func NewApplication(flipdot flipdot.Flipdot, buttonManager ButtonManager, imager Imager) Application {
 	app := application{
 		flipdot:       flipdot,
 		buttonManager: buttonManager,
 		imager:        imager,
 		messagesIn:    make(chan MessageRequest, messageInSize),
 	}
-	go app.run(tickPeriod)
 	return &app
 }
 
@@ -40,8 +40,8 @@ func (a *application) GetMessagesChannel() chan MessageRequest {
 	return a.messagesIn
 }
 
-// Routine for handling queued messages
-func (s *application) run(tickPeriod time.Duration) {
+// Blocking call that runs forever, polling for button presses, messages, and ticks
+func (s *application) Run(tickPeriod time.Duration) {
 	// Create a ticker
 	log.Println("Starting application loop...")
 	pause := false
@@ -90,7 +90,7 @@ func (s *application) run(tickPeriod time.Duration) {
 			if !pause {
 				log.Println("Tick event")
 				// Print the time (centred)
-				images, err := s.imager.Clock(t, true)
+				images, err := s.imager.Clock(t, len(pendingMessages) > 0)
 				errorHandler(err)
 				err = s.flipdot.Draw(images)
 				errorHandler(err)
