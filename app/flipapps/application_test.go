@@ -91,37 +91,56 @@ func TestMessageTextSent(t *testing.T) {
 	// Create a channel to signal the test is complete
 	textWritten := make(chan struct{})
 	defer close(textWritten)
+	activated := make(chan struct{})
+	defer close(activated)
+	// Get channel to pass messages through
 	messagesIn := app.GetMessagesChannel()
 	defer close(messagesIn)
 	// Configure startup mocks
 	buttonPress := make(chan struct{}) // Create a channel to signal a button press
-	fakeBm.EXPECT().GetChannel().Return(buttonPress)
+	gomock.InOrder(
+		fakeBm.EXPECT().GetChannel().Return(buttonPress), // Pass button press channel to app, when asked
+		fakeBm.EXPECT().SetState(Active).Do(func(interface{}) {
+			// Signal to main thread that button was activated
+			// Note: Can't message buttonPress in this callback as we get deadlock
+			activated <- struct{}{}
+		}), // Expect button to be activated after receiving message,
+		fakeBm.EXPECT().SetState(Inactive), // Expect dectivate before drawing message
+		fakeImager.EXPECT().Message("briggySmalls", "test text").Return([]*flipdot.Image{ // Expect constructing message images
+			&flipdot.Image{Data: make([]bool, 10)},
+			&flipdot.Image{Data: make([]bool, 10)},
+			&flipdot.Image{Data: make([]bool, 10)},
+			&flipdot.Image{Data: make([]bool, 10)},
+		}, nil),
+		fakeFlipdot.EXPECT().Draw(gomock.Any()).Do(func(images []*flipdot.Image) { // Expect draw message images
+			// Check image
+			if len(images) != 4 {
+				t.Errorf("Unexpected number of images: %d", len(images))
+			}
+			// signal we are done
+			textWritten <- struct{}{}
+		}).Return(nil),
+	)
 	// Start the app
-	app.Run(time.Hour)
+	go app.Run(time.Hour)
 	// Send a message to start the test (note: we don't assert as we check this in previous test)
 	messagesIn <- MessageRequest{
 		From:    "briggySmalls",
 		Payload: &MessageRequest_Text{"test text"},
 	}
-	fakeBm.EXPECT().SetState(Inactive)                                         // Expect dectivate before drawing message
-	fakeImager.EXPECT().Message("briggySmalls", "test text")                   // Expect first message
-	fakeFlipdot.EXPECT().Draw(gomock.Any()).Do(func(images []*flipdot.Image) { // Expect draw first message
-		// Check image
-		if len(images) != 1 {
-			t.Errorf("Unexpected number of images: %d", len(images))
-		}
-		// signal we are done
-	}).Return(nil)
-	// Then send a button press
-	buttonPress <- struct{}{}
 	// Wait until the message is handled, or timeout
-	select {
-	case <-textWritten:
-		// Completed successfully, stop the app
-		return
-	case <-time.After(time.Second * 5):
-		// Timeout before we completed
-		t.Fatal("Timeout before expected call")
+	for {
+		select {
+		case <-activated:
+			// Button is now active, so press button
+			buttonPress <- struct{}{}
+		case <-textWritten:
+			// Completed successfully, stop the app
+			return
+		case <-time.After(time.Second * 5):
+			// Timeout before we completed
+			t.Fatal("Timeout before expected call")
+		}
 	}
 }
 
