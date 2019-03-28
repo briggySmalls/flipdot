@@ -3,6 +3,7 @@ package flipapps
 import (
 	fmt "fmt"
 	"image/color"
+	"image/draw"
 
 	"image"
 	"time"
@@ -39,7 +40,7 @@ func (i *imager) Message(sender, message string) (images []*flipdot.Image, err e
 	}
 	// Add empty images to fill frame, if necessary
 	for uint(len(senderImages))%i.signCount != 0 {
-		var emptyImage []image.Image
+		var emptyImage []draw.Image
 		emptyImage, err = i.builder.Images("", false)
 		if err != nil {
 			return
@@ -62,7 +63,14 @@ func (i *imager) Clock(time time.Time, isMessagesAvailable bool) (images []*flip
 	// Get images that represent the time
 	srcImages, err := i.builder.Images(time.Format("Mon 1 Jan\n3:04 pm"), true)
 	errorHandler(err)
-	// TODO: Add status if necessary
+	// Add status if necessary
+	if isMessagesAvailable {
+		// Get far-right area the size of status image
+		xOffset := srcImages[0].Bounds().Dx() - i.statusImage.Bounds().Dx()
+		drawBounds := i.statusImage.Bounds().Add(image.Point{X: xOffset, Y: 0})
+		draw.Draw(srcImages[0], drawBounds, i.statusImage, image.Point{}, draw.Over)
+	}
+	// Convert and return images
 	images = convertImages(srcImages)
 	return
 }
@@ -82,7 +90,7 @@ func Slice(image image.Image) []bool {
 	return binImage
 }
 
-func convertImages(inImages []image.Image) (outImages []*flipdot.Image) {
+func convertImages(inImages []draw.Image) (outImages []*flipdot.Image) {
 	for _, img := range inImages {
 		outImages = append(outImages, &flipdot.Image{Data: Slice(img)})
 	}
