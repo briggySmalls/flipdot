@@ -49,7 +49,8 @@ class ConfigParser:
                     "Name missing from sign at index {}".format(i))
             _assert('address' in sign,
                     "Address missing from sign {}".format(sign["name"]))
-            _assert('width' in sign, "Width missing from sign {}".format(sign["name"]))
+            _assert('width' in sign,
+                    "Width missing from sign {}".format(sign["name"]))
             _assert('height' in sign,
                     "Height missing from sign {}".format(sign["name"]))
 
@@ -83,8 +84,7 @@ class ConfigParser:
             Sequence[SignConfig]: Sequence of sign information
         """
         return [
-            SignConfig(**sign_config)
-            for sign_config in self._config['signs']
+            SignConfig(**sign_config) for sign_config in self._config['signs']
         ]
 
     def _assert_not_missing(self, field):
