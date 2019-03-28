@@ -22,7 +22,11 @@ func TestTickText(t *testing.T) {
 	textWritten := make(chan struct{})
 	defer close(textWritten)
 	// Configure imager mock to expect request to build images
-	fakeImager.EXPECT().Clock(gomock.Any(), false).Return()
+	// Return two 'images' to be displayed
+	fakeImager.EXPECT().Clock(gomock.Any(), false).Return([]*flipdot.Image{
+		&flipdot.Image{Data: make([]bool, 10)},
+		&flipdot.Image{Data: make([]bool, 10)},
+	}, nil)
 	// Configure the mock (calls 'done' when executed)
 	mockAction := func(images []*flipdot.Image) {
 		// Assert that the images are as expected
@@ -60,6 +64,8 @@ func TestMessageTextQueued(t *testing.T) {
 	fakeBm.EXPECT().SetState(Active).Do(func(state State) {
 		messageAdded <- struct{}{}
 	})
+	// Run
+	go app.Run(time.Millisecond)
 	// Send the message
 	messagesIn := app.GetMessagesChannel()
 	messagesIn <- MessageRequest{
@@ -72,7 +78,7 @@ func TestMessageTextQueued(t *testing.T) {
 		// Completed successfully, stop the app
 		close(messagesIn)
 		return
-	case <-time.After(time.Second * 5):
+	case <-time.After(time.Second):
 		// Timeout before we completed
 		t.Fatal("Timeout before expected call")
 	}
