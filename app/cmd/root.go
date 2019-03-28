@@ -22,24 +22,18 @@ package cmd
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net"
 	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/briggySmalls/flipdot/app/flipapps"
 	"github.com/briggySmalls/flipdot/app/flipdot"
-	"github.com/briggySmalls/flipdot/app/text"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/stianeikeland/go-rpio"
-	"golang.org/x/image/font"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/reflection"
 )
 
 const (
@@ -58,6 +52,7 @@ type config struct {
 	appPassword       string
 	buttonPin         uint8
 	ledPin            uint8
+	statusImage       string
 }
 
 // rootCmd represents the base command when called without any subcommands
@@ -67,44 +62,37 @@ var rootCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		// Pull out config (from args/env/config file)
 		config := validateConfig()
-
-		// Create a gRPC connection to the remote flipdot server
-		connection, err := grpc.Dial(fmt.Sprintf(config.clientAddress), grpc.WithInsecure())
+		// Create a client
+		client, err := createClient(config.clientAddress)
 		errorHandler(err)
-		// Create a flipdot client
-		flipClient := flipdot.NewFlipdotClient(connection)
-
 		// Create a flipdot controller
 		flipdot, err := flipdot.NewFlipdot(
-			flipClient,
+			client,
 			time.Duration(config.frameDurationSecs)*time.Second)
 		errorHandler(err)
 		// Create a button manager
 		err = rpio.Open()
 		errorHandler(err)
 		defer rpio.Close()
-		ledPin := flipapps.NewOutputPin(config.ledPin)
-		buttonPin := flipapps.NewTriggerPin(config.buttonPin)
-		bm := flipapps.NewButtonManager(buttonPin, ledPin, time.Second, buttonDebounceDuration)
-		// Create an application
-		app := flipapps.NewApplication(flipdot, bm, time.Minute, readFont(config.fontFile, config.fontSize))
+		bm := createButtonManager(config.ledPin, config.buttonPin)
+		// Get font
+		font, err := readFont(config.fontFile, config.fontSize)
+		// Create imager
+		width, height := flipdot.Size()
+		imager, err := createImager(config.statusImage, font, width, height, uint(len(flipdot.Signs())))
+		errorHandler(err)
+		// Create and start application
+		app := flipapps.NewApplication(flipdot, bm, imager)
+		go app.Run(time.Minute)
 		// Create a flipapps server
-		grpcServer := flipapps.NewRpcServer(
-			config.appSecret,
-			config.appPassword,
-			app.MessagesIn,
-			flipdot.Signs(),
-		)
+		server := createServer(config.appSecret, config.appPassword, app.GetMessagesChannel(), flipdot.Signs())
+		// Run server
 		// Create a listener on TCP port
 		lis, err := net.Listen("tcp", fmt.Sprintf(config.serverAddress))
 		errorHandler(err)
-		// Start the server
-		// Register reflection service on gRPC server (for debugging).
-		reflection.Register(grpcServer)
-		if err := grpcServer.Serve(lis); err != nil {
+		if err := server.Serve(lis); err != nil {
 			log.Fatalf("failed to serve: %s", err)
 		}
-
 	},
 }
 
@@ -135,6 +123,7 @@ func init() {
 	flags.String("app-password", "", "password required for authorisation")
 	flags.Uint8("button-pin", 0, "GPIO pin that reads button state")
 	flags.Uint8("led-pin", 0, "GPIO pin that illuminates button")
+	flags.String("status-image", "", "Image to indicate new message status")
 
 	// Add all flags to config
 	viper.BindPFlags(flags)
@@ -179,6 +168,7 @@ func validateConfig() config {
 	appPassword := viper.GetString("app-password")
 	buttonPin := viper.GetInt("button-pin")
 	ledPin := viper.GetInt("led-pin")
+	statusImage := viper.GetString("status-image")
 
 	if serverAddress == "" {
 		errorHandler(fmt.Errorf("server-address cannot be: %s", serverAddress))
@@ -198,6 +188,9 @@ func validateConfig() config {
 	if appPassword == "" {
 		errorHandler(fmt.Errorf("app-password cannot be: %s", appPassword))
 	}
+	if statusImage == "" {
+		errorHandler(fmt.Errorf("status-iamge cannot be: %s", statusImage))
+	}
 
 	fmt.Println("")
 	fmt.Println("Starting server with the following configuration:")
@@ -208,6 +201,7 @@ func validateConfig() config {
 	fmt.Printf("frame-duration: %d\n", frameDuration)
 	fmt.Printf("button-pin: %d\n", buttonPin)
 	fmt.Printf("led-pin: %d\n", ledPin)
+	fmt.Printf("status-image: %s\n", statusImage)
 
 	return config{
 		clientAddress:     clientAddress,
@@ -219,19 +213,8 @@ func validateConfig() config {
 		appPassword:       appPassword,
 		buttonPin:         uint8(buttonPin),
 		ledPin:            uint8(ledPin),
+		statusImage:       statusImage,
 	}
-}
-
-// Load font from disk
-func readFont(filename string, size float64) font.Face {
-	file, err := filepath.Abs(filename)
-	errorHandler(err)
-	data, err := ioutil.ReadFile(file)
-	errorHandler(err)
-	// Create the font face from the file
-	face, err := text.NewFace(data, size)
-	errorHandler(err)
-	return face
 }
 
 // Generic error handler

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"image"
 	"image/color"
+	"image/draw"
 
 	"github.com/golang/freetype/truetype"
 	"golang.org/x/exp/shiny/text"
@@ -25,7 +26,7 @@ func NewFace(data []byte, points float64) (font.Face, error) {
 }
 
 type TextBuilder interface {
-	Images(text string, centre bool) ([]image.Image, error)
+	Images(text string, centre bool) ([]draw.Image, error)
 }
 
 func NewTextBuilder(width uint, height uint, font font.Face) TextBuilder {
@@ -43,7 +44,7 @@ type textBuilder struct {
 	font   font.Face
 }
 
-func (tb *textBuilder) Images(text string, centre bool) ([]image.Image, error) {
+func (tb *textBuilder) Images(text string, centre bool) ([]draw.Image, error) {
 	// Split the string up into lines
 	lines, err := tb.toLines(text)
 	errorHandler(err)
@@ -58,7 +59,7 @@ func (tb *textBuilder) Images(text string, centre bool) ([]image.Image, error) {
 		return nil, fmt.Errorf("Font height %d larger than height %d", charHeight.Round(), tb.height)
 	}
 	// Draw the string
-	var images []image.Image
+	var images []draw.Image
 	for _, line := range lines {
 		var xPos fixed.Int26_6 = 0
 		if centre {

@@ -16,10 +16,12 @@ RUN make build IS_PI=TRUE
 # INSTALL
 FROM scratch
 
-# Copy in executable and font
+# Copy in executable
 COPY --from=builder /go/src/github.com/briggySmalls/flipdot/app/bin/flipapp /go/bin/flipapp
-COPY ./app/Smirnof.ttf /app/
+# Copy in defaults for configuration
 COPY ./app/config.yaml /app/
+COPY ./app/Smirnof.ttf /app/font.ttf
+COPY ./app/bell.png /app/status.png
 
 # Run the go program
 ENTRYPOINT ["/go/bin/flipapp"]

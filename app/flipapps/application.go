@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/briggySmalls/flipdot/app/flipdot"
-	"golang.org/x/image/font"
 )
 
 const (
@@ -16,25 +15,33 @@ const (
 type application struct {
 	flipdot       flipdot.Flipdot
 	buttonManager ButtonManager
-	font          font.Face
+	imager        Imager
 	// Externally-visible channel for adding messages to the application
-	MessagesIn chan MessageRequest
+	messagesIn chan MessageRequest
+}
+
+type Application interface {
+	GetMessagesChannel() chan MessageRequest
+	Run(tickPeriod time.Duration)
 }
 
 // Creates and initialises a new Application
-func NewApplication(flipdot flipdot.Flipdot, buttonManager ButtonManager, tickPeriod time.Duration, font font.Face) application {
+func NewApplication(flipdot flipdot.Flipdot, buttonManager ButtonManager, imager Imager) Application {
 	app := application{
 		flipdot:       flipdot,
 		buttonManager: buttonManager,
-		font:          font,
-		MessagesIn:    make(chan MessageRequest, messageInSize),
+		imager:        imager,
+		messagesIn:    make(chan MessageRequest, messageInSize),
 	}
-	go app.run(tickPeriod)
-	return app
+	return &app
 }
 
-// Routine for handling queued messages
-func (s *application) run(tickPeriod time.Duration) {
+func (a *application) GetMessagesChannel() chan MessageRequest {
+	return a.messagesIn
+}
+
+// Blocking call that runs forever, polling for button presses, messages, and ticks
+func (s *application) Run(tickPeriod time.Duration) {
 	// Create a ticker
 	log.Println("Starting application loop...")
 	pause := false
@@ -47,7 +54,7 @@ func (s *application) run(tickPeriod time.Duration) {
 	// Run forever
 	for {
 		select {
-		case message, ok := <-s.MessagesIn:
+		case message, ok := <-s.messagesIn:
 			if !ok {
 				// There will be no more messages to handle
 				// TODO: check if there are any pending message that we should wait for
@@ -59,6 +66,8 @@ func (s *application) run(tickPeriod time.Duration) {
 			pendingMessages = append(pendingMessages, message)
 			// We have at least one message, so activate button
 			s.buttonManager.SetState(Active)
+			// Update time with message status
+			s.drawTime(time.Now(), true)
 		// Handle user signal to display message
 		case <-buttonPressed:
 			log.Println("Show message request")
@@ -83,10 +92,19 @@ func (s *application) run(tickPeriod time.Duration) {
 			if !pause {
 				log.Println("Tick event")
 				// Print the time (centred)
-				s.sendText(t.Format("Mon 1 Jan\n3:04 pm"), true)
+				s.drawTime(t, len(pendingMessages) > 0)
 			}
 		}
 	}
+}
+
+// Helper function to draw the time on the signs
+func (s *application) drawTime(time time.Time, isMessageAvailable bool) {
+	// Print the time (centred)
+	images, err := s.imager.Clock(time, isMessageAvailable)
+	errorHandler(err)
+	err = s.flipdot.Draw(images)
+	errorHandler(err)
 }
 
 // Gets a message sent to the flipdot signs
@@ -96,19 +114,16 @@ func (s *application) handleMessage(message MessageRequest) {
 	case *MessageRequest_Images:
 		err = s.sendImages(message.GetImages().Images)
 	case *MessageRequest_Text:
-		// Send left-aligned text for messages
-		err = s.sendText(message.GetText(), false)
+		// Create images from message
+		images, err := s.imager.Message(message.From, message.GetText())
+		errorHandler(err)
+		// Send images
+		s.sendImages(images)
 	default:
 		err = fmt.Errorf("Neither images or text supplied")
 	}
 	// Handle errors
 	errorHandler(err)
-}
-
-// Helper function to send text to the signs
-func (s *application) sendText(txt string, center bool) (err error) {
-	err = s.flipdot.Text(txt, s.font, center)
-	return
 }
 
 // Helper function to send images to the signs
@@ -120,6 +135,6 @@ func (s *application) sendImages(images []*flipdot.Image) (err error) {
 // In-queue error handler
 func errorHandler(err error) {
 	if err != nil {
-		fmt.Printf("Runtime error: %s", err)
+		panic(err)
 	}
 }
