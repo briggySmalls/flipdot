@@ -14,6 +14,7 @@ func TestTickText(t *testing.T) {
 	// Create mocks
 	ctrl, fakeFlipdot, fakeBm, fakeImager, app := createAppTestObjects(t)
 	defer ctrl.Finish()
+	defer close(app.GetMessagesChannel())
 	// Create a channel to signal the test is complete
 	textWritten := make(chan struct{})
 	defer close(textWritten)
@@ -39,8 +40,7 @@ func TestTickText(t *testing.T) {
 	// Wait until the message is handled, or timeout
 	select {
 	case <-textWritten:
-		// Completed successfully, stop the app
-		close(app.GetMessagesChannel())
+		// Completed successfully
 		return
 	case <-time.After(time.Second):
 		// Timeout before we completed
@@ -50,20 +50,24 @@ func TestTickText(t *testing.T) {
 
 func TestMessageTextQueued(t *testing.T) {
 	// Create mocks
-	ctrl, _, fakeBm, _, app := createAppTestObjects(t)
+	ctrl, fakeFlipdot, fakeBm, fakeImager, app := createAppTestObjects(t)
 	defer ctrl.Finish()
 	// Create a channel to signal the test is complete
 	messageAdded := make(chan struct{})
 	defer close(messageAdded)
 	// Configure mock to expect a call to activate button
 	fakeBm.EXPECT().GetChannel()
-	fakeBm.EXPECT().SetState(Active).Do(func(state State) {
+	fakeBm.EXPECT().SetState(Active)              // Expect button to be activated
+	fakeImager.EXPECT().Clock(gomock.Any(), true) // Expect clock image to be built
+	fakeFlipdot.EXPECT().Draw(gomock.Any()).Do(func(interface{}) {
+		// We are done testing
 		messageAdded <- struct{}{}
-	})
+	}) // Expect clock images to be sent
 	// Run
 	go app.Run(time.Millisecond)
 	// Send the message
 	messagesIn := app.GetMessagesChannel()
+	defer close(messagesIn)
 	messagesIn <- MessageRequest{
 		From:    "briggySmalls",
 		Payload: &MessageRequest_Text{"test text"},
@@ -72,7 +76,6 @@ func TestMessageTextQueued(t *testing.T) {
 	select {
 	case <-messageAdded:
 		// Completed successfully, stop the app
-		close(messagesIn)
 		return
 	case <-time.After(time.Second):
 		// Timeout before we completed

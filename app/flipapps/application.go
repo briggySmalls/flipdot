@@ -66,6 +66,8 @@ func (s *application) Run(tickPeriod time.Duration) {
 			pendingMessages = append(pendingMessages, message)
 			// We have at least one message, so activate button
 			s.buttonManager.SetState(Active)
+			// Update time with message status
+			s.drawTime(time.Now(), true)
 		// Handle user signal to display message
 		case <-buttonPressed:
 			log.Println("Show message request")
@@ -90,13 +92,19 @@ func (s *application) Run(tickPeriod time.Duration) {
 			if !pause {
 				log.Println("Tick event")
 				// Print the time (centred)
-				images, err := s.imager.Clock(t, len(pendingMessages) > 0)
-				errorHandler(err)
-				err = s.flipdot.Draw(images)
-				errorHandler(err)
+				s.drawTime(t, len(pendingMessages) > 0)
 			}
 		}
 	}
+}
+
+// Helper function to draw the time on the signs
+func (s *application) drawTime(time time.Time, isMessageAvailable bool) {
+	// Print the time (centred)
+	images, err := s.imager.Clock(time, isMessageAvailable)
+	errorHandler(err)
+	err = s.flipdot.Draw(images)
+	errorHandler(err)
 }
 
 // Gets a message sent to the flipdot signs
