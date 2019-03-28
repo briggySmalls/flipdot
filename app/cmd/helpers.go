@@ -33,7 +33,9 @@ func createClient(address string) (flipClient flipdot.FlipdotClient, err error) 
 	// Create a gRPC connection to the remote flipdot server
 	var connection *grpc.ClientConn
 	connection, err = grpc.Dial(fmt.Sprintf(address), grpc.WithInsecure())
-	return
+	if err != nil {
+		return
+	}
 	// Create a flipdot client
 	flipClient = flipdot.NewFlipdotClient(connection)
 	return
