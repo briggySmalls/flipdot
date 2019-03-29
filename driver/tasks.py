@@ -36,16 +36,20 @@ def format(c, check=False):
     Format code
     """
     python_dirs_string = " ".join(PYTHON_DIRS)
+    proto_globs_strings = ["*_pb2.py", "*_pb2_grpc.py"]
     # Run yapf
     yapf_options = '--recursive {} {}'.format(
         '--diff' if check else '--in-place',
-        " ".join(["--exclude '*{}'".format(t) for t in ["_pb2.py", "_pb2_grpc.py"]]))
+        " ".join(["--exclude '{}'".format(t) for t in proto_globs_strings]))
     yapf_command = "yapf {} {}".format(yapf_options, python_dirs_string)
     c.run(yapf_command)
     # Run isort
     isort_options = '--recursive {}'.format(
         '--check-only' if check else '')
-    c.run("isort {} {}".format(isort_options, python_dirs_string))
+    c.run("isort {} {} {}".format(
+        isort_options,
+        python_dirs_string,
+        " ".join(["-sg \'{}\'".format(t) for t in proto_globs_strings])))
 
 
 @task
