@@ -44,9 +44,9 @@ class ConfigParser:
                 "light_pin not supplied in pins")
         self._assert_not_missing('signs')
         _assert(len(self._config['signs']) > 0, "No signs supplied")
-        for i, sign in enumerate(self._config['signs']):
+        for idx, sign in enumerate(self._config['signs']):
             _assert('name' in sign,
-                    "Name missing from sign at index {}".format(i))
+                    "Name missing from sign at index {}".format(idx))
             _assert('address' in sign,
                     "Address missing from sign {}".format(sign["name"]))
             _assert('width' in sign,
