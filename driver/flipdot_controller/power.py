@@ -1,11 +1,19 @@
+"""Controls power GPIOs"""
+
 from collections import namedtuple
 
-import RPi.GPIO as GPIO
+import RPi.GPIO as GPIO  # pylint: disable=E0401
 
 PinConfig = namedtuple("PinConfig", ['sign', 'light'])
 
 
-class PowerManager(object):
+class PowerManager:
+    """Manager for providing power to components
+
+    Attributes:
+        pins (PinConfig): GPIO name/pin mapping
+    """
+
     def __init__(self, pins: PinConfig):
         GPIO.setmode(GPIO.BOARD)
         self.pins = pins
@@ -22,9 +30,19 @@ class PowerManager(object):
         GPIO.cleanup()
 
     def light(self, status: bool):
+        """Set power to lights
+
+        Args:
+            status (bool): True if on, otherwise False
+        """
         PowerManager._write_pin(self.pins.light, status)
 
     def sign(self, status: bool):
+        """Set power to signs
+
+        Args:
+            status (bool): True if on, otherwise False
+        """
         PowerManager._write_pin(self.pins.sign, status)
 
     @staticmethod

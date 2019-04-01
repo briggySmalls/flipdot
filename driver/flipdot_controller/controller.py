@@ -20,6 +20,14 @@ SignInfo = namedtuple("SignInfo", ['name', 'width', 'height'])
 
 
 class FlipdotController:
+    """Adapter class for forwarding server calls into the HanoverController
+
+    Attributes:
+        port (Serial): Serial port over which to control the sign
+        power_manager (PowerManager): Manager for the power pins
+        sign_controller (HanoverController): Low-level controller for the sign
+    """
+
     def __init__(self, port: Serial, signs: Sequence[SignConfig],
                  pins: PinConfig):
         # Create a controller
@@ -47,12 +55,21 @@ class FlipdotController:
         # Cleanup GPIOs
         self.power_manager.__exit__(*args, **kwargs)
 
-    def get_info(self, sign=None) -> Union[Sequence[SignInfo], SignInfo]:
+    def get_info(self,
+                 sign: str = None) -> Union[Sequence[SignInfo], SignInfo]:
+        """Return information about the currently attached signs
+
+        Args:
+            sign (str, optional): Name of a specific sign to get information on
+
+        Returns:
+            Union[Sequence[SignInfo], SignInfo]: Information on the signs
+        """
         logger.debug("get_info(sign=%s) called", sign)
         info = {}
-        for name, s in self.sign_controller.signs.items():
+        for name, query_sign in self.sign_controller.signs.items():
             info[name] = SignInfo(
-                name=name, width=s.width, height=s.height)
+                name=name, width=query_sign.width, height=query_sign.height)
         return list(info.values()) if sign is None else info[sign]
 
     def draw(self, sign: str, image: np.ndarray):
