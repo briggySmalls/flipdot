@@ -46,7 +46,7 @@ install: $(PROGRAM_SRCS)
 proto: $(PROTO_SRCS)
 
 test: $(PROGRAM_SRCS) $(TEST_SRCS)
-	go test ./...
+	go test -v ./...
 
 format:
 	gofmt -w .
