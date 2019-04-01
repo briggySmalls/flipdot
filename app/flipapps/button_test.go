@@ -44,19 +44,20 @@ func TestButtonPressed(t *testing.T) {
 	defer ctrl.Finish()
 	fakeLedPin := NewMockOutputPin(ctrl)
 	fakeButtonPin := NewMockTriggerPin(ctrl)
+	debounceDuration := time.Millisecond * 50
 	// Configure mock to expect calls
 	fakeLedPin.EXPECT().Low()
 	fakeLedPin.EXPECT().Toggle().AnyTimes() // We test this properly in another test
 	start := time.Now()
 	fakeButtonPin.EXPECT().Read().AnyTimes().DoAndReturn(func() rpio.State {
 		runtime := time.Now().Sub(start)
-		if runtime > time.Millisecond && runtime < time.Millisecond*4 {
+		if runtime > time.Millisecond && runtime < time.Millisecond+debounceDuration*2 {
 			return rpio.High
 		}
 		return rpio.Low
 	})
 	// Create a button manager and start the app
-	bm := NewButtonManager(fakeButtonPin, fakeLedPin, time.Hour, time.Millisecond)
+	bm := NewButtonManager(fakeButtonPin, fakeLedPin, time.Hour, time.Millisecond*50)
 	bm.SetState(Active)
 	// Check that a single 'pressed' event was sent
 	select {
