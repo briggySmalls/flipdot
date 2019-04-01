@@ -104,6 +104,8 @@ func TestMessageTextSent(t *testing.T) {
 			// Note: Can't message buttonPress in this callback as we get deadlock
 			activated <- struct{}{}
 		}), // Expect button to be activated after receiving message,
+		fakeImager.EXPECT().Clock(gomock.Any(), true), // Expect clock image to be built
+		fakeFlipdot.EXPECT().Draw(gomock.Any()),  // Expect clock images to be sent
 		fakeBm.EXPECT().SetState(Inactive), // Expect dectivate before drawing message
 		fakeImager.EXPECT().Message("briggySmalls", "test text").Return([]*flipdot.Image{ // Expect constructing message images
 			&flipdot.Image{Data: make([]bool, 10)},
