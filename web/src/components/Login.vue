@@ -1,8 +1,8 @@
 <template>
-    <form v-on:submit.prevent="authenticate" id="auth-form">
+    <form v-on:submit.prevent="authenticate">
       <div class="form-group">
           <label for="text">Password:</label>
-          <input v-model="password" type="password" name="password" id="password" class="form-control" required>
+          <input v-model="password" type="password" class="form-control" required>
       </div>
       <button type="submit" class="btn btn-primary">Authorize</button>
     </form>

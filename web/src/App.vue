@@ -1,13 +1,17 @@
 <template>
   <div id="app">
     <img alt="Vue logo" src="./assets/logo.png">
-    <Login v-bind:client="client"/>
+    <Error v-show="error != null" v-bind:error="error"/>
+    <Login v-show="!isAuthenticated" v-bind:client="client"/>
+    <Message v-show="isAuthenticated" v-bind:client="client"/>
   </div>
 </template>
 
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator';
 import Login from './components/Login.vue';
+import Message from './components/Message.vue';
+import Error from './components/Error.vue';
 import { Client } from './ts/client';
 
 const SERVER = 'https://jimsflipdot.hopto.org';
@@ -15,6 +19,8 @@ const SERVER = 'https://jimsflipdot.hopto.org';
 @Component({
   components: {
     Login,
+    Message,
+    Error,
   },
 })
 export default class App extends Vue {
@@ -26,6 +32,14 @@ export default class App extends Vue {
     super();
     // Create a client
     this.client = new Client(SERVER);
+  }
+
+  get isAuthenticated() {
+    return this.client.isAuthenticated;
+  }
+
+  get error() {
+    return this.client.error;
   }
 }
 </script>
