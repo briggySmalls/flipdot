@@ -1,20 +1,30 @@
 <template>
   <div id="app">
     <img alt="Vue logo" src="./assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js + TypeScript App"/>
+    <Login v-bind="client"/>
   </div>
 </template>
 
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator';
-import HelloWorld from './components/HelloWorld.vue';
+import Login from './components/Login.vue';
+import { Client } from './ts/client';
+
+const SERVER = 'https://jimsflipdot.hopto.org';
 
 @Component({
   components: {
-    HelloWorld,
+    Login,
   },
 })
-export default class App extends Vue {}
+export default class App extends Vue {
+  private client: Client;
+
+  constructor() {
+    super();
+    this.client = new Client(SERVER);
+  }
+}
 </script>
 
 <style lang="scss">
