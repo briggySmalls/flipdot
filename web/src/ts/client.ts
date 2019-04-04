@@ -1,6 +1,7 @@
 import {MessageRequest, MessageResponse, AuthenticateRequest} from '../generated/flipapps_pb';
 // import {GetInfoRequest, GetInfoResponse} from '../generated/flipdot_pb';
 import {FlipAppsClient} from '../generated/flipapps_pb_service';
+import {grpc} from '@improbable-eng/grpc-web';
 
 export class Client {
     // Token used to send authenticated gRPC messages with
@@ -11,7 +12,7 @@ export class Client {
 
     constructor(domain: string) {
         // Create a flipapps client
-        this.client = new FlipAppsClient(domain, null);
+        this.client = new FlipAppsClient(domain);
     }
 
     public authenticate(password: string) {
@@ -19,7 +20,7 @@ export class Client {
         const request = new AuthenticateRequest();
         request.setPassword(password);
         // Send the request
-        this.client.authenticate(request, {}, (err, response) => {
+        this.client.authenticate(request, new grpc.Metadata(), (err, response) => {
             if (err != null) {
                 return;
             }
@@ -34,6 +35,6 @@ export class Client {
         request.setFrom(from);
         request.setText(text);
         // Send the request
-        this.client.sendMessage(request, {token: this.token}, callback);
+        this.client.sendMessage(request, new grpc.Metadata({token: this.token}), callback);
     }
 }
