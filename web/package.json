@@ -11,6 +11,8 @@
     "generate": ""
   },
   "dependencies": {
+    "@improbable-eng/grpc-web": "^0.9.1",
+    "@types/google-protobuf": "^3.2.7",
     "core-js": "^2.6.5",
     "google-protobuf": "^3.7.1",
     "register-service-worker": "^1.6.2",
@@ -33,6 +35,7 @@
     "grpc-web": "^1.0.4",
     "sass": "^1.17.2",
     "sass-loader": "^7.1.0",
+    "ts-protoc-gen": "^0.9.0",
     "typescript": "^3.2.1",
     "vue-template-compiler": "^2.5.21"
   }

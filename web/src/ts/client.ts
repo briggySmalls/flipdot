@@ -1,6 +1,6 @@
-import {MessageRequest, MessageResponse, AuthenticateRequest, AuthenticateResponse} from '../generated/flipapps_pb';
-import {GetInfoRequest, GetInfoResponse} from '../generated/flipdot_pb';
-import {FlipAppsClient} from '../generated/FlipAppsServiceClientPb';
+import {MessageRequest, MessageResponse, AuthenticateRequest} from '../generated/flipapps_pb';
+// import {GetInfoRequest, GetInfoResponse} from '../generated/flipdot_pb';
+import {FlipAppsClient} from '../generated/flipapps_pb_service';
 
 export class Client {
     // Token used to send authenticated gRPC messages with
@@ -11,7 +11,7 @@ export class Client {
 
     constructor(domain: string) {
         // Create a flipapps client
-        this.client = new FlipAppsClient(domain, null, null);
+        this.client = new FlipAppsClient(domain, null);
     }
 
     public authenticate(password: string) {

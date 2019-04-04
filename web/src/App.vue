@@ -1,7 +1,7 @@
 <template>
   <div id="app">
     <img alt="Vue logo" src="./assets/logo.png">
-    <Login v-bind="client"/>
+    <Login v-bind:client="client"/>
   </div>
 </template>
 
@@ -18,10 +18,13 @@ const SERVER = 'https://jimsflipdot.hopto.org';
   },
 })
 export default class App extends Vue {
-  private client: Client;
+  // Client to be shared between components
+  public client: Client;
 
   constructor() {
+    // Call super
     super();
+    // Create a client
     this.client = new Client(SERVER);
   }
 }

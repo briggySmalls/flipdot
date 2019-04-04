@@ -1,10 +1,10 @@
 <template>
-    <form id="auth-form">
+    <form v-on:submit.prevent="authenticate" id="auth-form">
       <div class="form-group">
           <label for="text">Password:</label>
           <input v-model="password" type="password" name="password" id="password" class="form-control" required>
       </div>
-      <button v-on="authenticate" type="submit" class="btn btn-primary">Authorize</button>
+      <button type="submit" class="btn btn-primary">Authorize</button>
     </form>
 </template>
 
@@ -14,6 +14,7 @@ import { Client } from '../ts/client';
 
 @Component
 export default class Login extends Vue {
+  // Password bound to the view
   public password: string = '';
 
   @Prop() private client!: Client;
