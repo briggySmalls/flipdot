@@ -106,6 +106,8 @@ func (b *buttonManager) run(flashFreq time.Duration, debounceTime time.Duration)
 	// Create some channels for stopping 'active' goroutines
 	stopButtonFlashing := make(chan struct{})
 	stopButtonListening := make(chan struct{})
+	defer close(stopButtonFlashing)
+	defer close(stopButtonListening)
 
 	// Keep popping state changes off the queue
 	for {
