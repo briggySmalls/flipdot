@@ -1,6 +1,7 @@
 package flipapps
 
 import (
+	"fmt"
 	"log"
 	"time"
 
@@ -23,7 +24,8 @@ const (
 )
 
 const (
-	debouncedCount = 50
+	debouncedCount  = 50
+	stateQueueCount = 10
 )
 
 type TriggerPin interface {
@@ -73,7 +75,7 @@ func NewOutputPin(pinNum uint8) OutputPin {
 func NewButtonManager(buttonPin TriggerPin, ledPin OutputPin, flashFreq, debounceFreq time.Duration) ButtonManager {
 	manager := buttonManager{
 		buttonPressed: make(chan struct{}),
-		stateChanger:  make(chan State),
+		stateChanger:  make(chan State, stateQueueCount),
 		buttonPin:     buttonPin,
 		ledPin:        ledPin,
 		state:         Inactive,
@@ -89,50 +91,90 @@ func (b *buttonManager) SetState(state State) {
 		// Stop the manager thread
 		close(b.stateChanger)
 	} else {
-		// Update manager state (thread safe?)
+		// Update manager state
+		// This shouldn't ever block, although in theory it could
 		b.stateChanger <- state
 	}
 }
 
+// Button manager blocking activity loop (designed to be run in goroutine)
 func (b *buttonManager) run(flashFreq time.Duration, debounceTime time.Duration) {
 	// Run control loop
 	log.Println("Button manager loop starting...")
 	b.ledPin.Low() // Ensure LED off
-	flashTicker := time.NewTicker(flashFreq)
 
-	// Debounce-releated stuff
-	debounceTicker := time.NewTicker(debounceTime / debouncedCount)
-	debouncer := debouncer{state: Off, debouncedCount: debouncedCount}
+	// Create some channels for stopping 'active' goroutines
+	stopButtonFlashing := make(chan struct{})
+	stopButtonListening := make(chan struct{})
+
+	// Keep popping state changes off the queue
+	for {
+		state, ok := <-b.stateChanger
+		// Check if we need to stop
+		if !ok {
+			close(b.buttonPressed)
+			return
+		}
+		// Handle state change
+		switch state {
+		// Button becomes active
+		case Active:
+			// Run goroutine for flashing button
+			go togglePinPeriodically(b.ledPin, flashFreq, stopButtonFlashing)
+			// Run goroutine for listening for a button press
+			go listenForPress(b.buttonPin, debounceTime, stopButtonListening, b.buttonPressed)
+		// Button becomes inactive
+		case Inactive:
+			// Stop goroutines
+			stopButtonListening <- struct{}{}
+			stopButtonFlashing <- struct{}{}
+		// Unexpected state value
+		default:
+			panic(fmt.Errorf("Unexpected state"))
+		}
+	}
+}
+
+// Function for toggling a pin until stopped
+func togglePinPeriodically(pin OutputPin, flashFreq time.Duration, done <-chan struct{}) {
+	// Create a ticker
+	ticker := time.NewTicker(flashFreq)
+	defer ticker.Stop()
+	// Toggle until we have to stop
 	for {
 		select {
-		case state, ok := <-b.stateChanger:
-			if !ok {
-				// Stopping, tell listeners by stopping 'pressed' channel
-				close(b.buttonPressed)
-				return
-			}
-			b.state = state
-			log.Printf("State updated to %d", b.state)
-			if b.state == Inactive {
-				// Ensure LED is not illuminated
-				b.ledPin.Low()
-			}
-		case <-flashTicker.C:
-			if b.state == Active {
-				// Toggle LED illumination on tick
-				b.ledPin.Toggle()
-			}
+		// Toggle the pin when the ticker elapses
+		case <-ticker.C:
+			pin.Toggle()
+		// Set pin low and terminate when told we are done
+		case <-done:
+			pin.Low()
+			return
+		}
+	}
+}
+
+// Listen for a button press
+func listenForPress(pin TriggerPin, debounceTime time.Duration, done <-chan struct{}, pressed chan<- struct{}) {
+	// Create a ticker to poll button state
+	debounceTicker := time.NewTicker(debounceTime / debouncedCount)
+	defer debounceTicker.Stop()
+	// Create debouncer that keeps track of previous activity
+	debouncer := debouncer{state: Off, debouncedCount: debouncedCount}
+	// Run
+	for {
+		select {
 		case <-debounceTicker.C:
-			// Check if button status has changed
-			if b.state == Active {
-				// Read the button state
-				pinState := b.buttonPin.Read()
-				// Pass it to the debouncer
-				if debouncer.debounce(pinState == rpio.High) {
-					log.Println("Button press detected")
-					b.buttonPressed <- struct{}{}
-				}
+			// Read the button state
+			pinState := pin.Read()
+			// Pass it to the debouncer
+			if debouncer.debounce(pinState == rpio.High) {
+				log.Println("Button press detected")
+				pressed <- struct{}{}
 			}
+		case <-done:
+			// We've been told we're done
+			return
 		}
 	}
 }
