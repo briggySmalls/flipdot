@@ -68,3 +68,23 @@ func TestButtonPressed(t *testing.T) {
 		t.Fatal("No pressed event detected")
 	}
 }
+
+func TestDeadlock(t *testing.T) {
+	// Create fake buttons
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	fakeLedPin := NewMockOutputPin(ctrl)
+	fakeButtonPin := NewMockTriggerPin(ctrl)
+	debounceDuration := time.Duration(time.Millisecond * 50)
+	// Configure mock to expect calls
+	fakeLedPin.EXPECT().Low().AnyTimes()
+	fakeLedPin.EXPECT().Toggle().AnyTimes()
+	fakeButtonPin.EXPECT().Read().AnyTimes().Return(rpio.High)
+	// Create a button manager and start the app
+	bm := NewButtonManager(fakeButtonPin, fakeLedPin, time.Hour, debounceDuration)
+	bm.SetState(Active)
+	// Wait to ensure that button is pressed
+	time.Sleep(debounceDuration * 2)
+	// Send state change request, this should not deadlock
+	bm.SetState(Inactive)
+}
