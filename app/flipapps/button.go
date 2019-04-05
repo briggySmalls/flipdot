@@ -118,10 +118,12 @@ func (b *buttonManager) run(flashFreq time.Duration, debounceTime time.Duration)
 			return
 		}
 		// Check we're changing state
-		if b.state.Read() == state {
+		if b.state == state {
 			// We don't handle same-same transitions
 			continue
 		}
+		// Record state change
+		b.state = state
 		// Handle state change
 		switch state {
 		// Button becomes active
