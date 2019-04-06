@@ -67,10 +67,9 @@ export class Client {
     }
 
     private handleError() {
-        // Log for the moment
-        console.log('Error detected:');
-        console.log(this.err);
-        // // Resets the token in the event of a failure
-        // this.token = null;
+        // Reset the token in the event of an authentication failure
+        if (this.err.code === grpc.Code.Unauthenticated) {
+            this.token = null;
+        }
     }
 }
