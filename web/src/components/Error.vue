@@ -13,7 +13,7 @@ export default class Error extends Vue {
   // Computed property for error message
   get message(): string {
     if (this.error === null) {
-        return "";
+        return '';
     } else if (this.error.code === grpc.Code.Unauthenticated) {
         return `Authentication Error\n${this.error.message}\nPlease log in again`;
     }
