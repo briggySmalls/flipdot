@@ -30,6 +30,7 @@ import (
 
 	"github.com/briggySmalls/flipdot/app/flipapps"
 	"github.com/briggySmalls/flipdot/app/flipdot"
+	"github.com/gizak/termui"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -53,6 +54,7 @@ type config struct {
 	buttonPin         uint8
 	ledPin            uint8
 	statusImage       string
+	mock              bool
 }
 
 // rootCmd represents the base command when called without any subcommands
@@ -62,30 +64,65 @@ var rootCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		// Pull out config (from args/env/config file)
 		config := validateConfig()
-		// Create a client
-		client, err := createClient(config.clientAddress)
-		errorHandler(err)
-		// Create a flipdot controller
-		flipdot, err := flipdot.NewFlipdot(
-			client,
-			time.Duration(config.frameDurationSecs)*time.Second)
-		errorHandler(err)
+
+		// Get a flipdot
+		var flippy flipdot.Flipdot
+		if config.mock {
+			if err := termui.Init(); err != nil {
+				log.Fatalf("failed to initialize termui: %v", err)
+			}
+			defer termui.Close()
+			flippy = createMockFlipdot()
+			go func() {
+				uiEvents := termui.PollEvents()
+				for {
+					select {
+					case e := <-uiEvents:
+						switch e.ID { // event string/identifier
+						case "q", "<C-c>": // press 'q' or 'C-c' to quit
+							panic(fmt.Errorf("User requested stop"))
+						}
+					}
+				}
+			}()
+		} else {
+			// Create a client
+			client, err := createClient(config.clientAddress)
+			errorHandler(err)
+			// Create a flipdot controller
+			flippy, err = flipdot.NewFlipdot(
+				client,
+				time.Duration(config.frameDurationSecs)*time.Second)
+			errorHandler(err)
+		}
+
 		// Create a button manager
-		err = rpio.Open()
-		errorHandler(err)
-		defer rpio.Close()
-		bm := createButtonManager(config.ledPin, config.buttonPin)
+		var ledPin flipapps.OutputPin
+		var buttonPin flipapps.TriggerPin
+		if config.mock {
+			// Create mock pins
+			ledPin = &mockOutputPin{}
+			buttonPin = &mockTriggerPin{}
+		} else {
+			// Create pins that interface with RPi GPIO
+			err := rpio.Open()
+			errorHandler(err)
+			defer rpio.Close()
+			ledPin = flipapps.NewOutputPin(config.ledPin)
+			buttonPin = flipapps.NewTriggerPin(config.buttonPin)
+		}
+		bm := flipapps.NewButtonManager(buttonPin, ledPin, time.Second, buttonDebounceDuration)
 		// Get font
 		font, err := readFont(config.fontFile, config.fontSize)
 		// Create imager
-		width, height := flipdot.Size()
-		imager, err := createImager(config.statusImage, font, width, height, uint(len(flipdot.Signs())))
+		width, height := flippy.Size()
+		imager, err := createImager(config.statusImage, font, width, height, uint(len(flippy.Signs())))
 		errorHandler(err)
 		// Create and start application
-		app := flipapps.NewApplication(flipdot, bm, imager)
-		go app.Run(time.Minute)
+		app := flipapps.NewApplication(flippy, bm, imager)
+		go app.Run(time.Second)
 		// Create a flipapps server
-		server := createServer(config.appSecret, config.appPassword, app.GetMessagesChannel(), flipdot.Signs())
+		server := createServer(config.appSecret, config.appPassword, app.GetMessagesChannel(), flippy.Signs())
 		// Run server
 		// Create a listener on TCP port
 		lis, err := net.Listen("tcp", fmt.Sprintf(config.serverAddress))
@@ -124,6 +161,7 @@ func init() {
 	flags.Uint8("button-pin", 0, "GPIO pin that reads button state")
 	flags.Uint8("led-pin", 0, "GPIO pin that illuminates button")
 	flags.String("status-image", "", "Image to indicate new message status")
+	flags.BoolP("mock", "m", false, "Create a mock version of the application")
 
 	// Add all flags to config
 	viper.BindPFlags(flags)
@@ -169,6 +207,7 @@ func validateConfig() config {
 	buttonPin := viper.GetInt("button-pin")
 	ledPin := viper.GetInt("led-pin")
 	statusImage := viper.GetString("status-image")
+	mock := viper.GetBool("mock")
 
 	if serverAddress == "" {
 		errorHandler(fmt.Errorf("server-address cannot be: %s", serverAddress))
@@ -214,6 +253,7 @@ func validateConfig() config {
 		buttonPin:         uint8(buttonPin),
 		ledPin:            uint8(ledPin),
 		statusImage:       statusImage,
+		mock:              mock,
 	}
 }
 

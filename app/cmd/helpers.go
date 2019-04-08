@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"time"
 
 	"github.com/briggySmalls/flipdot/app/flipapps"
 	"github.com/briggySmalls/flipdot/app/flipdot"
@@ -38,13 +37,6 @@ func createClient(address string) (flipClient flipdot.FlipdotClient, err error) 
 	}
 	// Create a flipdot client
 	flipClient = flipdot.NewFlipdotClient(connection)
-	return
-}
-
-func createButtonManager(ledPinNum, buttonPinNum uint8) (bm flipapps.ButtonManager) {
-	ledPin := flipapps.NewOutputPin(ledPinNum)
-	buttonPin := flipapps.NewTriggerPin(buttonPinNum)
-	bm = flipapps.NewButtonManager(buttonPin, ledPin, time.Second, buttonDebounceDuration)
 	return
 }
 

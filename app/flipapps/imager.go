@@ -61,7 +61,7 @@ func (i *imager) Message(sender, message string) (images []*flipdot.Image, err e
 
 func (i *imager) Clock(time time.Time, isMessagesAvailable bool) (images []*flipdot.Image, err error) {
 	// Get images that represent the time
-	srcImages, err := i.builder.Images(time.Format("Mon 1 Jan\n3:04 pm"), true)
+	srcImages, err := i.builder.Images(time.Format("Mon 1 Jan\n3:04:05 pm"), true)
 	errorHandler(err)
 	// Add status if necessary
 	if isMessagesAvailable {
