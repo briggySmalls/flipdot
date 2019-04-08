@@ -1,9 +1,11 @@
 <template>
   <div id="app">
     <img alt="Vue logo" src="./assets/logo.png">
-    <Login v-show="state == 'login'" v-bind:client="client"  v-bind:fsm="fsm"/>
-    <Message v-show="state == 'message'" v-bind:client="client" v-bind:fsm="fsm"/>
-    <Result v-show="state == 'result'" v-bind:client="client" v-bind:fsm="fsm"/>
+    <div class="container">
+      <Login v-show="state == 'login'" v-bind:client="client"  v-bind:fsm="fsm"/>
+      <Message v-show="state == 'message'" v-bind:client="client" v-bind:fsm="fsm"/>
+      <Result v-show="state == 'result'" v-bind:client="client" v-bind:fsm="fsm"/>
+    </div>
   </div>
 </template>
 
@@ -14,8 +16,15 @@ import Message from './components/Message.vue';
 import Result from './components/Result.vue';
 import { Client } from './ts/client';
 import { Machine, interpret } from 'xstate';
+import BootstrapVue from 'bootstrap-vue';
+import 'bootstrap/dist/css/bootstrap.css';
+import 'bootstrap-vue/dist/bootstrap-vue.css';
 
+// Hardcoded URL of flipdot gRPC server
 const SERVER = 'https://jimsflipdot.hopto.org';
+
+// Use Bootstrap
+Vue.use(BootstrapVue);
 
 // Stateless machine definition
 // machine.transition(...) is a pure function used by the interpreter.

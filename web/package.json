@@ -13,6 +13,8 @@
   "dependencies": {
     "@improbable-eng/grpc-web": "^0.9.1",
     "@types/google-protobuf": "^3.2.7",
+    "bootstrap": "^4.3.1",
+    "bootstrap-vue": "^2.0.0-rc.17",
     "core-js": "^2.6.5",
     "google-protobuf": "^3.7.1",
     "register-service-worker": "^1.6.2",

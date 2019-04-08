@@ -1,7 +1,7 @@
 <template>
   <div id="result">
-    <div id="message">{{ message }}</div>
-    <button v-on:click="newMessage">Send a message</button>
+    <div class="prewrap alert" v-bind:class="messageClass">{{ message }}</div>
+    <button v-on:click="newMessage" class="btn btn-primary">Send a message</button>
   </div>
 </template>
 
@@ -22,6 +22,15 @@ export default class Result extends Vue {
   public newMessage() {
     // Send 'new' event to state machine
     this.fsm.send('NEW');
+  }
+
+  get messageClass(): string {
+    // If there is no error, we have succeeded
+    if (this.client.error === null) {
+        return 'alert-success';
+    }
+    // If there is an error, we have failed
+    return 'alert-danger';
   }
 
   // Computed property for error message

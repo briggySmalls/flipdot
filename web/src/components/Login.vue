@@ -1,10 +1,10 @@
 <template>
   <div id="login">
-    <div id="message">{{ message }}</div>
+    <div class="prewrap alert alert-danger">{{ message }}</div>
     <form v-on:submit.prevent="authenticate">
-      <div class="form-group">
-          <label for="text">Password:</label>
-          <input v-model="password" type="password" class="form-control" required>
+      <div class="form-group row">
+          <label for="text" class="col-sm-2 col-form-label">Password:</label>
+          <input v-model="password" type="password" class="col-sm-10 form-control" required>
       </div>
       <button type="submit" class="btn btn-primary">Authorize</button>
     </form>
@@ -52,7 +52,5 @@ export default class Login extends Vue {
 </script>
 
 <style>
-#message {
-    white-space: pre-wrap;
-}
+@import "../assets/common.scss";
 </style>
