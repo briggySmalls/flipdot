@@ -20,9 +20,6 @@ import BootstrapVue from 'bootstrap-vue';
 import 'bootstrap/dist/css/bootstrap.css';
 import 'bootstrap-vue/dist/bootstrap-vue.css';
 
-// Hardcoded URL of flipdot gRPC server
-const SERVER = 'https://jimsflipdot.hopto.org';
-
 // Use Bootstrap
 Vue.use(BootstrapVue);
 
@@ -58,7 +55,7 @@ export default class App extends Vue {
       .onTransition((state) => console.log(state.value))
       .start();
     // Create a client
-    this.client = new Client(SERVER);
+    this.client = new Client(process.env.VUE_APP_GRPC_SERVER_URL);
   }
 
   get state() {
