@@ -18,7 +18,8 @@
     "register-service-worker": "^1.6.2",
     "vue": "^2.6.6",
     "vue-class-component": "^6.0.0",
-    "vue-property-decorator": "^8.0.0"
+    "vue-property-decorator": "^8.0.0",
+    "xstate": "^4.4.0"
   },
   "devDependencies": {
     "@types/chai": "^4.1.0",

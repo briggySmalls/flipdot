@@ -18,15 +18,17 @@ export class Client {
         this.client = new FlipAppsClient(domain);
     }
 
-    public authenticate(password: string) {
+    public authenticate(password: string, callback: (response: any) => void) {
         // Construct a request
         const request = new AuthenticateRequest();
         request.setPassword(password);
         // Send the request
         this.client.authenticate(request, new grpc.Metadata(), (err, response) => {
             this.handle(err, response, (r) => {
-                // Save the token globally
+                // Save the token
                 this.token = r.getToken();
+                // Execute user callback
+                callback(r);
             });
         });
     }

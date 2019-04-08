@@ -1,9 +1,9 @@
 <template>
   <div id="app">
     <img alt="Vue logo" src="./assets/logo.png">
-    <Error v-show="error != null" v-bind:error="error"/>
-    <Login v-show="!isAuthenticated" v-bind:client="client"/>
-    <Message v-show="isAuthenticated" v-bind:client="client"/>
+    <Login v-show="state == 'login'" v-bind:client="client"  v-bind:fsm="fsm"/>
+    <Message v-show="state == 'message'" v-bind:client="client" v-bind:fsm="fsm"/>
+    <Result v-show="state == 'result'" v-bind:client="client" v-bind:fsm="fsm"/>
   </div>
 </template>
 
@@ -11,31 +11,49 @@
 import { Component, Vue } from 'vue-property-decorator';
 import Login from './components/Login.vue';
 import Message from './components/Message.vue';
-import Error from './components/Error.vue';
+import Result from './components/Result.vue';
 import { Client } from './ts/client';
+import { Machine, interpret } from 'xstate';
 
 const SERVER = 'https://jimsflipdot.hopto.org';
+
+// Stateless machine definition
+// machine.transition(...) is a pure function used by the interpreter.
+const appMachine = Machine({
+  initial: 'login',
+  states: {
+    login: { on: { AUTH: 'message' } },
+    message: { on: { SENT: 'result', REAUTH: 'login' } },
+    result: { on: { NEW: 'message' } },
+  },
+});
 
 @Component({
   components: {
     Login,
     Message,
-    Error,
+    Result,
   },
 })
 export default class App extends Vue {
   // Client to be shared between components
   public client: Client;
+  // State machine for controlling state
+  private fsm: any;
 
   constructor() {
     // Call super
     super();
+    // Create a state machine
+    this.fsm = interpret(appMachine)
+      .onTransition((state) => console.log(state.value))
+      .start();
     // Create a client
     this.client = new Client(SERVER);
   }
 
-  get isAuthenticated() {
-    return this.client.isAuthenticated;
+  get state() {
+    return this.fsm.state.value;
   }
 
   get error() {
