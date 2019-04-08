@@ -33,7 +33,7 @@ export default class Message extends Vue {
   public sendMessage() {
     // Send message to the server
     this.client.sendTextMessage(this.sender, this.message, (response) => {
-      if (this.client.error === grpc.Code.Unauthenticated) {
+      if (this.client.error && this.client.error.code === grpc.Code.Unauthenticated) {
         // Token has expired or something weirder: go back to login
         this.fsm.send('REAUTH');
         return;

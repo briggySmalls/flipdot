@@ -59,7 +59,6 @@ export class Client {
         if (err != null) {
             this.err = err;
             this.handleError();
-            return;
         } else {
             // Reset error
             this.err = null;
