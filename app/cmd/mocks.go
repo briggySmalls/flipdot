@@ -22,19 +22,27 @@ func (p *mockOutputPin) Low()    {}
 func (p *mockOutputPin) Toggle() {}
 
 // Mock trigger pin
-type mockTriggerPin struct{}
+type mockTriggerPin struct {
+	state bool // Button state
+}
 
-func (p *mockTriggerPin) EdgeDetected() bool { return false }
-func (p *mockTriggerPin) Read() rpio.State   { return rpio.Low }
+func (p *mockTriggerPin) Read() rpio.State {
+	if p.state {
+		return rpio.High
+	} else {
+		return rpio.Low
+	}
+}
 
 // Mock flipdot
 type mockFlipdotClient struct {
-	signs   []*flipdot.GetInfoResponse_SignInfo
-	widgets []*widgets.Image
+	signConfig   []*flipdot.GetInfoResponse_SignInfo
+	uiSigns      []*widgets.Image
+	uiButtonText *widgets.Paragraph
 }
 
-// NewMockFlipdot Create a mock flipdot
-func NewMockFlipdotClient(signs []*flipdot.GetInfoResponse_SignInfo) mockFlipdotClient {
+// Create a mock flipdot
+func newMockFlipdotClient(signs []*flipdot.GetInfoResponse_SignInfo) mockFlipdotClient {
 	// Create a widget for each image
 	imageWidgets := []*widgets.Image{}
 	previousHeight := 0
@@ -50,9 +58,13 @@ func NewMockFlipdotClient(signs []*flipdot.GetInfoResponse_SignInfo) mockFlipdot
 		previousHeight = height
 	}
 
+	// Also create a paragraph to reveal button state
+	buttonStateText := widgets.NewParagraph()
+
 	return mockFlipdotClient{
-		signs:   signs,
-		widgets: imageWidgets,
+		signConfig:   signs,
+		uiSigns:      imageWidgets,
+		uiButtonText: buttonStateText,
 	}
 }
 
@@ -119,6 +131,8 @@ func uiHandlingLoop() {
 			switch e.ID { // event string/identifier
 			case "q", "<C-c>": // press 'q' or 'C-c' to quit
 				return
+			case "b": // press 'b' for button press
+
 			}
 		}
 	}
@@ -140,7 +154,7 @@ func createMockFlipdotClient() flipdot.FlipdotClient {
 		},
 	}
 	// Create the mock
-	mock := NewMockFlipdotClient(mockSigns)
+	mock := newMockFlipdotClient(mockSigns)
 
 	// Start a coroutine for checking for user input
 	go func() {
