@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"image"
 	"image/color"
 	"log"
@@ -31,7 +32,7 @@ type mockFlipdot struct {
 }
 
 // NewMockFlipdot Create a mock flipdot
-func NewMockFlipdot(signs []*flipdot.GetInfoResponse_SignInfo) flipdot.Flipdot {
+func NewMockFlipdot(signs []*flipdot.GetInfoResponse_SignInfo) mockFlipdot {
 	// Create a widget for each image
 	imageWidgets := []*widgets.Image{}
 	previousHeight := 0
@@ -47,7 +48,7 @@ func NewMockFlipdot(signs []*flipdot.GetInfoResponse_SignInfo) flipdot.Flipdot {
 		previousHeight = height
 	}
 
-	return &mockFlipdot{
+	return mockFlipdot{
 		signs:   signs,
 		widgets: imageWidgets,
 	}
@@ -105,6 +106,11 @@ func (m *mockFlipdot) unslice(imgIn flipdot.Image) image.Image {
 
 // Create a mock flipdot for use in the application
 func createMockFlipdot() flipdot.Flipdot {
+	// Initialise termui
+	if err := termui.Init(); err != nil {
+		log.Fatalf("failed to initialize termui: %v", err)
+	}
+
 	// Mock the signs
 	mockSigns := []*flipdot.GetInfoResponse_SignInfo{
 		&flipdot.GetInfoResponse_SignInfo{
@@ -118,9 +124,21 @@ func createMockFlipdot() flipdot.Flipdot {
 			Height: 7,
 		},
 	}
-
 	// Create the mock
 	mock := NewMockFlipdot(mockSigns)
 
-	return mock
+	// Start a coroutine for checking for user input
+	go func() {
+		uiEvents := termui.PollEvents()
+		for {
+			select {
+			case e := <-uiEvents:
+				switch e.ID { // event string/identifier
+				case "q", "<C-c>": // press 'q' or 'C-c' to quit
+					panic(fmt.Errorf("User requested stop"))
+				}
+			}
+		}
+	}()
+	return &mock
 }

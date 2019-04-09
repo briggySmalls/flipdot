@@ -68,23 +68,8 @@ var rootCmd = &cobra.Command{
 		// Get a flipdot
 		var flippy flipdot.Flipdot
 		if config.mock {
-			if err := termui.Init(); err != nil {
-				log.Fatalf("failed to initialize termui: %v", err)
-			}
-			defer termui.Close()
 			flippy = createMockFlipdot()
-			go func() {
-				uiEvents := termui.PollEvents()
-				for {
-					select {
-					case e := <-uiEvents:
-						switch e.ID { // event string/identifier
-						case "q", "<C-c>": // press 'q' or 'C-c' to quit
-							panic(fmt.Errorf("User requested stop"))
-						}
-					}
-				}
-			}()
+			defer termui.Close()
 		} else {
 			// Create a client
 			client, err := createClient(config.clientAddress)
