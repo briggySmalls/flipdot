@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/briggySmalls/flipdot/app/flipapps"
 	"github.com/briggySmalls/flipdot/app/flipdot"
@@ -42,6 +43,22 @@ func createClient(address string, isMock bool) (flipClient flipdot.FlipdotClient
 	// Create a flipdot client
 	flipClient = flipdot.NewFlipdotClient(connection)
 	return
+}
+
+// Create a button manger
+func createButtonManager(buttonPinNum, ledPinNum uint8, isMock bool) flipapps.ButtonManager {
+	var ledPin flipapps.OutputPin
+	var buttonPin flipapps.TriggerPin
+	if isMock {
+		// Create mock pins
+		ledPin = &mockOutputPin{}
+		buttonPin = &mockTriggerPin{}
+	} else {
+		// Create pins that interface with RPi GPIO
+		ledPin = flipapps.NewOutputPin(ledPinNum)
+		buttonPin = flipapps.NewTriggerPin(buttonPinNum)
+	}
+	return flipapps.NewButtonManager(buttonPin, ledPin, time.Second, buttonDebounceDuration)
 }
 
 func createImager(imageFile string, font font.Face, width, height, signCount uint) (imager flipapps.Imager, err error) {

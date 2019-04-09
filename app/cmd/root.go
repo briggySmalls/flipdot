@@ -74,27 +74,20 @@ var rootCmd = &cobra.Command{
 		errorHandler(err)
 
 		// Create a button manager
-		var ledPin flipapps.OutputPin
-		var buttonPin flipapps.TriggerPin
-		if config.mock {
-			// Create mock pins
-			ledPin = &mockOutputPin{}
-			buttonPin = &mockTriggerPin{}
-		} else {
-			// Create pins that interface with RPi GPIO
+		if !config.mock {
 			err := rpio.Open()
 			errorHandler(err)
 			defer rpio.Close()
-			ledPin = flipapps.NewOutputPin(config.ledPin)
-			buttonPin = flipapps.NewTriggerPin(config.buttonPin)
 		}
-		bm := flipapps.NewButtonManager(buttonPin, ledPin, time.Second, buttonDebounceDuration)
+		bm := createButtonManager(config.buttonPin, config.ledPin, config.mock)
+
 		// Get font
 		font, err := readFont(config.fontFile, config.fontSize)
 		// Create imager
 		width, height := flippy.Size()
 		imager, err := createImager(config.statusImage, font, width, height, uint(len(flippy.Signs())))
 		errorHandler(err)
+
 		// Create and start application
 		app := flipapps.NewApplication(flippy, bm, imager)
 		go app.Run(time.Second)
