@@ -39,8 +39,8 @@ func NewMockFlipdot(signs []*flipdot.GetInfoResponse_SignInfo) mockFlipdot {
 		// Create a new widget
 		imgWidget := widgets.NewImage(nil)
 		// Set the position of the image
-		height := int(sign.Height) + previousHeight
-		imgWidget.SetRect(0, previousHeight, int(sign.Width), height)
+		height := int(sign.Height) + 2 + previousHeight
+		imgWidget.SetRect(0, previousHeight, int(sign.Width)+2, height)
 		// Add the widget to the slice
 		imageWidgets = append(imageWidgets, imgWidget)
 		// Update previous height
