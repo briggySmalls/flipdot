@@ -22,7 +22,6 @@ package cmd
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net"
 	"os"
@@ -64,11 +63,6 @@ var rootCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		// Pull out config (from args/env/config file)
 		config := validateConfig()
-
-		// First disable logging, if necessary
-		if config.mock {
-			log.SetOutput(ioutil.Discard)
-		}
 
 		// Create a client
 		client, err := createClient(config.clientAddress, config.mock)

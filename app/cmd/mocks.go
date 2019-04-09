@@ -4,6 +4,7 @@ import (
 	"context"
 	"image"
 	"image/color"
+	"io/ioutil"
 	"log"
 
 	"github.com/briggySmalls/flipdot/app/flipdot"
@@ -143,6 +144,8 @@ func createMockFlipdotClient() flipdot.FlipdotClient {
 
 	// Start a coroutine for checking for user input
 	go func() {
+		// Diable logging (we will be drawing)
+		log.SetOutput(ioutil.Discard)
 		// Initialise termui
 		if err := termui.Init(); err != nil {
 			log.Fatalf("failed to initialize termui: %v", err)
