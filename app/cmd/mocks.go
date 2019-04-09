@@ -56,7 +56,7 @@ func (p *mockInputPin) Read() rpio.State {
 func (p *mockInputPin) set(state bool) {
 	p.mux.Lock()
 	p.state = state
-	p.uiText.Border = state
+	p.uiText.Border = !state
 	// Render the update
 	termui.Render(p.uiText)
 	p.mux.Unlock()
