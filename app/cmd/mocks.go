@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"image"
 	"image/color"
 	"log"
@@ -104,13 +103,23 @@ func (m *mockFlipdot) unslice(imgIn flipdot.Image) image.Image {
 	return imgOut
 }
 
+func uiHandlingLoop() {
+	// Get the poll events channel
+	uiEvents := termui.PollEvents()
+	// Poll events until user quits
+	for {
+		select {
+		case e := <-uiEvents:
+			switch e.ID { // event string/identifier
+			case "q", "<C-c>": // press 'q' or 'C-c' to quit
+				return
+			}
+		}
+	}
+}
+
 // Create a mock flipdot for use in the application
 func createMockFlipdot() flipdot.Flipdot {
-	// Initialise termui
-	if err := termui.Init(); err != nil {
-		log.Fatalf("failed to initialize termui: %v", err)
-	}
-
 	// Mock the signs
 	mockSigns := []*flipdot.GetInfoResponse_SignInfo{
 		&flipdot.GetInfoResponse_SignInfo{
@@ -129,16 +138,13 @@ func createMockFlipdot() flipdot.Flipdot {
 
 	// Start a coroutine for checking for user input
 	go func() {
-		uiEvents := termui.PollEvents()
-		for {
-			select {
-			case e := <-uiEvents:
-				switch e.ID { // event string/identifier
-				case "q", "<C-c>": // press 'q' or 'C-c' to quit
-					panic(fmt.Errorf("User requested stop"))
-				}
-			}
+		// Initialise termui
+		if err := termui.Init(); err != nil {
+			log.Fatalf("failed to initialize termui: %v", err)
 		}
+		defer termui.Close()
+		// Listen for button presses, etc
+		uiHandlingLoop()
 	}()
 	return &mock
 }
