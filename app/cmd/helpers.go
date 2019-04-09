@@ -1,13 +1,11 @@
 package cmd
 
 import (
-	"fmt"
 	"image"
 	"image/png"
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"time"
 
 	"github.com/briggySmalls/flipdot/app/flipapps"
 	"github.com/briggySmalls/flipdot/app/flipdot"
@@ -27,38 +25,6 @@ func createServer(appSecret, appPassword string, messagesIn chan flipapps.Messag
 	// Register reflection service on gRPC server (for debugging).
 	reflection.Register(grpcServer)
 	return
-}
-
-func createClient(address string, isMock bool) (flipClient flipdot.FlipdotClient, err error) {
-	if isMock {
-		// Create a mock flipdot client
-		return createMockFlipdotClient(), nil
-	}
-	// Create a gRPC connection to the remote flipdot server
-	var connection *grpc.ClientConn
-	connection, err = grpc.Dial(fmt.Sprintf(address), grpc.WithInsecure())
-	if err != nil {
-		return
-	}
-	// Create a flipdot client
-	flipClient = flipdot.NewFlipdotClient(connection)
-	return
-}
-
-// Create a button manger
-func createButtonManager(buttonPinNum, ledPinNum uint8, isMock bool) flipapps.ButtonManager {
-	var ledPin flipapps.OutputPin
-	var buttonPin flipapps.TriggerPin
-	if isMock {
-		// Create mock pins
-		ledPin = &mockOutputPin{}
-		buttonPin = &mockTriggerPin{}
-	} else {
-		// Create pins that interface with RPi GPIO
-		ledPin = flipapps.NewOutputPin(ledPinNum)
-		buttonPin = flipapps.NewTriggerPin(buttonPinNum)
-	}
-	return flipapps.NewButtonManager(buttonPin, ledPin, time.Second, buttonDebounceDuration)
 }
 
 func createImager(imageFile string, font font.Face, width, height, signCount uint) (imager flipapps.Imager, err error) {

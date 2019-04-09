@@ -6,6 +6,7 @@ import (
 	"image/color"
 	"io/ioutil"
 	"log"
+	"sync"
 
 	"github.com/briggySmalls/flipdot/app/flipdot"
 	"github.com/gizak/termui"
@@ -15,30 +16,58 @@ import (
 )
 
 // Mock output pin
-type mockOutputPin struct{}
-
-func (p *mockOutputPin) High()   {}
-func (p *mockOutputPin) Low()    {}
-func (p *mockOutputPin) Toggle() {}
-
-// Mock trigger pin
-type mockTriggerPin struct {
-	state bool // Button state
+type mockInputPin struct {
+	state  bool // Button state
+	mux    sync.Mutex
+	uiText *widgets.Paragraph
 }
 
-func (p *mockTriggerPin) Read() rpio.State {
+type mockOutputPin struct {
+	uiText *widgets.Paragraph
+	state  bool // Button state
+}
+
+func (p *mockOutputPin) High()   { p.update(true) }
+func (p *mockOutputPin) Low()    { p.update(false) }
+func (p *mockOutputPin) Toggle() { p.update(!p.state) }
+func (p *mockOutputPin) update(state bool) {
+	// Update state
+	p.state = state
+	// Update paragraph colour
+	color := &p.uiText.TextStyle.Fg
+	if state {
+		*color = termui.ColorRed
+	} else {
+		*color = termui.ColorWhite
+	}
+	// Render the update
+	termui.Render(p.uiText)
+}
+
+func (p *mockInputPin) Read() rpio.State {
+	p.mux.Lock()
+	defer p.mux.Unlock()
 	if p.state {
 		return rpio.High
-	} else {
-		return rpio.Low
 	}
+	return rpio.Low
+}
+
+func (p *mockInputPin) set(state bool) {
+	p.mux.Lock()
+	p.state = state
+	p.uiText.Border = state
+	// Render the update
+	termui.Render(p.uiText)
+	p.mux.Unlock()
 }
 
 // Mock flipdot
 type mockFlipdotClient struct {
-	signConfig   []*flipdot.GetInfoResponse_SignInfo
-	uiSigns      []*widgets.Image
-	uiButtonText *widgets.Paragraph
+	signConfig []*flipdot.GetInfoResponse_SignInfo
+	uiSigns    []*widgets.Image
+	buttonPin  mockInputPin
+	ledPin     mockOutputPin
 }
 
 // Create a mock flipdot
@@ -58,13 +87,17 @@ func newMockFlipdotClient(signs []*flipdot.GetInfoResponse_SignInfo) mockFlipdot
 		previousHeight = height
 	}
 
-	// Also create a paragraph to reveal button state
-	buttonStateText := widgets.NewParagraph()
+	// Create some text for the button
+	buttonText := widgets.NewParagraph()
+	buttonText.Text = "Button"
+	buttonText.SetRect(0, previousHeight+1, 20, previousHeight+1+3)
+	buttonText.TextStyle.Fg = termui.ColorWhite
 
 	return mockFlipdotClient{
-		signConfig:   signs,
-		uiSigns:      imageWidgets,
-		uiButtonText: buttonStateText,
+		signConfig: signs,
+		uiSigns:    imageWidgets,
+		buttonPin:  mockInputPin{uiText: buttonText},
+		ledPin:     mockOutputPin{uiText: buttonText},
 	}
 }
 
@@ -72,21 +105,21 @@ func newMockFlipdotClient(signs []*flipdot.GetInfoResponse_SignInfo) mockFlipdot
 func (m *mockFlipdotClient) GetInfo(ctx context.Context, in *flipdot.GetInfoRequest, opts ...grpc.CallOption) (*flipdot.GetInfoResponse, error) {
 	// Return the baked-in mocked signs
 	return &flipdot.GetInfoResponse{
-		Signs: m.signs,
+		Signs: m.signConfig,
 	}, nil
 }
 
 // Mock the Draw function
 func (m *mockFlipdotClient) Draw(ctx context.Context, in *flipdot.DrawRequest, opts ...grpc.CallOption) (*flipdot.DrawResponse, error) {
 	// Find the sign
-	for i, sign := range m.signs {
+	for i, sign := range m.signConfig {
 		if sign.Name == in.Sign {
 			// Draw the image
 			img := unslice(*in.Image, sign.Width, sign.Height)
 			// Draw the image to the terminal
-			m.widgets[i].Image = img
+			m.uiSigns[i].Image = img
 			// Render the update
-			termui.Render(m.widgets[i])
+			termui.Render(m.uiSigns[i])
 		}
 	}
 	return &flipdot.DrawResponse{}, nil
@@ -121,7 +154,7 @@ func unslice(imgIn flipdot.Image, width, height uint32) image.Image {
 	return imgOut
 }
 
-func uiHandlingLoop() {
+func (m *mockFlipdotClient) uiHandlingLoop() {
 	// Get the poll events channel
 	uiEvents := termui.PollEvents()
 	// Poll events until user quits
@@ -131,15 +164,18 @@ func uiHandlingLoop() {
 			switch e.ID { // event string/identifier
 			case "q", "<C-c>": // press 'q' or 'C-c' to quit
 				return
-			case "b": // press 'b' for button press
-
+			case "<Down>": // Press button
+				m.buttonPin.set(true)
+				break
+			case "<Up>": // Release button
+				m.buttonPin.set(false)
 			}
 		}
 	}
 }
 
 // Create a mock flipdot for use in the application
-func createMockFlipdotClient() flipdot.FlipdotClient {
+func createMockFlipdotClient() *mockFlipdotClient {
 	// Mock the signs
 	mockSigns := []*flipdot.GetInfoResponse_SignInfo{
 		&flipdot.GetInfoResponse_SignInfo{
@@ -166,7 +202,7 @@ func createMockFlipdotClient() flipdot.FlipdotClient {
 		}
 		defer termui.Close()
 		// Listen for button presses, etc
-		uiHandlingLoop()
+		mock.uiHandlingLoop()
 	}()
 	return &mock
 }

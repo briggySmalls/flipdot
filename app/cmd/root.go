@@ -34,6 +34,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/stianeikeland/go-rpio"
+	"google.golang.org/grpc"
 )
 
 const (
@@ -64,22 +65,38 @@ var rootCmd = &cobra.Command{
 		// Pull out config (from args/env/config file)
 		config := validateConfig()
 
-		// Create a client
-		client, err := createClient(config.clientAddress, config.mock)
-		errorHandler(err)
+		// Create real/mock client and button manger
+		var client flipdot.FlipdotClient
+		var bm flipapps.ButtonManager
+		if config.mock {
+			// Create a mock flipdot client
+			ui := createMockFlipdotClient()
+			// Assign client from UI
+			client = ui
+			// Create a button manager from UI
+			bm = flipapps.NewButtonManager(&ui.buttonPin, &ui.ledPin, time.Second, buttonDebounceDuration)
+		} else {
+			// Create a gRPC connection to the remote flipdot server
+			connection, err := grpc.Dial(fmt.Sprintf(config.clientAddress), grpc.WithInsecure())
+			errorHandler(err)
+			// Create a flipdot client
+			client = flipdot.NewFlipdotClient(connection)
+			// Activate RPi GPIO
+			err = rpio.Open()
+			errorHandler(err)
+			defer rpio.Close()
+			// Create pins that interface with RPi GPIO
+			ledPin := flipapps.NewOutputPin(config.ledPin)
+			buttonPin := flipapps.NewTriggerPin(config.buttonPin)
+			// Create a button manager
+			bm = flipapps.NewButtonManager(buttonPin, ledPin, time.Second, buttonDebounceDuration)
+		}
+
 		// Create a flipdot controller
 		flippy, err := flipdot.NewFlipdot(
 			client,
 			time.Duration(config.frameDurationSecs)*time.Second)
 		errorHandler(err)
-
-		// Create a button manager
-		if !config.mock {
-			err := rpio.Open()
-			errorHandler(err)
-			defer rpio.Close()
-		}
-		bm := createButtonManager(config.buttonPin, config.ledPin, config.mock)
 
 		// Get font
 		font, err := readFont(config.fontFile, config.fontSize)
