@@ -28,7 +28,11 @@ func createServer(appSecret, appPassword string, messagesIn chan flipapps.Messag
 	return
 }
 
-func createClient(address string) (flipClient flipdot.FlipdotClient, err error) {
+func createClient(address string, isMock bool) (flipClient flipdot.FlipdotClient, err error) {
+	if isMock {
+		// Create a mock flipdot client
+		return createMockFlipdotClient(), nil
+	}
 	// Create a gRPC connection to the remote flipdot server
 	var connection *grpc.ClientConn
 	connection, err = grpc.Dial(fmt.Sprintf(address), grpc.WithInsecure())

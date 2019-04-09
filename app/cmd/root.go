@@ -31,7 +31,6 @@ import (
 
 	"github.com/briggySmalls/flipdot/app/flipapps"
 	"github.com/briggySmalls/flipdot/app/flipdot"
-	"github.com/gizak/termui"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -71,21 +70,14 @@ var rootCmd = &cobra.Command{
 			log.SetOutput(ioutil.Discard)
 		}
 
-		// Get a flipdot
-		var flippy flipdot.Flipdot
-		if config.mock {
-			flippy = createMockFlipdot()
-			defer termui.Close()
-		} else {
-			// Create a client
-			client, err := createClient(config.clientAddress)
-			errorHandler(err)
-			// Create a flipdot controller
-			flippy, err = flipdot.NewFlipdot(
-				client,
-				time.Duration(config.frameDurationSecs)*time.Second)
-			errorHandler(err)
-		}
+		// Create a client
+		client, err := createClient(config.clientAddress, config.mock)
+		errorHandler(err)
+		// Create a flipdot controller
+		flippy, err := flipdot.NewFlipdot(
+			client,
+			time.Duration(config.frameDurationSecs)*time.Second)
+		errorHandler(err)
 
 		// Create a button manager
 		var ledPin flipapps.OutputPin

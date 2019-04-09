@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"image"
 	"image/color"
 	"log"
@@ -9,6 +10,7 @@ import (
 	"github.com/gizak/termui"
 	"github.com/gizak/termui/widgets"
 	"github.com/stianeikeland/go-rpio"
+	"google.golang.org/grpc"
 )
 
 // Mock output pin
@@ -25,13 +27,13 @@ func (p *mockTriggerPin) EdgeDetected() bool { return false }
 func (p *mockTriggerPin) Read() rpio.State   { return rpio.Low }
 
 // Mock flipdot
-type mockFlipdot struct {
+type mockFlipdotClient struct {
 	signs   []*flipdot.GetInfoResponse_SignInfo
 	widgets []*widgets.Image
 }
 
 // NewMockFlipdot Create a mock flipdot
-func NewMockFlipdot(signs []*flipdot.GetInfoResponse_SignInfo) mockFlipdot {
+func NewMockFlipdotClient(signs []*flipdot.GetInfoResponse_SignInfo) mockFlipdotClient {
 	// Create a widget for each image
 	imageWidgets := []*widgets.Image{}
 	previousHeight := 0
@@ -47,45 +49,48 @@ func NewMockFlipdot(signs []*flipdot.GetInfoResponse_SignInfo) mockFlipdot {
 		previousHeight = height
 	}
 
-	return mockFlipdot{
+	return mockFlipdotClient{
 		signs:   signs,
 		widgets: imageWidgets,
 	}
 }
 
 // Mock the GetInfo response
-func (m *mockFlipdot) Signs() []*flipdot.GetInfoResponse_SignInfo {
-	return m.signs
+func (m *mockFlipdotClient) GetInfo(ctx context.Context, in *flipdot.GetInfoRequest, opts ...grpc.CallOption) (*flipdot.GetInfoResponse, error) {
+	// Return the baked-in mocked signs
+	return &flipdot.GetInfoResponse{
+		Signs: m.signs,
+	}, nil
 }
 
-// Mock the Size response
-func (m *mockFlipdot) Size() (width, height uint) {
-	return uint(m.signs[0].Width), uint(m.signs[0].Height)
-}
-
-func (m *mockFlipdot) LightOn() error   { return nil }
-func (m *mockFlipdot) LightOff() error  { return nil }
-func (m *mockFlipdot) TestStart() error { return nil }
-func (m *mockFlipdot) TestStop() error  { return nil }
-
-// Mock drawing an image
-func (m *mockFlipdot) Draw(images []*flipdot.Image) error {
-	// Draw the images
-	for i, image := range images {
-		log.Println("Drawing image...")
-		// Unslice the image
-		img := m.unslice(*image)
-		// Draw the image to the terminal
-		m.widgets[i].Image = img
-		termui.Render(m.widgets[i])
+// Mock the Draw function
+func (m *mockFlipdotClient) Draw(ctx context.Context, in *flipdot.DrawRequest, opts ...grpc.CallOption) (*flipdot.DrawResponse, error) {
+	// Find the sign
+	for i, sign := range m.signs {
+		if sign.Name == in.Sign {
+			// Draw the image
+			img := unslice(*in.Image, sign.Width, sign.Height)
+			// Draw the image to the terminal
+			m.widgets[i].Image = img
+			// Render the update
+			termui.Render(m.widgets[i])
+		}
 	}
-	// Never error
-	return nil
+	return &flipdot.DrawResponse{}, nil
 }
 
-func (m *mockFlipdot) unslice(imgIn flipdot.Image) image.Image {
+func (m *mockFlipdotClient) Test(ctx context.Context, in *flipdot.TestRequest, opts ...grpc.CallOption) (*flipdot.TestResponse, error) {
+	// Return and do nothing
+	return &flipdot.TestResponse{}, nil
+}
+
+func (m *mockFlipdotClient) Light(ctx context.Context, in *flipdot.LightRequest, opts ...grpc.CallOption) (*flipdot.LightResponse, error) {
+	// Return and do nothing
+	return &flipdot.LightResponse{}, nil
+}
+
+func unslice(imgIn flipdot.Image, width, height uint32) image.Image {
 	// Create an image to hold the unpacked pixels
-	width, height := m.Size()
 	imgOut := image.NewGray(image.Rect(0, 0, int(width), int(height)))
 	// Iterate through the pixels
 	for i, pixel := range imgIn.Data {
@@ -119,7 +124,7 @@ func uiHandlingLoop() {
 }
 
 // Create a mock flipdot for use in the application
-func createMockFlipdot() flipdot.Flipdot {
+func createMockFlipdotClient() flipdot.FlipdotClient {
 	// Mock the signs
 	mockSigns := []*flipdot.GetInfoResponse_SignInfo{
 		&flipdot.GetInfoResponse_SignInfo{
@@ -134,7 +139,7 @@ func createMockFlipdot() flipdot.Flipdot {
 		},
 	}
 	// Create the mock
-	mock := NewMockFlipdot(mockSigns)
+	mock := NewMockFlipdotClient(mockSigns)
 
 	// Start a coroutine for checking for user input
 	go func() {
