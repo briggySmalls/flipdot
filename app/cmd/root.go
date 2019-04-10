@@ -40,7 +40,6 @@ const (
 )
 
 var cfgFile string
-var cfg config
 
 type config struct {
 	clientAddress     string
@@ -59,10 +58,6 @@ type config struct {
 var rootCmd = &cobra.Command{
 	Use:   "flipapp",
 	Short: "Application to display clock and messages on flipdot displays",
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		// Pull out config (from args/env/config file)
-		cfg = validateConfig()
-	},
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -124,23 +119,17 @@ func initConfig() {
 }
 
 // Validate the supplied config
-func validateConfig() config {
-	clientAddress := viper.GetString("client-address")
+func getCommonConfig() config {
 	serverAddress := viper.GetString("server-address")
 	fontFile := viper.GetString("font-file")
 	fontSize := viper.GetFloat64("font-size")
 	frameDuration := viper.GetInt("frame-duration")
 	appSecret := viper.GetString("app-secret")
 	appPassword := viper.GetString("app-password")
-	buttonPin := viper.GetInt("button-pin")
-	ledPin := viper.GetInt("led-pin")
 	statusImage := viper.GetString("status-image")
 
 	if serverAddress == "" {
 		errorHandler(fmt.Errorf("server-address cannot be: %s", serverAddress))
-	}
-	if clientAddress == "" {
-		errorHandler(fmt.Errorf("client-address cannot be: %s", clientAddress))
 	}
 	if fontSize == 0 {
 		errorHandler(fmt.Errorf("font-size cannot be: %f", fontSize))
@@ -155,30 +144,24 @@ func validateConfig() config {
 		errorHandler(fmt.Errorf("app-password cannot be: %s", appPassword))
 	}
 	if statusImage == "" {
-		errorHandler(fmt.Errorf("status-iamge cannot be: %s", statusImage))
+		errorHandler(fmt.Errorf("status-image cannot be: %s", statusImage))
 	}
 
 	fmt.Println("")
 	fmt.Println("Starting server with the following configuration:")
-	fmt.Printf("client-address: %s\n", clientAddress)
 	fmt.Printf("server-address: %s\n", serverAddress)
 	fmt.Printf("font-file: %s\n", fontFile)
 	fmt.Printf("font-size: %f\n", fontSize)
 	fmt.Printf("frame-duration: %d\n", frameDuration)
-	fmt.Printf("button-pin: %d\n", buttonPin)
-	fmt.Printf("led-pin: %d\n", ledPin)
 	fmt.Printf("status-image: %s\n", statusImage)
 
 	return config{
-		clientAddress:     clientAddress,
 		serverAddress:     serverAddress,
 		fontFile:          fontFile,
 		fontSize:          fontSize,
 		frameDurationSecs: frameDuration,
 		appSecret:         appSecret,
 		appPassword:       appPassword,
-		buttonPin:         uint8(buttonPin),
-		ledPin:            uint8(ledPin),
 		statusImage:       statusImage,
 	}
 }
