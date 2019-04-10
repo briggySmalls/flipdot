@@ -21,11 +21,11 @@ func TestTickText(t *testing.T) {
 	// Configure imager mock to expect request to build images
 	// Return two 'images' to be displayed
 	fakeImager.EXPECT().Clock(gomock.Any(), false).Return([]*flipdot.Image{
-		&flipdot.Image{Data: make([]bool, 10)},
-		&flipdot.Image{Data: make([]bool, 10)},
+		{Data: make([]bool, 10)},
+		{Data: make([]bool, 10)},
 	}, nil)
 	// Configure the mock (calls 'done' when executed)
-	mockAction := func(images []*flipdot.Image) {
+	mockAction := func(images []*flipdot.Image, isWait bool) {
 		// Assert that the images are as expected
 		if len(images) != 2 {
 			t.Errorf("Unexpected number of images: %d", len(images))
@@ -34,7 +34,7 @@ func TestTickText(t *testing.T) {
 		textWritten <- struct{}{}
 	}
 	fakeBm.EXPECT().GetChannel()
-	fakeFlipdot.EXPECT().Draw(gomock.Any()).Do(mockAction).Return(nil)
+	fakeFlipdot.EXPECT().Draw(gomock.Any(), false).Do(mockAction).Return(nil)
 	// Run
 	go app.Run(time.Millisecond)
 	// Wait until the message is handled, or timeout
@@ -59,7 +59,7 @@ func TestMessageTextQueued(t *testing.T) {
 	fakeBm.EXPECT().GetChannel()
 	fakeBm.EXPECT().SetState(Active)              // Expect button to be activated
 	fakeImager.EXPECT().Clock(gomock.Any(), true) // Expect clock image to be built
-	fakeFlipdot.EXPECT().Draw(gomock.Any()).Do(func(interface{}) {
+	fakeFlipdot.EXPECT().Draw(gomock.Any(), false).Do(func(interface{}, bool) {
 		// We are done testing
 		messageAdded <- struct{}{}
 	}) // Expect clock images to be sent
@@ -104,16 +104,16 @@ func TestMessageTextSent(t *testing.T) {
 			// Note: Can't message buttonPress in this callback as we get deadlock
 			activated <- struct{}{}
 		}), // Expect button to be activated after receiving message,
-		fakeImager.EXPECT().Clock(gomock.Any(), true), // Expect clock image to be built
-		fakeFlipdot.EXPECT().Draw(gomock.Any()),  // Expect clock images to be sent
-		fakeBm.EXPECT().SetState(Inactive), // Expect dectivate before drawing message
+		fakeImager.EXPECT().Clock(gomock.Any(), true),  // Expect clock image to be built
+		fakeFlipdot.EXPECT().Draw(gomock.Any(), false), // Expect clock images to be sent
+		fakeBm.EXPECT().SetState(Inactive),             // Expect dectivate before drawing message
 		fakeImager.EXPECT().Message("briggySmalls", "test text").Return([]*flipdot.Image{ // Expect constructing message images
-			&flipdot.Image{Data: make([]bool, 10)},
-			&flipdot.Image{Data: make([]bool, 10)},
-			&flipdot.Image{Data: make([]bool, 10)},
-			&flipdot.Image{Data: make([]bool, 10)},
+			{Data: make([]bool, 10)},
+			{Data: make([]bool, 10)},
+			{Data: make([]bool, 10)},
+			{Data: make([]bool, 10)},
 		}, nil),
-		fakeFlipdot.EXPECT().Draw(gomock.Any()).Do(func(images []*flipdot.Image) { // Expect draw message images
+		fakeFlipdot.EXPECT().Draw(gomock.Any(), true).Do(func(images []*flipdot.Image, isWait bool) { // Expect draw message images
 			// Check image
 			if len(images) != 4 {
 				t.Errorf("Unexpected number of images: %d", len(images))

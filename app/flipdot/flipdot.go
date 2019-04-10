@@ -19,7 +19,7 @@ type Flipdot interface {
 	LightOff() error
 	TestStart() error
 	TestStop() error
-	Draw(images []*Image) error
+	Draw(images []*Image, isWait bool) error
 }
 
 type flipdot struct {
@@ -79,9 +79,15 @@ func (f *flipdot) Size() (width, height uint) {
 }
 
 // Draw a set of images
-func (f *flipdot) Draw(images []*Image) (err error) {
+func (f *flipdot) Draw(images []*Image, isWait bool) (err error) {
 	// Send any relevant images
 	images, err = f.sendFrame(images)
+	if err != nil || (len(images) == 0 && !isWait) {
+		// Either:
+		// 1) We've errored
+		// 2) We've sent all our images and we've not been asked to keep them visible
+		return
+	}
 	// Create a ticker
 	ticker := time.NewTicker(f.frameTime)
 	defer ticker.Stop()
@@ -210,6 +216,7 @@ func checkSigns(signs []*GetInfoResponse_SignInfo) error {
 	return nil
 }
 
+// Request signs information from service
 func (f *flipdot) getSigns() (signs []*GetInfoResponse_SignInfo, err error) {
 	// Get the signs
 	context, cancel := getContext()

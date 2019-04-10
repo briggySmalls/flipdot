@@ -191,7 +191,7 @@ func TestDraw(t *testing.T) {
 	}
 	// Run the test
 	runTest(func(f Flipdot) error {
-		return f.Draw(images)
+		return f.Draw(images, false)
 	}, mock, t)
 }
 
