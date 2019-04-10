@@ -51,6 +51,8 @@ func (s *application) Run(tickPeriod time.Duration) {
 	pendingMessages := make([]MessageRequest, 0)
 	// Get queue for button presses
 	buttonPressed := s.buttonManager.GetChannel()
+	// Draw first clock
+	s.drawTime(time.Now(), false)
 	// Run forever
 	for {
 		select {

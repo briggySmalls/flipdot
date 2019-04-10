@@ -56,13 +56,17 @@ func TestMessageTextQueued(t *testing.T) {
 	messageAdded := make(chan struct{})
 	defer close(messageAdded)
 	// Configure mock to expect a call to activate button
-	fakeBm.EXPECT().GetChannel()
-	fakeBm.EXPECT().SetState(Active)              // Expect button to be activated
-	fakeImager.EXPECT().Clock(gomock.Any(), true) // Expect clock image to be built
-	fakeFlipdot.EXPECT().Draw(gomock.Any(), false).Do(func(interface{}, bool) {
-		// We are done testing
-		messageAdded <- struct{}{}
-	}) // Expect clock images to be sent
+	gomock.InOrder(
+		fakeBm.EXPECT().GetChannel(),                   // Expect setup to fetch channel (before loop)
+		fakeImager.EXPECT().Clock(gomock.Any(), false), // Expect clock image to be built (before loop)
+		fakeFlipdot.EXPECT().Draw(gomock.Any(), false), // Expect clock image to be drawn (before loop)
+		fakeBm.EXPECT().SetState(Active),               // Expect button to be activated
+		fakeImager.EXPECT().Clock(gomock.Any(), true),  // Expect clock image to be built
+		fakeFlipdot.EXPECT().Draw(gomock.Any(), false).Do(func(interface{}, bool) {
+			// We are done testing
+			messageAdded <- struct{}{}
+		}), // Expect clock images to be sent
+	)
 	// Run
 	go app.Run(time.Millisecond)
 	// Send the message
@@ -99,6 +103,8 @@ func TestMessageTextSent(t *testing.T) {
 	buttonPress := make(chan struct{}) // Create a channel to signal a button press
 	gomock.InOrder(
 		fakeBm.EXPECT().GetChannel().Return(buttonPress), // Pass button press channel to app, when asked
+		fakeImager.EXPECT().Clock(gomock.Any(), false),   // Expect clock image to be built
+		fakeFlipdot.EXPECT().Draw(gomock.Any(), false),   // Expect clock images to be sent
 		fakeBm.EXPECT().SetState(Active).Do(func(interface{}) {
 			// Signal to main thread that button was activated
 			// Note: Can't message buttonPress in this callback as we get deadlock
