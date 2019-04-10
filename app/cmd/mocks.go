@@ -179,12 +179,12 @@ func (m *mockUI) ProcessEvents() {
 func createMockUI() *mockUI {
 	// Mock the signs
 	signs := []*flipdot.GetInfoResponse_SignInfo{
-		&flipdot.GetInfoResponse_SignInfo{
+		{
 			Name:   "top",
 			Width:  84,
 			Height: 7,
 		},
-		&flipdot.GetInfoResponse_SignInfo{
+		{
 			Name:   "bottom",
 			Width:  84,
 			Height: 7,
@@ -201,6 +201,11 @@ func createMockUI() *mockUI {
 		if err := termui.Init(); err != nil {
 			log.Fatalf("failed to initialize termui: %v", err)
 		}
+		// Render all the objects
+		for _, obj := range ui.uiSigns {
+			termui.Render(obj)
+		}
+		termui.Render(ui.ledPin.uiText)
 		defer termui.Close()
 		// Listen for button presses, etc
 		ui.ProcessEvents()
