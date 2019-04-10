@@ -86,10 +86,10 @@ func init() {
 	persistentFlags.StringP("server-address", "s", "0.0.0.0:5002", "address used to expose flipapp API over")
 	persistentFlags.StringP("font-file", "f", "", "path to font .ttf file to display text with")
 	persistentFlags.Float32P("font-size", "p", 0, "point size to obtain font face from font file")
-	persistentFlags.Float32P("frame-duration", "d", 5, "Duration (in seconds) to display each frame of a message")
+	persistentFlags.Float32P("frame-duration", "d", 5, "duration (in seconds) to display each frame of a message")
 	persistentFlags.String("app-secret", "", "secret used to sign JWTs with")
 	persistentFlags.String("app-password", "", "password required for authorisation")
-	persistentFlags.String("status-image", "", "Image to indicate new message status")
+	persistentFlags.String("status-image", "", "image to indicate new message status")
 
 	// Add all flags to config
 	viper.BindPFlags(persistentFlags)
