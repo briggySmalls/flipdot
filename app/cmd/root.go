@@ -70,7 +70,7 @@ var rootCmd = &cobra.Command{
 		var bm flipapps.ButtonManager
 		if config.mock {
 			// Create a mock flipdot client
-			ui := createMockFlipdotClient()
+			ui := createMockUI()
 			// Assign client from UI
 			client = ui
 			// Create a button manager from UI

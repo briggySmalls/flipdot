@@ -16,12 +16,6 @@ import (
 )
 
 // Mock output pin
-type mockInputPin struct {
-	state  bool // Button state
-	mux    sync.Mutex
-	uiText *widgets.Paragraph
-}
-
 type mockOutputPin struct {
 	uiText *widgets.Paragraph
 	state  bool // Button state
@@ -44,6 +38,13 @@ func (p *mockOutputPin) update(state bool) {
 	termui.Render(p.uiText)
 }
 
+// Mock input pin
+type mockInputPin struct {
+	state  bool // Button state
+	mux    sync.Mutex
+	uiText *widgets.Paragraph
+}
+
 func (p *mockInputPin) Read() rpio.State {
 	p.mux.Lock()
 	defer p.mux.Unlock()
@@ -63,16 +64,15 @@ func (p *mockInputPin) set(state bool) {
 }
 
 // Mock flipdot
-type mockFlipdotClient struct {
+type mockUI struct {
 	signConfig []*flipdot.GetInfoResponse_SignInfo
 	uiSigns    []*widgets.Image
 	buttonPin  mockInputPin
 	ledPin     mockOutputPin
 }
 
-// Create a mock flipdot
-func newMockFlipdotClient(signs []*flipdot.GetInfoResponse_SignInfo) mockFlipdotClient {
-	// Create a widget for each image
+func newMockUI(signs []*flipdot.GetInfoResponse_SignInfo) mockUI {
+	// Create an image widget for each sign
 	imageWidgets := []*widgets.Image{}
 	previousHeight := 0
 	for _, sign := range signs {
@@ -87,13 +87,14 @@ func newMockFlipdotClient(signs []*flipdot.GetInfoResponse_SignInfo) mockFlipdot
 		previousHeight = height
 	}
 
-	// Create some text for the button
+	// Create a text widget for the button
 	buttonText := widgets.NewParagraph()
 	buttonText.Text = "Button"
 	buttonText.SetRect(0, previousHeight+1, 20, previousHeight+1+3)
 	buttonText.TextStyle.Fg = termui.ColorWhite
 
-	return mockFlipdotClient{
+	// Create a mockUI
+	return mockUI{
 		signConfig: signs,
 		uiSigns:    imageWidgets,
 		buttonPin:  mockInputPin{uiText: buttonText},
@@ -102,7 +103,7 @@ func newMockFlipdotClient(signs []*flipdot.GetInfoResponse_SignInfo) mockFlipdot
 }
 
 // Mock the GetInfo response
-func (m *mockFlipdotClient) GetInfo(ctx context.Context, in *flipdot.GetInfoRequest, opts ...grpc.CallOption) (*flipdot.GetInfoResponse, error) {
+func (m *mockUI) GetInfo(ctx context.Context, in *flipdot.GetInfoRequest, opts ...grpc.CallOption) (*flipdot.GetInfoResponse, error) {
 	// Return the baked-in mocked signs
 	return &flipdot.GetInfoResponse{
 		Signs: m.signConfig,
@@ -110,7 +111,7 @@ func (m *mockFlipdotClient) GetInfo(ctx context.Context, in *flipdot.GetInfoRequ
 }
 
 // Mock the Draw function
-func (m *mockFlipdotClient) Draw(ctx context.Context, in *flipdot.DrawRequest, opts ...grpc.CallOption) (*flipdot.DrawResponse, error) {
+func (m *mockUI) Draw(ctx context.Context, in *flipdot.DrawRequest, opts ...grpc.CallOption) (*flipdot.DrawResponse, error) {
 	// Find the sign
 	for i, sign := range m.signConfig {
 		if sign.Name == in.Sign {
@@ -125,12 +126,12 @@ func (m *mockFlipdotClient) Draw(ctx context.Context, in *flipdot.DrawRequest, o
 	return &flipdot.DrawResponse{}, nil
 }
 
-func (m *mockFlipdotClient) Test(ctx context.Context, in *flipdot.TestRequest, opts ...grpc.CallOption) (*flipdot.TestResponse, error) {
+func (m *mockUI) Test(ctx context.Context, in *flipdot.TestRequest, opts ...grpc.CallOption) (*flipdot.TestResponse, error) {
 	// Return and do nothing
 	return &flipdot.TestResponse{}, nil
 }
 
-func (m *mockFlipdotClient) Light(ctx context.Context, in *flipdot.LightRequest, opts ...grpc.CallOption) (*flipdot.LightResponse, error) {
+func (m *mockUI) Light(ctx context.Context, in *flipdot.LightRequest, opts ...grpc.CallOption) (*flipdot.LightResponse, error) {
 	// Return and do nothing
 	return &flipdot.LightResponse{}, nil
 }
@@ -154,7 +155,7 @@ func unslice(imgIn flipdot.Image, width, height uint32) image.Image {
 	return imgOut
 }
 
-func (m *mockFlipdotClient) uiHandlingLoop() {
+func (m *mockUI) ProcessEvents() {
 	// Get the poll events channel
 	uiEvents := termui.PollEvents()
 	// Poll events until user quits
@@ -175,9 +176,9 @@ func (m *mockFlipdotClient) uiHandlingLoop() {
 }
 
 // Create a mock flipdot for use in the application
-func createMockFlipdotClient() *mockFlipdotClient {
+func createMockUI() *mockUI {
 	// Mock the signs
-	mockSigns := []*flipdot.GetInfoResponse_SignInfo{
+	signs := []*flipdot.GetInfoResponse_SignInfo{
 		&flipdot.GetInfoResponse_SignInfo{
 			Name:   "top",
 			Width:  84,
@@ -189,11 +190,11 @@ func createMockFlipdotClient() *mockFlipdotClient {
 			Height: 7,
 		},
 	}
-	// Create the mock
-	mock := newMockFlipdotClient(mockSigns)
+	// Create the UI
+	ui := newMockUI(signs)
 
-	// Start a coroutine for checking for user input
-	go func() {
+	// Run the UI loop
+	go func() { // Start a coroutine for checking for user input
 		// Diable logging (we will be drawing)
 		log.SetOutput(ioutil.Discard)
 		// Initialise termui
@@ -202,7 +203,9 @@ func createMockFlipdotClient() *mockFlipdotClient {
 		}
 		defer termui.Close()
 		// Listen for button presses, etc
-		mock.uiHandlingLoop()
+		ui.ProcessEvents()
 	}()
-	return &mock
+
+	// Return the ui
+	return &ui
 }
