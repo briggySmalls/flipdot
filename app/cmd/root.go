@@ -33,7 +33,6 @@ import (
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/stianeikeland/go-rpio"
 )
 
 const (
@@ -59,41 +58,6 @@ type config struct {
 var rootCmd = &cobra.Command{
 	Use:   "flipapp",
 	Short: "Application to display clock and messages on flipdot displays",
-	Run: func(cmd *cobra.Command, args []string) {
-		// Pull out config (from args/env/config file)
-		config := validateConfig()
-		// Create a client
-		client, err := createClient(config.clientAddress)
-		errorHandler(err)
-		// Create a flipdot controller
-		flipdot, err := flipdot.NewFlipdot(
-			client,
-			time.Duration(config.frameDurationSecs)*time.Second)
-		errorHandler(err)
-		// Create a button manager
-		err = rpio.Open()
-		errorHandler(err)
-		defer rpio.Close()
-		bm := createButtonManager(config.ledPin, config.buttonPin)
-		// Get font
-		font, err := readFont(config.fontFile, config.fontSize)
-		// Create imager
-		width, height := flipdot.Size()
-		imager, err := createImager(config.statusImage, font, width, height, uint(len(flipdot.Signs())))
-		errorHandler(err)
-		// Create and start application
-		app := flipapps.NewApplication(flipdot, bm, imager)
-		go app.Run(time.Minute)
-		// Create a flipapps server
-		server := createServer(config.appSecret, config.appPassword, app.GetMessagesChannel(), flipdot.Signs())
-		// Run server
-		// Create a listener on TCP port
-		lis, err := net.Listen("tcp", fmt.Sprintf(config.serverAddress))
-		errorHandler(err)
-		if err := server.Serve(lis); err != nil {
-			log.Fatalf("failed to serve: %s", err)
-		}
-	},
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -113,20 +77,17 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.flipapp.yaml)")
 
 	// Define some root-command flags
-	flags := rootCmd.Flags()
-	flags.StringP("client-address", "c", "localhost:5001", "address used to connect to flipdot service")
-	flags.StringP("server-address", "s", "0.0.0.0:5002", "address used to expose flipapp API over")
-	flags.StringP("font-file", "f", "", "path to font .ttf file to display text with")
-	flags.Float32P("font-size", "p", 0, "point size to obtain font face from font file")
-	flags.Float32P("frame-duration", "d", 5, "Duration (in seconds) to display each frame of a message")
-	flags.String("app-secret", "", "secret used to sign JWTs with")
-	flags.String("app-password", "", "password required for authorisation")
-	flags.Uint8("button-pin", 0, "GPIO pin that reads button state")
-	flags.Uint8("led-pin", 0, "GPIO pin that illuminates button")
-	flags.String("status-image", "", "Image to indicate new message status")
+	persistentFlags := rootCmd.PersistentFlags()
+	persistentFlags.StringP("server-address", "s", "0.0.0.0:5002", "address used to expose flipapp API over")
+	persistentFlags.StringP("font-file", "f", "", "path to font .ttf file to display text with")
+	persistentFlags.Float32P("font-size", "p", 0, "point size to obtain font face from font file")
+	persistentFlags.Float32P("frame-duration", "d", 5, "duration (in seconds) to display each frame of a message")
+	persistentFlags.String("app-secret", "", "secret used to sign JWTs with")
+	persistentFlags.String("app-password", "", "password required for authorisation")
+	persistentFlags.String("status-image", "", "image to indicate new message status")
 
 	// Add all flags to config
-	viper.BindPFlags(flags)
+	viper.BindPFlags(persistentFlags)
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -158,23 +119,17 @@ func initConfig() {
 }
 
 // Validate the supplied config
-func validateConfig() config {
-	clientAddress := viper.GetString("client-address")
+func getCommonConfig() config {
 	serverAddress := viper.GetString("server-address")
 	fontFile := viper.GetString("font-file")
 	fontSize := viper.GetFloat64("font-size")
 	frameDuration := viper.GetInt("frame-duration")
 	appSecret := viper.GetString("app-secret")
 	appPassword := viper.GetString("app-password")
-	buttonPin := viper.GetInt("button-pin")
-	ledPin := viper.GetInt("led-pin")
 	statusImage := viper.GetString("status-image")
 
 	if serverAddress == "" {
 		errorHandler(fmt.Errorf("server-address cannot be: %s", serverAddress))
-	}
-	if clientAddress == "" {
-		errorHandler(fmt.Errorf("client-address cannot be: %s", clientAddress))
 	}
 	if fontSize == 0 {
 		errorHandler(fmt.Errorf("font-size cannot be: %f", fontSize))
@@ -189,31 +144,54 @@ func validateConfig() config {
 		errorHandler(fmt.Errorf("app-password cannot be: %s", appPassword))
 	}
 	if statusImage == "" {
-		errorHandler(fmt.Errorf("status-iamge cannot be: %s", statusImage))
+		errorHandler(fmt.Errorf("status-image cannot be: %s", statusImage))
 	}
 
 	fmt.Println("")
 	fmt.Println("Starting server with the following configuration:")
-	fmt.Printf("client-address: %s\n", clientAddress)
 	fmt.Printf("server-address: %s\n", serverAddress)
 	fmt.Printf("font-file: %s\n", fontFile)
 	fmt.Printf("font-size: %f\n", fontSize)
 	fmt.Printf("frame-duration: %d\n", frameDuration)
-	fmt.Printf("button-pin: %d\n", buttonPin)
-	fmt.Printf("led-pin: %d\n", ledPin)
 	fmt.Printf("status-image: %s\n", statusImage)
 
 	return config{
-		clientAddress:     clientAddress,
 		serverAddress:     serverAddress,
 		fontFile:          fontFile,
 		fontSize:          fontSize,
 		frameDurationSecs: frameDuration,
 		appSecret:         appSecret,
 		appPassword:       appPassword,
-		buttonPin:         uint8(buttonPin),
-		ledPin:            uint8(ledPin),
 		statusImage:       statusImage,
+	}
+}
+
+// Create components and run application
+func runApp(client flipdot.FlipdotClient, bm flipapps.ButtonManager, config config) {
+	// Create a flipdot controller
+	flippy, err := flipdot.NewFlipdot(
+		client,
+		time.Duration(config.frameDurationSecs)*time.Second)
+	errorHandler(err)
+
+	// Get font
+	font, err := readFont(config.fontFile, config.fontSize)
+	// Create imager
+	width, height := flippy.Size()
+	imager, err := createImager(config.statusImage, font, width, height, uint(len(flippy.Signs())))
+	errorHandler(err)
+
+	// Create and start application
+	app := flipapps.NewApplication(flippy, bm, imager)
+	go app.Run(time.Second)
+	// Create a flipapps server
+	server := createServer(config.appSecret, config.appPassword, app.GetMessagesChannel(), flippy.Signs())
+	// Run server
+	// Create a listener on TCP port
+	lis, err := net.Listen("tcp", fmt.Sprintf(config.serverAddress))
+	errorHandler(err)
+	if err := server.Serve(lis); err != nil {
+		log.Fatalf("failed to serve: %s", err)
 	}
 }
 

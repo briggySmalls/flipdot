@@ -29,7 +29,6 @@ const (
 )
 
 type TriggerPin interface {
-	EdgeDetected() bool
 	Read() rpio.State
 }
 
