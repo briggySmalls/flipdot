@@ -80,8 +80,27 @@ func (f *flipdot) Size() (width, height uint) {
 
 // Draw a set of images
 func (f *flipdot) Draw(images []*Image) (err error) {
-	// Send the images
-	err = f.sendImages(images)
+	// Send any relevant images
+	images, err = f.sendFrame(images)
+	// Create a ticker
+	ticker := time.NewTicker(f.frameTime)
+	defer ticker.Stop()
+	// Write images periodically
+	for {
+		select {
+		case <-ticker.C:
+			if len(images) > 0 {
+				// Send a frame's-worth of images
+				images, err = f.sendFrame(images)
+				if err != nil {
+					return
+				}
+			} else {
+				// We've finished displaying images, move on
+				return
+			}
+		}
+	}
 	return
 }
 
@@ -137,31 +156,6 @@ func (f *flipdot) test(start bool) (err error) {
 	}
 	_, err = f.client.Test(ctx, &TestRequest{Action: action})
 	return
-}
-
-// Send a set of images, periodically if necessary
-func (f *flipdot) sendImages(images []*Image) (err error) {
-	// Send any relevant images
-	images, err = f.sendFrame(images)
-	// Create a ticker
-	ticker := time.NewTicker(f.frameTime)
-	defer ticker.Stop()
-	// Write images periodically
-	for {
-		select {
-		case <-ticker.C:
-			if len(images) > 0 {
-				// Send a frame's-worth of images
-				images, err = f.sendFrame(images)
-				if err != nil {
-					return
-				}
-			} else {
-				// We've finished displaying images, move on
-				return
-			}
-		}
-	}
 }
 
 // Send a set of images to available signs
