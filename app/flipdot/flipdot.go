@@ -19,7 +19,7 @@ type Flipdot interface {
 	LightOff() error
 	TestStart() error
 	TestStop() error
-	Draw(images []*Image) error
+	Draw(images []*Image, isWait bool) error
 }
 
 type flipdot struct {
@@ -79,9 +79,34 @@ func (f *flipdot) Size() (width, height uint) {
 }
 
 // Draw a set of images
-func (f *flipdot) Draw(images []*Image) (err error) {
-	// Send the images
-	err = f.sendImages(images)
+func (f *flipdot) Draw(images []*Image, isWait bool) (err error) {
+	// Send any relevant images
+	images, err = f.sendFrame(images)
+	if err != nil || (len(images) == 0 && !isWait) {
+		// Either:
+		// 1) We've errored
+		// 2) We've sent all our images and we've not been asked to keep them visible
+		return
+	}
+	// Create a ticker
+	ticker := time.NewTicker(f.frameTime)
+	defer ticker.Stop()
+	// Write images periodically
+	for {
+		select {
+		case <-ticker.C:
+			if len(images) > 0 {
+				// Send a frame's-worth of images
+				images, err = f.sendFrame(images)
+				if err != nil {
+					return
+				}
+			} else {
+				// We've finished displaying images, move on
+				return
+			}
+		}
+	}
 	return
 }
 
@@ -139,31 +164,6 @@ func (f *flipdot) test(start bool) (err error) {
 	return
 }
 
-// Send a set of images, periodically if necessary
-func (f *flipdot) sendImages(images []*Image) (err error) {
-	// Send any relevant images
-	images, err = f.sendFrame(images)
-	// Create a ticker
-	ticker := time.NewTicker(f.frameTime)
-	defer ticker.Stop()
-	// Write images periodically
-	for {
-		select {
-		case <-ticker.C:
-			if len(images) > 0 {
-				// Send a frame's-worth of images
-				images, err = f.sendFrame(images)
-				if err != nil {
-					return
-				}
-			} else {
-				// We've finished displaying images, move on
-				return
-			}
-		}
-	}
-}
-
 // Send a set of images to available signs
 func (f *flipdot) sendFrame(images []*Image) (leftover []*Image, err error) {
 	leftover = images
@@ -216,6 +216,7 @@ func checkSigns(signs []*GetInfoResponse_SignInfo) error {
 	return nil
 }
 
+// Request signs information from service
 func (f *flipdot) getSigns() (signs []*GetInfoResponse_SignInfo, err error) {
 	// Get the signs
 	context, cancel := getContext()

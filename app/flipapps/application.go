@@ -51,6 +51,8 @@ func (s *application) Run(tickPeriod time.Duration) {
 	pendingMessages := make([]MessageRequest, 0)
 	// Get queue for button presses
 	buttonPressed := s.buttonManager.GetChannel()
+	// Draw first clock
+	s.drawTime(time.Now(), false)
 	// Run forever
 	for {
 		select {
@@ -103,7 +105,7 @@ func (s *application) drawTime(time time.Time, isMessageAvailable bool) {
 	// Print the time (centred)
 	images, err := s.imager.Clock(time, isMessageAvailable)
 	errorHandler(err)
-	err = s.flipdot.Draw(images)
+	err = s.flipdot.Draw(images, false)
 	errorHandler(err)
 }
 
@@ -128,7 +130,7 @@ func (s *application) handleMessage(message MessageRequest) {
 
 // Helper function to send images to the signs
 func (s *application) sendImages(images []*flipdot.Image) (err error) {
-	err = s.flipdot.Draw(images)
+	err = s.flipdot.Draw(images, true)
 	return
 }
 
