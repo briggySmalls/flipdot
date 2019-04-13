@@ -25,5 +25,4 @@ COPY ./app/bell.png /app/status.png
 
 # Run the go program
 ENTRYPOINT ["/go/bin/flipapp"]
-CMD ["--config", "/app/config.yaml"]
-
+CMD ["app", "--config", "/app/config.yaml"]
