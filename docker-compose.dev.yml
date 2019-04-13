@@ -1,0 +1,23 @@
+version: '3'
+services:
+  proxy:
+    image: briggysmalls/grpcwebproxy:latest
+    command: --backend_addr=app:5002 --allow_all_origins --run_tls_server=false
+    links:
+      - app
+    ports:
+      - "5002:8080"
+  app:
+    image: briggysmalls/flipapp:latest
+    # Run mock instead of app
+    command: mock --config /app/config.yaml
+    stdin_open: true
+    tty: true
+    env_file:
+      - .env.dev
+    expose:
+      - "5002"
+    volumes:
+      - ./app/config.yaml:/app/config.yaml
+      - ./app/bell.png:/app/status.png
+      - ./app/Smirnof.ttf:/app/font.ttf
