@@ -9,20 +9,20 @@ verify_ssl = true
 name = "pypi"
 
 [dev-packages]
-invoke = "*"
-bumpversion = "*"
-coverage = "*"
-wheel = "*"
-sphinx = "*"
-twine = "*"
-tox = "*"
-"flake8" = "*"
-pylint = "*"
-pytest = "*"
-isort = "*"
-yapf = "*"
-grpcio-tools = "*"
-ipython = "*"
+invoke = {version="*", index="pypi"}
+bumpversion = {version="*", index="pypi"}
+coverage = {version="*", index="pypi"}
+wheel = {version="*", index="pypi"}
+sphinx = {version="*", index="pypi"}
+twine = {version="*", index="pypi"}
+tox = {version="*", index="pypi"}
+"flake8" = {version="*", index="pypi"}
+pylint = {version="*", index="pypi"}
+pytest = {version="*", index="pypi"}
+isort = {version="*", index="pypi"}
+yapf = {version="*", index="pypi"}
+grpcio-tools = {version="*", index="pypi"}
+ipython = {version="*", index="pypi"}
 
 [packages]
 flipdot_controller = {path = ".", editable = true}

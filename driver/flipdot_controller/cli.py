@@ -13,11 +13,10 @@ from flipdot_controller.server import Server
 
 
 @click.command()
-@click.option(
-    '--config',
-    type=click.Path(exists=True),
-    required=True,
-    help="TOML config file")
+@click.option('--config',
+              type=click.Path(exists=True),
+              required=True,
+              help="TOML config file")
 def main(config):
     """Console script for flipdot_controller."""
     logging.basicConfig(level=logging.DEBUG)

@@ -8,9 +8,10 @@ import numpy as np
 from grpc_reflection.v1alpha import reflection
 
 from flipdot_controller.controller import FlipdotController
-from flipdot_controller.protos.flipdot_pb2 import (
-    DESCRIPTOR, DrawResponse, GetInfoResponse, LightRequest, LightResponse,
-    TestRequest, TestResponse)
+from flipdot_controller.protos.flipdot_pb2 import (DESCRIPTOR, DrawResponse,
+                                                   GetInfoResponse,
+                                                   LightRequest, LightResponse,
+                                                   TestRequest, TestResponse)
 from flipdot_controller.protos.flipdot_pb2_grpc import (
     FlipdotServicer, add_FlipdotServicer_to_server)
 
@@ -88,9 +89,8 @@ class Servicer(FlipdotServicer):
         # Determine sign's shape
         sign_info = self.controller.get_info(request.sign)
         # Reconstruct image
-        image = np.array(
-            request.image.data, dtype=bool).reshape((sign_info.height,
-                                                     sign_info.width))
+        image = np.array(request.image.data, dtype=bool).reshape(
+            (sign_info.height, sign_info.width))
         # Send the command
         self.controller.draw(request.sign, image)
         return DrawResponse()
