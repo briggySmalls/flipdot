@@ -106,8 +106,6 @@ jobs:
     steps:
       # Install netlify cli
       - run: npm install netlify-cli -g
-      # Login
-      - run: netlify login
       # Fetch built web app
       - attach_workspace:
           at: /tmp/dist
