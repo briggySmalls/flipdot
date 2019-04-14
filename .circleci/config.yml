@@ -110,7 +110,7 @@ jobs:
       - attach_workspace:
           at: /tmp/dist
       # Deploy
-      - run: netlify deploy --dir /tmp/dist --prod
+      - run: netlify deploy --dir /tmp/dist --prod --site $NETLIFY_SITE_ID
 
 workflows:
   version: 2
