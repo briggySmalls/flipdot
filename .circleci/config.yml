@@ -84,6 +84,10 @@ jobs:
     steps:
       # Checkout code
       - checkout
+      # Install deps
+      - run:
+          command: yarn install --dev
+          working_directory: ./web
       # Generate source
       - run:
           command: yarn generate
