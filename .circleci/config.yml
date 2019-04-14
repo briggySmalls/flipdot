@@ -134,6 +134,6 @@ workflows:
       - deploy-web:
           requires:
             - build-web
-          # filters:
-          #   branches:
-          #     only: master
+          filters:
+            branches:
+              only: master
