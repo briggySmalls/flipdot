@@ -1,16 +1,36 @@
 # web
 
+Web application that is a gRPC-web client for sending messages to a flipdot sign, built using:
+
+- Vue.js
+- [@improbable-eng/grpc-web](https://github.com/improbable-eng/grpc-web/tree/master/client/grpc-web)
+
 ## Project setup
 ```
 yarn install
 ```
 
-### Compiles and hot-reloads for development
+### Development
+
+Start a development server with:
+
 ```
 yarn run serve
 ```
 
-### Compiles and minifies for production
+The existing `.env.development` configures the app to connect to a gRPC-web server at http://localhost:5002.
+
+### Production
+
+Create a `.env.production` file of the following form:
+
+```ini
+# Address where grpc-web server can be contacted
+VUE_APP_GRPC_SERVER_ADDRESS=https://address.of.grpc
+```
+
+Then build the application:
+
 ```
 yarn run build
 ```
