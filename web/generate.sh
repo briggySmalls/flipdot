@@ -1,16 +1,16 @@
 #!/bin/bash
 set -e
 
+# Get current location
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+
 # Establish some variables
-GEN_OUTPUT_DIR=./src/generated
+GEN_OUTPUT_DIR=$DIR/src/generated
 PROTOC_GEN_TS_PATH=$(yarn bin protoc-gen-ts)
 
 # Copy protobufs to local
-cp ../protos/flipdot.proto $GEN_OUTPUT_DIR/flipdot.proto
-cp ../protos/flipapps.proto $GEN_OUTPUT_DIR/flipapps.proto
-
-# Prepare output directory
 mkdir -p $GEN_OUTPUT_DIR
+cp $DIR/../protos/*.proto $GEN_OUTPUT_DIR
 
 # Build
 yarn grpc_tools_node_protoc \
@@ -21,4 +21,4 @@ yarn grpc_tools_node_protoc \
     $GEN_OUTPUT_DIR/flipdot.proto $GEN_OUTPUT_DIR/flipapps.proto
 
 # Remove protos
-rm $GEN_OUTPUT_DIR/flipdot.proto $GEN_OUTPUT_DIR/flipapps.proto
+rm $GEN_OUTPUT_DIR/*.proto
