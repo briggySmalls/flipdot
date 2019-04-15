@@ -90,6 +90,10 @@ jobs:
           working_directory: ./web
       # Generate source
       - run:
+          command: yarn generate
+          working_directory: ./web
+      # Run tests
+      - run:
           command: yarn test:unit
           working_directory: ./web
   # Build the web app
