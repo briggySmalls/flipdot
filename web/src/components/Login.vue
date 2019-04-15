@@ -4,9 +4,9 @@
     <form v-on:submit.prevent="authenticate">
       <div class="form-group row">
           <label for="text" class="col-sm-2 col-form-label">Password:</label>
-          <input v-model="password" type="password" class="col-sm-10 form-control" required>
+          <input id="login-password" v-model="password" type="password" class="col-sm-10 form-control" required>
       </div>
-      <button type="submit" class="btn btn-primary">Authorize</button>
+      <button id="login-submit" type="submit" class="btn btn-primary">Authorize</button>
     </form>
   </div>
 </template>

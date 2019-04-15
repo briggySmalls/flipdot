@@ -15,24 +15,13 @@ import Login from './components/Login.vue';
 import Message from './components/Message.vue';
 import Result from './components/Result.vue';
 import { Client } from './ts/client';
-import { Machine, interpret } from 'xstate';
+import { createFsm } from './ts/fsm';
 import BootstrapVue from 'bootstrap-vue';
 import 'bootstrap/dist/css/bootstrap.css';
 import 'bootstrap-vue/dist/bootstrap-vue.css';
 
 // Use Bootstrap
 Vue.use(BootstrapVue);
-
-// Stateless machine definition
-// machine.transition(...) is a pure function used by the interpreter.
-const appMachine = Machine({
-  initial: 'login',
-  states: {
-    login: { on: { AUTH: 'message' } },
-    message: { on: { SENT: 'result', REAUTH: 'login' } },
-    result: { on: { NEW: 'message' } },
-  },
-});
 
 @Component({
   components: {
@@ -51,7 +40,7 @@ export default class App extends Vue {
     // Call super
     super();
     // Create a state machine
-    this.fsm = interpret(appMachine)
+    this.fsm = createFsm()
       .onTransition((state) => console.log(state.value))
       .start();
     // Create a client
