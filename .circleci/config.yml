@@ -77,6 +77,21 @@ jobs:
       - run: |
           docker push briggysmalls/flipapp:$CIRCLE_SHA1 &&
           docker push briggysmalls/flipapp:latest
+  # Test web app
+  test-web:
+    docker:
+      - image: node:11-stretch
+    steps:
+      # Checkout code
+      - checkout
+      # Install deps
+      - run:
+          command: yarn install --dev
+          working_directory: ./web
+      # Generate source
+      - run:
+          command: yarn test:unit
+          working_directory: ./web
   # Build the web app
   build-web:
     docker:
@@ -130,6 +145,7 @@ workflows:
               only: master
   web:
     jobs:
+      - test-web
       - build-web
       - deploy-web:
           requires:
