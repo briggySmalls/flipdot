@@ -2,9 +2,9 @@
   <div id="app">
     <img alt="Vue logo" src="./assets/logo.png">
     <div class="container">
-      <Login v-show="state == 'login'" v-bind:client="client"  v-bind:fsm="fsm"/>
-      <Message v-show="state == 'message'" v-bind:client="client" v-bind:fsm="fsm"/>
-      <Result v-show="state == 'result'" v-bind:client="client" v-bind:fsm="fsm"/>
+      <Login id="login" v-show="state == 'login'" v-bind:client="client"  v-bind:fsm="fsm"/>
+      <Message id="message" v-show="state == 'message'" v-bind:client="client" v-bind:fsm="fsm"/>
+      <Result id="result" v-show="state == 'result'" v-bind:client="client" v-bind:fsm="fsm"/>
     </div>
   </div>
 </template>

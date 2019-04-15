@@ -2,13 +2,13 @@
   <form v-on:submit.prevent="sendMessage">
     <div class="form-group row">
         <label for="text" class="col-sm-2 col-form-label">Sender:</label>
-        <input v-model="sender" type="text" class="col-sm-10 form-control" required>
+        <input v-model="sender" type="text" class="col-sm-10 form-control message-sender" required>
     </div>
     <div class="form-group row">
         <label for="text" class="col-sm-2 col-form-label">Message:</label>
-        <input v-model="message" type="text" class="col-sm-10 form-control" required>
+        <input v-model="message" type="text" class="col-sm-10 form-control message-text" required>
     </div>
-    <button type="submit" class="btn btn-primary">Send</button>
+    <button type="submit" class="btn btn-primary message-submit">Send</button>
   </form>
 </template>
 

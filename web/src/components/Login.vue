@@ -1,12 +1,12 @@
 <template>
-  <div id="login">
+  <div>
     <div v-show="client.error !== null" class="prewrap alert alert-danger">{{ message }}</div>
     <form v-on:submit.prevent="authenticate">
       <div class="form-group row">
           <label for="text" class="col-sm-2 col-form-label">Password:</label>
-          <input id="login-password" v-model="password" type="password" class="col-sm-10 form-control" required>
+          <input v-model="password" type="password" class="col-sm-10 form-control login-password" required>
       </div>
-      <button id="login-submit" type="submit" class="btn btn-primary">Authorize</button>
+      <button type="submit" class="btn btn-primary login-submit">Authorize</button>
     </form>
   </div>
 </template>

@@ -1,5 +1,5 @@
 <template>
-  <div id="result">
+  <div>
     <div class="prewrap alert" v-bind:class="messageClass">{{ message }}</div>
     <button v-on:click="newMessage" class="btn btn-primary">Send a message</button>
   </div>

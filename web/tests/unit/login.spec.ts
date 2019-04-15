@@ -43,8 +43,8 @@ describe('Login.vue', () => {
         },
     );
     // Send password
-    wrapper.find('#login-password').setValue('password');
-    wrapper.find('#login-submit').trigger('submit');
+    wrapper.find('form .login-password').setValue('password');
+    wrapper.find('form .login-submit').trigger('submit');
     // Set a password
     verify(mockedClient.authenticate('password', anything())).once();
     verify(mockedFsm.send('AUTH')).once();
@@ -65,11 +65,11 @@ describe('Login.vue', () => {
       },
     );
     // Send password
-    wrapper.find('#login-password').setValue('password');
-    wrapper.find('#login-submit').trigger('submit');
+    wrapper.find('form .login-password').setValue('password');
+    wrapper.find('form .login-submit').trigger('submit');
     // Set a password
     verify(mockedClient.authenticate('password', anything())).once();
     verify(mockedFsm.send(anything())).never();
-    expect(wrapper.find('#login .alert').isVisible());
+    expect(wrapper.find('.alert').isVisible());
   });
 });
