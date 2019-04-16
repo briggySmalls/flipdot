@@ -77,6 +77,59 @@ jobs:
       - run: |
           docker push briggysmalls/flipapp:$CIRCLE_SHA1 &&
           docker push briggysmalls/flipapp:latest
+  # Test web app
+  test-web:
+    docker:
+      - image: node:11-stretch
+    steps:
+      # Checkout code
+      - checkout
+      # Install deps
+      - run:
+          command: yarn install --dev
+          working_directory: ./web
+      # Generate source
+      - run:
+          command: yarn generate
+          working_directory: ./web
+      # Run tests
+      - run:
+          command: yarn test:unit
+          working_directory: ./web
+  # Build the web app
+  build-web:
+    docker:
+      - image: node:11-stretch
+    steps:
+      # Checkout code
+      - checkout
+      # Install deps
+      - run:
+          command: yarn install --dev
+          working_directory: ./web
+      # Generate source
+      - run:
+          command: yarn generate
+          working_directory: ./web
+      # Build app
+      - run:
+          command: yarn build
+          working_directory: ./web
+      # Save built app to workspace
+      - persist_to_workspace:
+          root: ./web
+          paths: dist
+  deploy-web:
+    docker:
+      - image: node:11-stretch
+    steps:
+      # Install netlify cli
+      - run: npm install netlify-cli -g
+      # Fetch built web app
+      - attach_workspace:
+          at: /tmp/dist
+      # Deploy
+      - run: netlify deploy --dir /tmp/dist --prod --site $NETLIFY_SITE_ID
 
 workflows:
   version: 2
@@ -91,6 +144,16 @@ workflows:
     jobs:
       - test-driver
       - docker-driver:
+          filters:
+            branches:
+              only: master
+  web:
+    jobs:
+      - test-web
+      - build-web
+      - deploy-web:
+          requires:
+            - build-web
           filters:
             branches:
               only: master

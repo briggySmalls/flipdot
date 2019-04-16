@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"sync"
+	"time"
 
 	"github.com/briggySmalls/flipdot/app/flipdot"
 	"github.com/gizak/termui"
@@ -165,11 +166,11 @@ func (m *mockUI) ProcessEvents() {
 			switch e.ID { // event string/identifier
 			case "q", "<C-c>": // press 'q' or 'C-c' to quit
 				return
-			case "<Down>": // Press button
+			case "b": // Press button
 				m.buttonPin.set(true)
-				break
-			case "<Up>": // Release button
+				time.Sleep(time.Millisecond * 300)
 				m.buttonPin.set(false)
+				break
 			}
 		}
 	}
