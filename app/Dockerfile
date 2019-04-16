@@ -21,7 +21,7 @@ COPY --from=builder /go/src/github.com/briggySmalls/flipdot/app/bin/flipapp /go/
 # Copy in defaults for configuration
 COPY ./app/config.yaml /app/
 COPY ./app/Smirnof.ttf /app/font.ttf
-COPY ./app/bell.png /app/status.png
+COPY ./app/status.png /app/status.png
 
 # Run the go program
 ENTRYPOINT ["/go/bin/flipapp"]
