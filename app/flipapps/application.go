@@ -41,7 +41,7 @@ func (a *application) GetMessagesChannel() chan MessageRequest {
 }
 
 // Blocking call that runs forever, polling for button presses, messages, and ticks
-func (s *application) Run(tickPeriod time.Duration) {
+func (a *application) Run(tickPeriod time.Duration) {
 	// Create a ticker
 	log.Println("Starting application loop...")
 	pause := false
@@ -50,13 +50,13 @@ func (s *application) Run(tickPeriod time.Duration) {
 	// Create intermediate message queue
 	pendingMessages := make([]MessageRequest, 0)
 	// Get queue for button presses
-	buttonPressed := s.buttonManager.GetChannel()
+	buttonPressed := a.buttonManager.GetChannel()
 	// Draw first clock
-	s.drawTime(time.Now(), false)
+	a.drawTime(time.Now(), false)
 	// Run forever
 	for {
 		select {
-		case message, ok := <-s.messagesIn:
+		case message, ok := <-a.messagesIn:
 			if !ok {
 				// There will be no more messages to handle
 				// TODO: check if there are any pending message that we should wait for
@@ -67,9 +67,9 @@ func (s *application) Run(tickPeriod time.Duration) {
 			// Pass to internal buffer
 			pendingMessages = append(pendingMessages, message)
 			// We have at least one message, so activate button
-			s.buttonManager.SetState(Active)
+			a.buttonManager.SetState(Active)
 			// Update time with message status
-			s.drawTime(time.Now(), true)
+			a.drawTime(time.Now(), true)
 		// Handle user signal to display message
 		case <-buttonPressed:
 			log.Println("Show message request")
@@ -77,15 +77,15 @@ func (s *application) Run(tickPeriod time.Duration) {
 			if len(pendingMessages) > 0 {
 				log.Println("Displaying message")
 				// Disable button whilst we show a message
-				s.buttonManager.SetState(Inactive)
+				a.buttonManager.SetState(Inactive)
 				// Pop message
 				message := pendingMessages[0]
 				pendingMessages = pendingMessages[1:]
 				// Display message
-				s.handleMessage(message)
+				a.handleMessage(message)
 				// Reenable button if there are more messages
 				if len(pendingMessages) > 0 {
-					s.buttonManager.SetState(Active)
+					a.buttonManager.SetState(Active)
 				}
 			}
 		// Otherwise display the time
@@ -94,33 +94,33 @@ func (s *application) Run(tickPeriod time.Duration) {
 			if !pause {
 				log.Println("Tick event")
 				// Print the time (centred)
-				s.drawTime(t, len(pendingMessages) > 0)
+				a.drawTime(t, len(pendingMessages) > 0)
 			}
 		}
 	}
 }
 
 // Helper function to draw the time on the signs
-func (s *application) drawTime(time time.Time, isMessageAvailable bool) {
+func (a *application) drawTime(time time.Time, isMessageAvailable bool) {
 	// Print the time (centred)
-	images, err := s.imager.Clock(time, isMessageAvailable)
+	images, err := a.imager.Clock(time, isMessageAvailable)
 	errorHandler(err)
-	err = s.flipdot.Draw(images, false)
+	err = a.flipdot.Draw(images, false)
 	errorHandler(err)
 }
 
 // Gets a message sent to the flipdot signs
-func (s *application) handleMessage(message MessageRequest) {
+func (a *application) handleMessage(message MessageRequest) {
 	var err error
 	switch message.Payload.(type) {
 	case *MessageRequest_Images:
-		err = s.sendImages(message.GetImages().Images)
+		err = a.sendImages(message.GetImages().Images)
 	case *MessageRequest_Text:
 		// Create images from message
-		images, err := s.imager.Message(message.From, message.GetText())
+		images, err := a.imager.Message(message.From, message.GetText())
 		errorHandler(err)
 		// Send images
-		s.sendImages(images)
+		a.sendImages(images)
 	default:
 		err = fmt.Errorf("Neither images or text supplied")
 	}
@@ -129,8 +129,8 @@ func (s *application) handleMessage(message MessageRequest) {
 }
 
 // Helper function to send images to the signs
-func (s *application) sendImages(images []*flipdot.Image) (err error) {
-	err = s.flipdot.Draw(images, true)
+func (a *application) sendImages(images []*flipdot.Image) (err error) {
+	err = a.flipdot.Draw(images, true)
 	return
 }
 
