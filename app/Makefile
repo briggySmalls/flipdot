@@ -24,6 +24,7 @@ PROTO_BUFS=$(addprefix $(PROTO_DIR)/,$(notdir $(PROTO_SRCS:.pb.go=.proto)))
 MOCK_SRCS=$(subst .go,.mock.go,$(PROTO_SRCS)) $(addprefix internal/,\
 	client/flipdot.mock.go \
 	button/button.mock.go \
+	button/pins.mock.go \
 	imaging/imager.mock.go \
 	text/texter.mock.go)
 
