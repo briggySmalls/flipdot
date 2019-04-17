@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/briggySmalls/flipdot/app/text"
+	"github.com/briggySmalls/flipdot/app/internal/text"
 	gomock "github.com/golang/mock/gomock"
 )
 
