@@ -59,8 +59,8 @@ clean:
 	rm -f $(PROTO_SRCS) $(MOCK_SRCS)
 
 docker:
-	cp .dockerignore ..
-	docker build -t briggysmalls/flipapp:$(DOCKER_TAG) -f Dockerfile ..
+	cp build/.dockerignore ..
+	docker build -t briggysmalls/flipapp:$(DOCKER_TAG) -f build/Dockerfile ..
 	rm ../.dockerignore
 
 ## PATTERN/SUB-RULES
