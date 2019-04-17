@@ -1,4 +1,4 @@
-package flipapps
+package server
 
 import (
 	context "context"
@@ -9,7 +9,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 
-	"github.com/briggySmalls/flipdot/app/flipdot"
+	"github.com/briggySmalls/flipdot/app/internal/client"
 	"github.com/dgrijalva/jwt-go"
 	"google.golang.org/grpc/status"
 )
@@ -18,7 +18,7 @@ const (
 	tokenDuration = time.Hour // Duration before JWT expiry
 )
 
-func NewRpcServer(secret, password string, messageQueue chan MessageRequest, signsInfo []*flipdot.GetInfoResponse_SignInfo) (grpcServer *grpc.Server) {
+func NewRpcServer(secret, password string, messageQueue chan MessageRequest, signsInfo []*client.GetInfoResponse_SignInfo) (grpcServer *grpc.Server) {
 	// Create a flipdot server
 	server := NewServer(secret, password, messageQueue, signsInfo)
 	// create a gRPC server object
@@ -29,7 +29,7 @@ func NewRpcServer(secret, password string, messageQueue chan MessageRequest, sig
 }
 
 // Create a new server
-func NewServer(secret, password string, messageQueue chan MessageRequest, signsInfo []*flipdot.GetInfoResponse_SignInfo) FlipAppsServer {
+func NewServer(secret, password string, messageQueue chan MessageRequest, signsInfo []*client.GetInfoResponse_SignInfo) FlipAppsServer {
 	// Create a flipdot controller
 	server := &flipappsServer{
 		appSecret:    secret,
@@ -47,7 +47,7 @@ type flipappsServer struct {
 	// Channel to which new messages are sent
 	messageQueue chan MessageRequest
 	// Information on connected signs
-	signsInfo []*flipdot.GetInfoResponse_SignInfo
+	signsInfo []*client.GetInfoResponse_SignInfo
 }
 
 // Handler for client request to authenticate (obtain JWT token)
@@ -69,10 +69,10 @@ func (f *flipappsServer) Authenticate(_ context.Context, request *AuthenticateRe
 }
 
 // Handler for client request of information on connected signs
-func (f *flipappsServer) GetInfo(_ context.Context, _ *flipdot.GetInfoRequest) (*flipdot.GetInfoResponse, error) {
+func (f *flipappsServer) GetInfo(_ context.Context, _ *client.GetInfoRequest) (*client.GetInfoResponse, error) {
 	// Make a request to the controller
 	signs := f.signsInfo
-	response := flipdot.GetInfoResponse{Signs: signs}
+	response := client.GetInfoResponse{Signs: signs}
 	return &response, nil
 }
 

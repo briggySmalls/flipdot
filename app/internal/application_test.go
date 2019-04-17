@@ -1,4 +1,4 @@
-package flipapps
+package internal
 
 import (
 	"testing"
@@ -20,12 +20,12 @@ func TestTickText(t *testing.T) {
 	defer close(textWritten)
 	// Configure imager mock to expect request to build images
 	// Return two 'images' to be displayed
-	fakeImager.EXPECT().Clock(gomock.Any(), false).Return([]*flipdot.Image{
+	fakeImager.EXPECT().Clock(gomock.Any(), false).Return([]*client.Image{
 		{Data: make([]bool, 10)},
 		{Data: make([]bool, 10)},
 	}, nil)
 	// Configure the mock (calls 'done' when executed)
-	mockAction := func(images []*flipdot.Image, isWait bool) {
+	mockAction := func(images []*client.Image, isWait bool) {
 		// Assert that the images are as expected
 		if len(images) != 2 {
 			t.Errorf("Unexpected number of images: %d", len(images))
@@ -113,13 +113,13 @@ func TestMessageTextSent(t *testing.T) {
 		fakeImager.EXPECT().Clock(gomock.Any(), true),  // Expect clock image to be built
 		fakeFlipdot.EXPECT().Draw(gomock.Any(), false), // Expect clock images to be sent
 		fakeBm.EXPECT().SetState(Inactive),             // Expect dectivate before drawing message
-		fakeImager.EXPECT().Message("briggySmalls", "test text").Return([]*flipdot.Image{ // Expect constructing message images
+		fakeImager.EXPECT().Message("briggySmalls", "test text").Return([]*client.Image{ // Expect constructing message images
 			{Data: make([]bool, 10)},
 			{Data: make([]bool, 10)},
 			{Data: make([]bool, 10)},
 			{Data: make([]bool, 10)},
 		}, nil),
-		fakeFlipdot.EXPECT().Draw(gomock.Any(), true).Do(func(images []*flipdot.Image, isWait bool) { // Expect draw message images
+		fakeFlipdot.EXPECT().Draw(gomock.Any(), true).Do(func(images []*client.Image, isWait bool) { // Expect draw message images
 			// Check image
 			if len(images) != 4 {
 				t.Errorf("Unexpected number of images: %d", len(images))
@@ -151,10 +151,10 @@ func TestMessageTextSent(t *testing.T) {
 	}
 }
 
-func createAppTestObjects(t *testing.T) (*gomock.Controller, *flipdot.MockFlipdot, *MockButtonManager, *MockImager, Application) {
+func createAppTestObjects(t *testing.T) (*gomock.Controller, *client.MockFlipdot, *MockButtonManager, *MockImager, Application) {
 	// Create a mock
 	ctrl := gomock.NewController(t)
-	fakeFlipdot := flipdot.NewMockFlipdot(ctrl)
+	fakeFlipdot := client.NewMockFlipdot(ctrl)
 	fakeBm := NewMockButtonManager(ctrl)
 	fakeImager := NewMockImager(ctrl)
 	// Create object under test

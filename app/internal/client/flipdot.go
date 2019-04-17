@@ -1,11 +1,11 @@
-package flipdot
+package client
 
 import (
 	context "context"
 	fmt "fmt"
 	"time"
 
-	"github.com/briggySmalls/flipdot/app/text"
+	"github.com/briggySmalls/flipdot/app/internal/text"
 )
 
 const (

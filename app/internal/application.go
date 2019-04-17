@@ -1,11 +1,15 @@
-package flipapps
+package internal
 
 import (
 	fmt "fmt"
 	"log"
 	"time"
 
-	"github.com/briggySmalls/flipdot/app/flipdot"
+	"github.com/briggySmalls/flipdot/app/internal/button"
+	"github.com/briggySmalls/flipdot/app/internal/client"
+	"github.com/briggySmalls/flipdot/app/internal/imaging"
+	"github.com/briggySmalls/flipdot/app/internal/server"
+	"github.com/briggySmalls/flipdot/app/internal/shared"
 )
 
 const (
@@ -13,30 +17,30 @@ const (
 )
 
 type application struct {
-	flipdot       flipdot.Flipdot
-	buttonManager ButtonManager
-	imager        Imager
+	flipdot       client.Flipdot
+	buttonManager button.ButtonManager
+	imager        imaging.Imager
 	// Externally-visible channel for adding messages to the application
-	messagesIn chan MessageRequest
+	messagesIn chan server.MessageRequest
 }
 
 type Application interface {
-	GetMessagesChannel() chan MessageRequest
+	GetMessagesChannel() chan server.MessageRequest
 	Run(tickPeriod time.Duration)
 }
 
 // Creates and initialises a new Application
-func NewApplication(flipdot flipdot.Flipdot, buttonManager ButtonManager, imager Imager) Application {
+func NewApplication(flipdot client.Flipdot, buttonManager button.ButtonManager, imager imaging.Imager) Application {
 	app := application{
 		flipdot:       flipdot,
 		buttonManager: buttonManager,
 		imager:        imager,
-		messagesIn:    make(chan MessageRequest, messageInSize),
+		messagesIn:    make(chan server.MessageRequest, messageInSize),
 	}
 	return &app
 }
 
-func (a *application) GetMessagesChannel() chan MessageRequest {
+func (a *application) GetMessagesChannel() chan server.MessageRequest {
 	return a.messagesIn
 }
 
@@ -48,7 +52,7 @@ func (a *application) Run(tickPeriod time.Duration) {
 	ticker := time.NewTicker(tickPeriod)
 	defer ticker.Stop()
 	// Create intermediate message queue
-	pendingMessages := make([]MessageRequest, 0)
+	pendingMessages := make([]server.MessageRequest, 0)
 	// Get queue for button presses
 	buttonPressed := a.buttonManager.GetChannel()
 	// Draw first clock
@@ -67,7 +71,7 @@ func (a *application) Run(tickPeriod time.Duration) {
 			// Pass to internal buffer
 			pendingMessages = append(pendingMessages, message)
 			// We have at least one message, so activate button
-			a.buttonManager.SetState(Active)
+			a.buttonManager.SetState(button.Active)
 			// Update time with message status
 			a.drawTime(time.Now(), true)
 		// Handle user signal to display message
@@ -77,7 +81,7 @@ func (a *application) Run(tickPeriod time.Duration) {
 			if len(pendingMessages) > 0 {
 				log.Println("Displaying message")
 				// Disable button whilst we show a message
-				a.buttonManager.SetState(Inactive)
+				a.buttonManager.SetState(button.Inactive)
 				// Pop message
 				message := pendingMessages[0]
 				pendingMessages = pendingMessages[1:]
@@ -85,7 +89,7 @@ func (a *application) Run(tickPeriod time.Duration) {
 				a.handleMessage(message)
 				// Reenable button if there are more messages
 				if len(pendingMessages) > 0 {
-					a.buttonManager.SetState(Active)
+					a.buttonManager.SetState(button.Active)
 				}
 			}
 		// Otherwise display the time
@@ -104,39 +108,32 @@ func (a *application) Run(tickPeriod time.Duration) {
 func (a *application) drawTime(time time.Time, isMessageAvailable bool) {
 	// Print the time (centred)
 	images, err := a.imager.Clock(time, isMessageAvailable)
-	errorHandler(err)
+	shared.ErrorHandler(err)
 	err = a.flipdot.Draw(images, false)
-	errorHandler(err)
+	shared.ErrorHandler(err)
 }
 
 // Gets a message sent to the flipdot signs
-func (a *application) handleMessage(message MessageRequest) {
+func (a *application) handleMessage(message server.MessageRequest) {
 	var err error
 	switch message.Payload.(type) {
-	case *MessageRequest_Images:
+	case *server.MessageRequest_Images:
 		err = a.sendImages(message.GetImages().Images)
-	case *MessageRequest_Text:
+	case *server.MessageRequest_Text:
 		// Create images from message
 		images, err := a.imager.Message(message.From, message.GetText())
-		errorHandler(err)
+		shared.ErrorHandler(err)
 		// Send images
 		a.sendImages(images)
 	default:
 		err = fmt.Errorf("Neither images or text supplied")
 	}
 	// Handle errors
-	errorHandler(err)
+	shared.ErrorHandler(err)
 }
 
 // Helper function to send images to the signs
-func (a *application) sendImages(images []*flipdot.Image) (err error) {
+func (a *application) sendImages(images []*client.Image) (err error) {
 	err = a.flipdot.Draw(images, true)
 	return
-}
-
-// In-queue error handler
-func errorHandler(err error) {
-	if err != nil {
-		panic(err)
-	}
 }

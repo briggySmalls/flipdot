@@ -1,4 +1,4 @@
-package flipapps
+package imaging
 
 import (
 	fmt "fmt"
@@ -8,13 +8,14 @@ import (
 	"image"
 	"time"
 
-	"github.com/briggySmalls/flipdot/app/flipdot"
-	"github.com/briggySmalls/flipdot/app/text"
+	"github.com/briggySmalls/flipdot/app/internal/client"
+	"github.com/briggySmalls/flipdot/app/internal/shared"
+	"github.com/briggySmalls/flipdot/app/internal/text"
 )
 
 type Imager interface {
-	Message(sender, message string) ([]*flipdot.Image, error)
-	Clock(time time.Time, isMessagesAvailable bool) ([]*flipdot.Image, error)
+	Message(sender, message string) ([]*client.Image, error)
+	Clock(time time.Time, isMessagesAvailable bool) ([]*client.Image, error)
 }
 
 type imager struct {
@@ -32,7 +33,7 @@ func NewImager(builder text.TextBuilder, statusImage image.Image, signCount uint
 }
 
 // Helper function to send text to the signs
-func (i *imager) Message(sender, message string) (images []*flipdot.Image, err error) {
+func (i *imager) Message(sender, message string) (images []*client.Image, err error) {
 	// Convert the sender to images
 	senderImages, err := i.builder.Images(fmt.Sprintf("From: %s", sender), true)
 	if err != nil {
@@ -59,10 +60,10 @@ func (i *imager) Message(sender, message string) (images []*flipdot.Image, err e
 	return
 }
 
-func (i *imager) Clock(time time.Time, isMessagesAvailable bool) (images []*flipdot.Image, err error) {
+func (i *imager) Clock(time time.Time, isMessagesAvailable bool) (images []*client.Image, err error) {
 	// Get images that represent the time
 	srcImages, err := i.builder.Images(time.Format("Mon 1 Jan\n3:04 pm"), true)
-	errorHandler(err)
+	shared.ErrorHandler(err)
 	// Add status if necessary
 	if isMessagesAvailable {
 		// Get far-right area the size of status image
@@ -90,9 +91,9 @@ func Slice(image image.Image) []bool {
 	return binImage
 }
 
-func convertImages(inImages []draw.Image) (outImages []*flipdot.Image) {
+func convertImages(inImages []draw.Image) (outImages []*client.Image) {
 	for _, img := range inImages {
-		outImages = append(outImages, &flipdot.Image{Data: Slice(img)})
+		outImages = append(outImages, &client.Image{Data: Slice(img)})
 	}
 	return
 }

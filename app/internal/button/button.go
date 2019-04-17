@@ -1,4 +1,4 @@
-package flipapps
+package button
 
 import (
 	"fmt"

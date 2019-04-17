@@ -1,4 +1,4 @@
-package flipapps
+package server
 
 import (
 	context "context"

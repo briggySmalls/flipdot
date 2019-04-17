@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cmd
+package flipapp
 
 import (
 	"time"
 
-	"github.com/briggySmalls/flipdot/app/flipapps"
+	"github.com/briggySmalls/flipdot/app/internal/button"
 	"github.com/spf13/cobra"
 )
 
@@ -36,7 +36,7 @@ Useful for debugging and development, especially when working with the web app.`
 		// Assign client from UI
 		client := ui
 		// Create a button manager from UI
-		bm := flipapps.NewButtonManager(&ui.buttonPin, &ui.ledPin, time.Second, buttonDebounceDuration)
+		bm := button.NewButtonManager(&ui.buttonPin, &ui.ledPin, time.Second, buttonDebounceDuration)
 
 		// Run the rest of the app
 		runApp(client, bm, config)

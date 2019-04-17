@@ -1,4 +1,4 @@
-package flipapps
+package imaging
 
 import (
 	"image"
