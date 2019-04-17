@@ -10,8 +10,8 @@ import (
 	"time"
 
 	"github.com/briggySmalls/flipdot/app/internal/client"
-	"github.com/gizak/termui"
-	"github.com/gizak/termui/widgets"
+	"github.com/gizak/termui/v3"
+	"github.com/gizak/termui/v3/widgets"
 	"github.com/stianeikeland/go-rpio"
 	"google.golang.org/grpc"
 )
