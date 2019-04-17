@@ -7,6 +7,7 @@
           placeholder="Sam"
           type="text"
           class="col-sm-10 form-control message-sender"
+          :state="sender.length > 0"
           required>
         </b-form-input>
     </div>
@@ -14,6 +15,7 @@
         <label for="text" class="col-sm-2 col-form-label">Message:</label>
         <b-form-textarea
           v-model="message"
+          :state="message.length > 0"
           placeholder="Message here, try to keep it short!"
           rows="3"
           max-rows="4"
