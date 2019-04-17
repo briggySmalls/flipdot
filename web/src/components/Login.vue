@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div v-show="client.error !== null" class="prewrap alert alert-danger">{{ message }}</div>
+    <b-alert class="prewrap" variant="danger" v-bind:show="client.error !== null">{{ client.error }}</b-alert>
     <form v-on:submit.prevent="authenticate">
       <div class="form-group row">
           <label for="text" class="col-sm-2 col-form-label">Password:</label>
