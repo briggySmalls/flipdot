@@ -19,17 +19,16 @@ endif
 
 # Generated protobufs
 PROTO_DIR=../protos
-PROTO_SRCS=./flipdot/flipdot.pb.go ./flipapps/flipapps.pb.go
+PROTO_SRCS=$(addprefix internal/,server/flipapps.pb.go client/flipdot.pb.go)
 PROTO_BUFS=$(addprefix $(PROTO_DIR)/,$(notdir $(PROTO_SRCS:.pb.go=.proto)))
-MOCK_SRCS=$(subst .go,.mock.go,$(PROTO_SRCS)) ./flipdot/flipdot.mock.go ./flipapps/button.mock.go ./flipapps/imager.mock.go ./text/texter.mock.go
-
-# Generated mocks
-MOCKED_CLASS=FlipdotClient
-MOCK_DIR=mock_flipdot
-MOCK_FILE=$(MOCK_DIR)/flipdot.go
+MOCK_SRCS=$(subst .go,.mock.go,$(PROTO_SRCS)) $(addprefix internal/,\
+	client/flipdot.mock.go \
+	button/button.mock.go \
+	imaging/imager.mock.go \
+	text/texter.mock.go)
 
 # All sources
-TEST_SRCS=$(shell find . -name "*_test.go") $(MOCK_SRCS)
+TEST_SRCS=$(shell find . -name "*_test.go")
 STD_SRCS=$(filter-out $(TEST_SRCS) $(PROTO_SRCS) $(MOCK_SRCS), $(shell find . -name "*.go"))
 PROGRAM_SRCS=$(STD_SRCS) $(PROTO_SRCS)
 
@@ -45,7 +44,9 @@ install: $(PROGRAM_SRCS)
 
 proto: $(PROTO_SRCS)
 
-test: $(PROGRAM_SRCS) $(TEST_SRCS)
+mocks: $(MOCK_SRCS)
+
+test: $(PROGRAM_SRCS) $(TEST_SRCS) mocks
 	go test -v ./...
 
 format:
