@@ -18,6 +18,6 @@ services:
     expose:
       - "5002"
     volumes:
-      - ./app/config.yaml:/app/config.yaml
-      - ./app/status.png:/app/status.png
-      - ./app/Smirnof.ttf:/app/font.ttf
+      - ./app/config/config.yaml:/app/config.yaml
+      - ./app/assets/status.png:/app/status.png
+      - ./app/assets/Smirnof.ttf:/app/font.ttf
