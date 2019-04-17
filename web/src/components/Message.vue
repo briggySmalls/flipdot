@@ -6,7 +6,7 @@
     </div>
     <div class="form-group row">
         <label for="text" class="col-sm-2 col-form-label">Message:</label>
-        <input v-model="message" type="text" class="col-sm-10 form-control message-text" required>
+        <textarea v-model="message" class="col-sm-10 form-control message-text" required></textarea>
     </div>
     <button type="submit" class="btn btn-primary message-submit">Send</button>
   </form>
