@@ -8,6 +8,7 @@
           type="text"
           class="col-sm-10 form-control message-sender"
           :state="sender.length > 0"
+          trim
           required>
         </b-form-input>
     </div>
@@ -20,6 +21,7 @@
           rows="3"
           max-rows="4"
           class="col-sm-10 form-control message-text"
+          trim
           required>
         </b-form-textarea>
     </div>
