@@ -1,4 +1,4 @@
-package cmd
+package flipapp
 
 import (
 	"image"
@@ -7,16 +7,17 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/briggySmalls/flipdot/app/flipapps"
-	"github.com/briggySmalls/flipdot/app/flipdot"
-	"github.com/briggySmalls/flipdot/app/text"
+	"github.com/briggySmalls/flipdot/app/internal/client"
+	"github.com/briggySmalls/flipdot/app/internal/imaging"
+	"github.com/briggySmalls/flipdot/app/internal/server"
+	"github.com/briggySmalls/flipdot/app/internal/text"
 	"golang.org/x/image/font"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
 
-func createServer(appSecret, appPassword string, messagesIn chan flipapps.MessageRequest, signsInfo []*flipdot.GetInfoResponse_SignInfo) (grpcServer *grpc.Server) {
-	grpcServer = flipapps.NewRpcServer(
+func createServer(appSecret, appPassword string, messagesIn chan server.MessageRequest, signsInfo []*client.GetInfoResponse_SignInfo) (grpcServer *grpc.Server) {
+	grpcServer = server.NewRpcServer(
 		appSecret,
 		appPassword,
 		messagesIn,
@@ -27,7 +28,7 @@ func createServer(appSecret, appPassword string, messagesIn chan flipapps.Messag
 	return
 }
 
-func createImager(imageFile string, font font.Face, width, height, signCount uint) (imager flipapps.Imager, err error) {
+func createImager(imageFile string, font font.Face, width, height, signCount uint) (imager imaging.Imager, err error) {
 	// Read in status image
 	var statusImage image.Image
 	statusImage, err = readImage(imageFile)
@@ -37,7 +38,7 @@ func createImager(imageFile string, font font.Face, width, height, signCount uin
 	// Create a text builder
 	textBuilder := text.NewTextBuilder(width, height, font)
 	// Create the imager
-	imager = flipapps.NewImager(textBuilder, statusImage, signCount)
+	imager = imaging.NewImager(textBuilder, statusImage, signCount)
 	return
 }
 

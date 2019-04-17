@@ -1,4 +1,4 @@
-package flipapps
+package button
 
 import (
 	"fmt"
@@ -9,7 +9,6 @@ import (
 )
 
 type State uint8
-type DebounceState uint8
 
 const (
 	Active State = iota
@@ -18,25 +17,8 @@ const (
 )
 
 const (
-	Off DebounceState = iota
-	Transitioning
-	Triggered
-)
-
-const (
-	debouncedCount  = 50
 	stateQueueCount = 10
 )
-
-type TriggerPin interface {
-	Read() rpio.State
-}
-
-type OutputPin interface {
-	High()
-	Low()
-	Toggle()
-}
 
 type buttonManager struct {
 	buttonPin TriggerPin
@@ -52,23 +34,6 @@ type buttonManager struct {
 type ButtonManager interface {
 	SetState(State)
 	GetChannel() chan struct{}
-}
-
-func NewTriggerPin(pinNum uint8) TriggerPin {
-	// Create the pin
-	p := rpio.Pin(pinNum)
-	// Configure the pin
-	p.Input()
-	p.PullDown()
-	return p
-}
-
-func NewOutputPin(pinNum uint8) OutputPin {
-	// Create the pin
-	p := rpio.Pin(pinNum)
-	// Configure the pin
-	p.Output()
-	return p
 }
 
 func NewButtonManager(buttonPin TriggerPin, ledPin OutputPin, flashFreq, debounceFreq time.Duration) ButtonManager {
@@ -185,46 +150,6 @@ func listenForPress(pin TriggerPin, debounceTime time.Duration, done <-chan stru
 			return
 		}
 	}
-}
-
-type debouncer struct {
-	// Internal state of the debouncer
-	state DebounceState
-	// Counter for the number of consecutive positive signal counts
-	counter uint16
-	// Number of consecutive counts considered to be 'debounced'
-	debouncedCount uint16
-}
-
-// Debounces an input boolan, returning the debounced signal
-func (d *debouncer) debounce(value bool) bool {
-	switch d.state {
-	case Off:
-		if value {
-			// Start counter (we've transitioned)
-			d.state = Transitioning
-			d.counter = 0
-		}
-	case Transitioning:
-		if value {
-			// Increment counter
-			d.counter++
-			if d.counter == d.debouncedCount {
-				// Sufficient consecutive high signals
-				d.state = Triggered
-				return true
-			}
-		} else {
-			// Reset state (press aborted)
-			d.state = Off
-		}
-	case Triggered:
-		if !value {
-			// Button has returned to off
-			d.state = Off
-		}
-	}
-	return false
 }
 
 func (b *buttonManager) GetChannel() chan struct{} {

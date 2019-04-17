@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cmd
+package flipapp
 
 import (
 	"fmt"
 	"time"
 
-	"github.com/briggySmalls/flipdot/app/flipapps"
-	"github.com/briggySmalls/flipdot/app/flipdot"
+	"github.com/briggySmalls/flipdot/app/internal/button"
+	"github.com/briggySmalls/flipdot/app/internal/client"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/stianeikeland/go-rpio"
@@ -43,16 +43,16 @@ to quickly create a Cobra application.`,
 		connection, err := grpc.Dial(fmt.Sprintf(config.clientAddress), grpc.WithInsecure())
 		errorHandler(err)
 		// Create a flipdot client
-		client := flipdot.NewFlipdotClient(connection)
+		client := client.NewFlipdotClient(connection)
 		// Activate RPi GPIO
 		err = rpio.Open()
 		errorHandler(err)
 		defer rpio.Close()
 		// Create pins that interface with RPi GPIO
-		ledPin := flipapps.NewOutputPin(config.ledPin)
-		buttonPin := flipapps.NewTriggerPin(config.buttonPin)
+		ledPin := button.NewOutputPin(config.ledPin)
+		buttonPin := button.NewTriggerPin(config.buttonPin)
 		// Create a button manager
-		bm := flipapps.NewButtonManager(buttonPin, ledPin, time.Second, buttonDebounceDuration)
+		bm := button.NewButtonManager(buttonPin, ledPin, time.Second, buttonDebounceDuration)
 
 		// Run the rest of the app
 		runApp(client, bm, config)

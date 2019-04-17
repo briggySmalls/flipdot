@@ -18,7 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package cmd
+package flipapp
 
 import (
 	"fmt"
@@ -28,8 +28,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/briggySmalls/flipdot/app/flipapps"
-	"github.com/briggySmalls/flipdot/app/flipdot"
+	"github.com/briggySmalls/flipdot/app/internal"
+	"github.com/briggySmalls/flipdot/app/internal/button"
+	"github.com/briggySmalls/flipdot/app/internal/client"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -167,10 +168,10 @@ func getCommonConfig() config {
 }
 
 // Create components and run application
-func runApp(client flipdot.FlipdotClient, bm flipapps.ButtonManager, config config) {
+func runApp(clnt client.FlipdotClient, bm button.ButtonManager, config config) {
 	// Create a flipdot controller
-	flippy, err := flipdot.NewFlipdot(
-		client,
+	flippy, err := client.NewFlipdot(
+		clnt,
 		time.Duration(config.frameDurationSecs)*time.Second)
 	errorHandler(err)
 
@@ -182,7 +183,7 @@ func runApp(client flipdot.FlipdotClient, bm flipapps.ButtonManager, config conf
 	errorHandler(err)
 
 	// Create and start application
-	app := flipapps.NewApplication(flippy, bm, imager)
+	app := internal.NewApplication(flippy, bm, imager)
 	go app.Run(time.Second)
 	// Create a flipapps server
 	server := createServer(config.appSecret, config.appPassword, app.GetMessagesChannel(), flippy.Signs())

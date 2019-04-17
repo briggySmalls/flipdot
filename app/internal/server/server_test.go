@@ -1,4 +1,4 @@
-package flipapps
+package server
 
 import (
 	context "context"
@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/briggySmalls/flipdot/app/flipdot"
+	client "github.com/briggySmalls/flipdot/app/internal/client"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -60,7 +60,7 @@ func TestGetInfo(t *testing.T) {
 	// Run the command
 	ctx, cancel := getContext()
 	defer cancel()
-	response, err := flipapps.GetInfo(ctx, &flipdot.GetInfoRequest{})
+	response, err := flipapps.GetInfo(ctx, &client.GetInfoRequest{})
 	// Assert the return values
 	if err != nil {
 		t.Fatal(err)
@@ -100,13 +100,13 @@ func TestSendMessage(t *testing.T) {
 }
 
 // Helper function to set up the unit under test
-func createTestObjects(t *testing.T) (FlipAppsServer, chan MessageRequest, []*flipdot.GetInfoResponse_SignInfo) {
+func createTestObjects(t *testing.T) (FlipAppsServer, chan MessageRequest, []*client.GetInfoResponse_SignInfo) {
 	// Make some dummy signs
-	signs := []*flipdot.GetInfoResponse_SignInfo{
-		&flipdot.GetInfoResponse_SignInfo{
+	signs := []*client.GetInfoResponse_SignInfo{
+		&client.GetInfoResponse_SignInfo{
 			Name: "test1", Width: 10, Height: 2,
 		},
-		&flipdot.GetInfoResponse_SignInfo{
+		&client.GetInfoResponse_SignInfo{
 			Name: "test2", Width: 10, Height: 2,
 		},
 	}

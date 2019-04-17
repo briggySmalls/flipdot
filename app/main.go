@@ -20,8 +20,8 @@
 
 package main
 
-import "github.com/briggySmalls/flipdot/app/cmd"
+import "github.com/briggySmalls/flipdot/app/cmd/flipapp"
 
 func main() {
-	cmd.Execute()
+	flipapp.Execute()
 }

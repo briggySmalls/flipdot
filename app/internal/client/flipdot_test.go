@@ -1,4 +1,4 @@
-package flipdot
+package client
 
 import (
 	"fmt"
