@@ -46,7 +46,5 @@ export default class Result extends Vue {
 </script>
 
 <style>
-#message {
-    white-space: pre-wrap;
-}
+@import "~@/assets/common.scss";
 </style>

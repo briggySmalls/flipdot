@@ -52,5 +52,5 @@ export default class Login extends Vue {
 </script>
 
 <style>
-@import "../assets/common.scss";
+@import "~@/assets/common.scss";
 </style>
