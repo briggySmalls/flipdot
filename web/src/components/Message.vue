@@ -2,11 +2,24 @@
   <form v-on:submit.prevent="sendMessage">
     <div class="form-group row">
         <label for="text" class="col-sm-2 col-form-label">Sender:</label>
-        <input v-model="sender" type="text" class="col-sm-10 form-control message-sender" required>
+        <b-form-input
+          v-model="sender"
+          placeholder="Sam"
+          type="text"
+          class="col-sm-10 form-control message-sender"
+          required>
+        </b-form-input>
     </div>
     <div class="form-group row">
         <label for="text" class="col-sm-2 col-form-label">Message:</label>
-        <textarea v-model="message" class="col-sm-10 form-control message-text" required></textarea>
+        <b-form-textarea
+          v-model="message"
+          placeholder="Message here, try to keep it short!"
+          rows="3"
+          max-rows="4"
+          class="col-sm-10 form-control message-text"
+          required>
+        </b-form-textarea>
     </div>
     <button type="submit" class="btn btn-primary message-submit">Send</button>
   </form>
