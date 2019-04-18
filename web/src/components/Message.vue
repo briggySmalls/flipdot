@@ -65,5 +65,4 @@ export default class Message extends Vue {
 </script>
 
 <style>
-
 </style>

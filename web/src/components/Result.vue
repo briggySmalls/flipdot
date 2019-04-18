@@ -46,5 +46,4 @@ export default class Result extends Vue {
 </script>
 
 <style>
-@import "~@/assets/common.scss";
 </style>
