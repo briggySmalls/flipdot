@@ -1,32 +1,34 @@
 <template>
-  <form v-on:submit.prevent="sendMessage">
-    <div class="form-group row">
-        <label for="text" class="col-sm-2 col-form-label">Sender:</label>
-        <b-form-input
-          v-model="sender"
-          placeholder="Sam"
-          type="text"
-          class="col-sm-10 form-control message-sender"
-          :state="sender.length > 0"
-          trim
-          required>
-        </b-form-input>
-    </div>
-    <div class="form-group row">
-        <label for="text" class="col-sm-2 col-form-label">Message:</label>
-        <b-form-textarea
-          v-model="message"
-          :state="message.length > 0"
-          placeholder="Message here, try to keep it short!"
-          rows="3"
-          max-rows="4"
-          class="col-sm-10 form-control message-text"
-          trim
-          required>
-        </b-form-textarea>
-    </div>
-    <button type="submit" class="btn btn-primary message-submit">Send</button>
-  </form>
+  <b-form v-on:submit.prevent="sendMessage">
+    <b-form-group
+      label="Password:"
+      label-for="sender-field">
+      <b-form-input
+        id="sender-field"
+        v-model="sender"
+        placeholder="Sam"
+        type="text"
+        :state="sender.length > 0"
+        trim
+        required>
+      </b-form-input>
+    </b-form-group>
+    <b-form-group
+      label="Message:"
+      label-for="text-field">
+      <b-form-textarea
+        id="text-field"
+        v-model="message"
+        :state="message.length > 0"
+        placeholder="Message here, try to keep it short!"
+        rows="3"
+        max-rows="4"
+        trim
+        required>
+      </b-form-textarea>
+    </b-form-group>
+    <b-button type="submit" variant="primary">Send</b-button>
+  </b-form>
 </template>
 
 <script lang="ts">

@@ -1,13 +1,19 @@
 <template>
   <div>
     <b-alert class="prewrap" variant="danger" v-bind:show="client.error !== null">{{ client.error }}</b-alert>
-    <form v-on:submit.prevent="authenticate">
-      <div class="form-group row">
-          <label for="text" class="col-sm-2 col-form-label">Password:</label>
-          <input v-model="password" type="password" class="col-sm-10 form-control login-password" required>
-      </div>
-      <button type="submit" class="btn btn-primary login-submit">Authorize</button>
-    </form>
+    <b-form v-on:submit.prevent="authenticate">
+      <b-form-group
+        label="Password:"
+        label-for="password-field">
+          <b-form-input
+            id="password-field"
+            v-model="password"
+            type="password"
+            required>
+          </b-form-input>
+      </b-form-group>
+      <b-button type="submit" variant="primary">Authorize</b-button>
+    </b-form>
   </div>
 </template>
 
