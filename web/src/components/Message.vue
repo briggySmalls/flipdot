@@ -52,6 +52,8 @@ export default class Message extends Vue {
   public sendMessage() {
     // Send message to the server
     this.client.sendTextMessage(this.sender, this.message, (response) => {
+      // Clear the form
+      this.reset();
       if (this.client.error && this.client.error.code === grpc.Code.Unauthenticated) {
         // Token has expired or something weirder: go back to login
         this.fsm.send('REAUTH');
@@ -60,6 +62,11 @@ export default class Message extends Vue {
       // We have sent the message
       this.fsm.send('SENT');
     });
+  }
+
+  private reset() {
+    this.sender = '';
+    this.message = '';
   }
 }
 </script>
