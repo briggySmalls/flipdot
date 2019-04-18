@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png">
+    <h1 id="site-title">jims-magic-sign</h1>
     <div class="container">
       <Login id="login" v-show="state == 'login'" v-bind:client="client"  v-bind:fsm="fsm"/>
       <Message id="message" v-show="state == 'message'" v-bind:client="client" v-bind:fsm="fsm"/>
@@ -67,5 +67,8 @@ export default class App extends Vue {
   text-align: center;
   color: #2c3e50;
   margin-top: 60px;
+}
+#site-title {
+  font-family: smirnof, monospace;
 }
 </style>
