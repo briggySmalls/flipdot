@@ -1,12 +1,12 @@
 <template>
   <b-form v-on:submit.prevent="sendMessage">
     <b-form-group
-      label="Password:"
+      label="Sender:"
       label-for="sender-field">
       <b-form-input
         id="sender-field"
         v-model="sender"
-        placeholder="Sam"
+        placeholder="Your name"
         type="text"
         :state="sender.length > 0"
         trim
@@ -20,7 +20,7 @@
         id="text-field"
         v-model="message"
         :state="message.length > 0"
-        placeholder="Message here, try to keep it short!"
+        placeholder="Your message here, try to keep it short!"
         rows="3"
         max-rows="4"
         trim
