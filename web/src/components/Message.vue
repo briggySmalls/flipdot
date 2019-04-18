@@ -27,7 +27,7 @@
         required>
       </b-form-textarea>
     </b-form-group>
-    <b-button type="submit" variant="primary">Send</b-button>
+    <b-button type="submit" variant="primary" block>Send</b-button>
   </b-form>
 </template>
 

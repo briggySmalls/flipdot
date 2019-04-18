@@ -1,7 +1,7 @@
 <template>
   <div>
     <b-alert class="prewrap" v-bind:variant="alertVariant" show>{{ message }}</b-alert>
-    <button v-on:click="newMessage" class="btn btn-primary">Send a message</button>
+    <b-button v-on:click="newMessage" variant="primary" block>Send a message</b-button>
   </div>
 </template>
 

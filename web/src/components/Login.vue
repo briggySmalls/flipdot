@@ -12,7 +12,7 @@
             required>
           </b-form-input>
       </b-form-group>
-      <b-button type="submit" variant="primary">Authorize</b-button>
+      <b-button type="submit" variant="primary" block>Authorize</b-button>
     </b-form>
   </div>
 </template>
