@@ -51,10 +51,6 @@ jobs:
             go get -u github.com/golang/protobuf/protoc-gen-go
       - checkout
       - run:
-          name: Install app dependencies
-          command: go get -v -t -d ./...
-          working_directory: app
-      - run:
           name: Run tests
           command: make test
           working_directory: app
