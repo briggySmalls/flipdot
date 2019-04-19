@@ -49,12 +49,6 @@ jobs:
           command: |
             go get github.com/golang/mock/gomock &&
             go get -u github.com/golang/protobuf/protoc-gen-go
-      - run:
-          name: Checkout working version of mockgen
-          command: |
-            cd $GOPATH/src/github.com/golang/mock &&
-            git checkout v1.2.0 &&
-            go install github.com/golang/mock/mockgen
       - checkout
       - run:
           name: Install app dependencies
