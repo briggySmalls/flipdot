@@ -8,14 +8,14 @@ import (
 	"image"
 	"time"
 
-	"github.com/briggySmalls/flipdot/app/internal/client"
+	"github.com/briggySmalls/flipdot/app/internal/protos"
 	"github.com/briggySmalls/flipdot/app/internal/shared"
 	"github.com/briggySmalls/flipdot/app/internal/text"
 )
 
 type Imager interface {
-	Message(sender, message string) ([]*client.Image, error)
-	Clock(time time.Time, isMessagesAvailable bool) ([]*client.Image, error)
+	Message(sender, message string) ([]*protos.Image, error)
+	Clock(time time.Time, isMessagesAvailable bool) ([]*protos.Image, error)
 }
 
 type imager struct {
@@ -33,7 +33,7 @@ func NewImager(builder text.TextBuilder, statusImage image.Image, signCount uint
 }
 
 // Helper function to send text to the signs
-func (i *imager) Message(sender, message string) (images []*client.Image, err error) {
+func (i *imager) Message(sender, message string) (images []*protos.Image, err error) {
 	// Convert the sender to images
 	senderImages, err := i.builder.Images(fmt.Sprintf("From: %s", sender), true)
 	if err != nil {
@@ -60,7 +60,7 @@ func (i *imager) Message(sender, message string) (images []*client.Image, err er
 	return
 }
 
-func (i *imager) Clock(time time.Time, isMessagesAvailable bool) (images []*client.Image, err error) {
+func (i *imager) Clock(time time.Time, isMessagesAvailable bool) (images []*protos.Image, err error) {
 	// Get images that represent the time
 	srcImages, err := i.builder.Images(time.Format("Mon 1 Jan\n3:04 pm"), true)
 	shared.ErrorHandler(err)
@@ -91,9 +91,9 @@ func Slice(image image.Image) []bool {
 	return binImage
 }
 
-func convertImages(inImages []draw.Image) (outImages []*client.Image) {
+func convertImages(inImages []draw.Image) (outImages []*protos.Image) {
 	for _, img := range inImages {
-		outImages = append(outImages, &client.Image{Data: Slice(img)})
+		outImages = append(outImages, &protos.Image{Data: Slice(img)})
 	}
 	return
 }

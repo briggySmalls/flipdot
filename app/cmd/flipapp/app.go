@@ -19,7 +19,7 @@ import (
 	"time"
 
 	"github.com/briggySmalls/flipdot/app/internal/button"
-	"github.com/briggySmalls/flipdot/app/internal/client"
+	"github.com/briggySmalls/flipdot/app/internal/protos"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/stianeikeland/go-rpio"
@@ -43,7 +43,7 @@ to quickly create a Cobra application.`,
 		connection, err := grpc.Dial(fmt.Sprintf(config.clientAddress), grpc.WithInsecure())
 		errorHandler(err)
 		// Create a flipdot client
-		client := client.NewFlipdotClient(connection)
+		client := protos.NewFlipdotClient(connection)
 		// Activate RPi GPIO
 		err = rpio.Open()
 		errorHandler(err)

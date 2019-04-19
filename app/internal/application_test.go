@@ -7,7 +7,7 @@ import (
 	"github.com/briggySmalls/flipdot/app/internal/button"
 	"github.com/briggySmalls/flipdot/app/internal/client"
 	"github.com/briggySmalls/flipdot/app/internal/imaging"
-	"github.com/briggySmalls/flipdot/app/internal/server"
+	"github.com/briggySmalls/flipdot/app/internal/protos"
 	gomock "github.com/golang/mock/gomock"
 	"golang.org/x/image/font"
 	"golang.org/x/image/font/inconsolata"
@@ -23,12 +23,12 @@ func TestTickText(t *testing.T) {
 	defer close(textWritten)
 	// Configure imager mock to expect request to build images
 	// Return two 'images' to be displayed
-	fakeImager.EXPECT().Clock(gomock.Any(), false).Return([]*client.Image{
+	fakeImager.EXPECT().Clock(gomock.Any(), false).Return([]*protos.Image{
 		{Data: make([]bool, 10)},
 		{Data: make([]bool, 10)},
 	}, nil)
 	// Configure the mock (calls 'done' when executed)
-	mockAction := func(images []*client.Image, isWait bool) {
+	mockAction := func(images []*protos.Image, isWait bool) {
 		// Assert that the images are as expected
 		if len(images) != 2 {
 			t.Errorf("Unexpected number of images: %d", len(images))
@@ -75,9 +75,9 @@ func TestMessageTextQueued(t *testing.T) {
 	// Send the message
 	messagesIn := app.GetMessagesChannel()
 	defer close(messagesIn)
-	messagesIn <- server.MessageRequest{
+	messagesIn <- protos.MessageRequest{
 		From:    "briggySmalls",
-		Payload: &server.MessageRequest_Text{"test text"},
+		Payload: &protos.MessageRequest_Text{"test text"},
 	}
 	// Wait until the message is handled, or timeout
 	select {
@@ -116,13 +116,13 @@ func TestMessageTextSent(t *testing.T) {
 		fakeImager.EXPECT().Clock(gomock.Any(), true),  // Expect clock image to be built
 		fakeFlipdot.EXPECT().Draw(gomock.Any(), false), // Expect clock images to be sent
 		fakeBm.EXPECT().SetState(button.Inactive),      // Expect dectivate before drawing message
-		fakeImager.EXPECT().Message("briggySmalls", "test text").Return([]*client.Image{ // Expect constructing message images
+		fakeImager.EXPECT().Message("briggySmalls", "test text").Return([]*protos.Image{ // Expect constructing message images
 			{Data: make([]bool, 10)},
 			{Data: make([]bool, 10)},
 			{Data: make([]bool, 10)},
 			{Data: make([]bool, 10)},
 		}, nil),
-		fakeFlipdot.EXPECT().Draw(gomock.Any(), true).Do(func(images []*client.Image, isWait bool) { // Expect draw message images
+		fakeFlipdot.EXPECT().Draw(gomock.Any(), true).Do(func(images []*protos.Image, isWait bool) { // Expect draw message images
 			// Check image
 			if len(images) != 4 {
 				t.Errorf("Unexpected number of images: %d", len(images))
@@ -134,9 +134,9 @@ func TestMessageTextSent(t *testing.T) {
 	// Start the app
 	go app.Run(time.Hour)
 	// Send a message to start the test (note: we don't assert as we check this in previous test)
-	messagesIn <- server.MessageRequest{
+	messagesIn <- protos.MessageRequest{
 		From:    "briggySmalls",
-		Payload: &server.MessageRequest_Text{"test text"},
+		Payload: &protos.MessageRequest_Text{"test text"},
 	}
 	// Wait until the message is handled, or timeout
 	for {

@@ -7,16 +7,16 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/briggySmalls/flipdot/app/internal/client"
 	"github.com/briggySmalls/flipdot/app/internal/imaging"
 	"github.com/briggySmalls/flipdot/app/internal/server"
 	"github.com/briggySmalls/flipdot/app/internal/text"
+	"github.com/briggySmalls/flipdot/app/internal/protos"
 	"golang.org/x/image/font"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
 
-func createServer(appSecret, appPassword string, messagesIn chan server.MessageRequest, signsInfo []*client.GetInfoResponse_SignInfo) (grpcServer *grpc.Server) {
+func createServer(appSecret, appPassword string, messagesIn chan protos.MessageRequest, signsInfo []*protos.GetInfoResponse_SignInfo) (grpcServer *grpc.Server) {
 	grpcServer = server.NewRpcServer(
 		appSecret,
 		appPassword,

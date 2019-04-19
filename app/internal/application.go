@@ -8,8 +8,8 @@ import (
 	"github.com/briggySmalls/flipdot/app/internal/button"
 	"github.com/briggySmalls/flipdot/app/internal/client"
 	"github.com/briggySmalls/flipdot/app/internal/imaging"
-	"github.com/briggySmalls/flipdot/app/internal/server"
 	"github.com/briggySmalls/flipdot/app/internal/shared"
+	"github.com/briggySmalls/flipdot/app/internal/protos"
 )
 
 const (
@@ -21,11 +21,11 @@ type application struct {
 	buttonManager button.ButtonManager
 	imager        imaging.Imager
 	// Externally-visible channel for adding messages to the application
-	messagesIn chan server.MessageRequest
+	messagesIn chan protos.MessageRequest
 }
 
 type Application interface {
-	GetMessagesChannel() chan server.MessageRequest
+	GetMessagesChannel() chan protos.MessageRequest
 	Run(tickPeriod time.Duration)
 }
 
@@ -35,12 +35,12 @@ func NewApplication(flipdot client.Flipdot, buttonManager button.ButtonManager, 
 		flipdot:       flipdot,
 		buttonManager: buttonManager,
 		imager:        imager,
-		messagesIn:    make(chan server.MessageRequest, messageInSize),
+		messagesIn:    make(chan protos.MessageRequest, messageInSize),
 	}
 	return &app
 }
 
-func (a *application) GetMessagesChannel() chan server.MessageRequest {
+func (a *application) GetMessagesChannel() chan protos.MessageRequest {
 	return a.messagesIn
 }
 
@@ -52,7 +52,7 @@ func (a *application) Run(tickPeriod time.Duration) {
 	ticker := time.NewTicker(tickPeriod)
 	defer ticker.Stop()
 	// Create intermediate message queue
-	pendingMessages := make([]server.MessageRequest, 0)
+	pendingMessages := make([]protos.MessageRequest, 0)
 	// Get queue for button presses
 	buttonPressed := a.buttonManager.GetChannel()
 	// Draw first clock
@@ -114,12 +114,12 @@ func (a *application) drawTime(time time.Time, isMessageAvailable bool) {
 }
 
 // Gets a message sent to the flipdot signs
-func (a *application) handleMessage(message server.MessageRequest) {
+func (a *application) handleMessage(message protos.MessageRequest) {
 	var err error
 	switch message.Payload.(type) {
-	case *server.MessageRequest_Images:
+	case *protos.MessageRequest_Images:
 		err = a.sendImages(message.GetImages().Images)
-	case *server.MessageRequest_Text:
+	case *protos.MessageRequest_Text:
 		// Create images from message
 		images, err := a.imager.Message(message.From, message.GetText())
 		shared.ErrorHandler(err)
@@ -133,7 +133,7 @@ func (a *application) handleMessage(message server.MessageRequest) {
 }
 
 // Helper function to send images to the signs
-func (a *application) sendImages(images []*client.Image) (err error) {
+func (a *application) sendImages(images []*protos.Image) (err error) {
 	err = a.flipdot.Draw(images, true)
 	return
 }

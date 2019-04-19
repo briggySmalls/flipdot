@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/briggySmalls/flipdot/app/internal/text"
+	"github.com/briggySmalls/flipdot/app/internal/protos"
 )
 
 const (
@@ -13,20 +14,20 @@ const (
 )
 
 type Flipdot interface {
-	Signs() []*GetInfoResponse_SignInfo
+	Signs() []*protos.GetInfoResponse_SignInfo
 	Size() (width, height uint)
 	LightOn() error
 	LightOff() error
 	TestStart() error
 	TestStop() error
-	Draw(images []*Image, isWait bool) error
+	Draw(images []*protos.Image, isWait bool) error
 }
 
 type flipdot struct {
 	// gRPC client to send command via
-	client FlipdotClient
+	client protos.FlipdotClient
 	// Record of response from GetInfo request
-	signs []*GetInfoResponse_SignInfo
+	signs []*protos.GetInfoResponse_SignInfo
 	// Names of signs from GetInfo request
 	signNames []string
 	// TextBuilder used to convert text to images
@@ -35,7 +36,7 @@ type flipdot struct {
 	frameTime time.Duration
 }
 
-func NewFlipdot(client FlipdotClient, frameTime time.Duration) (f Flipdot, err error) {
+func NewFlipdot(client protos.FlipdotClient, frameTime time.Duration) (f Flipdot, err error) {
 	flipdot := flipdot{
 		client:    client,
 		frameTime: frameTime,
@@ -66,7 +67,7 @@ func (f *flipdot) TestStop() (err error) {
 }
 
 // Get info from the sign
-func (f *flipdot) Signs() (signs []*GetInfoResponse_SignInfo) {
+func (f *flipdot) Signs() (signs []*protos.GetInfoResponse_SignInfo) {
 	return f.signs
 }
 
@@ -79,7 +80,7 @@ func (f *flipdot) Size() (width, height uint) {
 }
 
 // Draw a set of images
-func (f *flipdot) Draw(images []*Image, isWait bool) (err error) {
+func (f *flipdot) Draw(images []*protos.Image, isWait bool) (err error) {
 	// Send any relevant images
 	images, err = f.sendFrame(images)
 	if err != nil || (len(images) == 0 && !isWait) {
@@ -137,13 +138,13 @@ func (f *flipdot) light(on bool) (err error) {
 	ctx, cancel := getContext()
 	defer cancel()
 	// Send request
-	var status LightRequest_Status
+	var status protos.LightRequest_Status
 	if on {
-		status = LightRequest_ON
+		status = protos.LightRequest_ON
 	} else {
-		status = LightRequest_OFF
+		status = protos.LightRequest_OFF
 	}
-	_, err = f.client.Light(ctx, &LightRequest{Status: status})
+	_, err = f.client.Light(ctx, &protos.LightRequest{Status: status})
 	// Handle errors
 	return
 }
@@ -154,29 +155,29 @@ func (f *flipdot) test(start bool) (err error) {
 	ctx, cancel := getContext()
 	defer cancel()
 	// Send request
-	var action TestRequest_Action
+	var action protos.TestRequest_Action
 	if start {
-		action = TestRequest_START
+		action = protos.TestRequest_START
 	} else {
-		action = TestRequest_STOP
+		action = protos.TestRequest_STOP
 	}
-	_, err = f.client.Test(ctx, &TestRequest{Action: action})
+	_, err = f.client.Test(ctx, &protos.TestRequest{Action: action})
 	return
 }
 
 // Send a set of images to available signs
-func (f *flipdot) sendFrame(images []*Image) (leftover []*Image, err error) {
+func (f *flipdot) sendFrame(images []*protos.Image) (leftover []*protos.Image, err error) {
 	leftover = images
 	width, height := f.Size()
 	blankImageData := make([]bool, width*height)
 	for _, sign := range f.signNames {
 		// Send an empty image if there are none left (removes old messages)
 		if len(leftover) == 0 {
-			f.writeImage(Image{Data: blankImageData}, sign)
+			f.writeImage(protos.Image{Data: blankImageData}, sign)
 			return
 		}
 		// Pop an image off the stack and send it
-		var image *Image
+		var image *protos.Image
 		image, leftover = leftover[0], leftover[1:]
 		err = f.writeImage(*image, sign)
 		if err != nil {
@@ -187,11 +188,11 @@ func (f *flipdot) sendFrame(images []*Image) (leftover []*Image, err error) {
 }
 
 // Write an image to the specified sign
-func (f *flipdot) writeImage(image Image, sign string) (err error) {
+func (f *flipdot) writeImage(image protos.Image, sign string) (err error) {
 	// Send request
 	ctx, cancel := getContext()
 	defer cancel()
-	_, err = f.client.Draw(ctx, &DrawRequest{
+	_, err = f.client.Draw(ctx, &protos.DrawRequest{
 		Sign:  sign,
 		Image: &image,
 	})
@@ -199,7 +200,7 @@ func (f *flipdot) writeImage(image Image, sign string) (err error) {
 }
 
 // Check that all signs have the same width/height
-func checkSigns(signs []*GetInfoResponse_SignInfo) error {
+func checkSigns(signs []*protos.GetInfoResponse_SignInfo) error {
 	var width, height uint32
 	for i, sign := range signs {
 		if i == 0 {
@@ -217,11 +218,11 @@ func checkSigns(signs []*GetInfoResponse_SignInfo) error {
 }
 
 // Request signs information from service
-func (f *flipdot) getSigns() (signs []*GetInfoResponse_SignInfo, err error) {
+func (f *flipdot) getSigns() (signs []*protos.GetInfoResponse_SignInfo, err error) {
 	// Get the signs
 	context, cancel := getContext()
 	defer cancel()
-	response, err := f.client.GetInfo(context, &GetInfoRequest{})
+	response, err := f.client.GetInfo(context, &protos.GetInfoRequest{})
 	if err != nil {
 		// Something went wrong
 		return nil, err

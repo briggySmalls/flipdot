@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	client "github.com/briggySmalls/flipdot/app/internal/client"
+	"github.com/briggySmalls/flipdot/app/internal/protos"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -21,7 +21,7 @@ func TestAuthenticateFail(t *testing.T) {
 	// Run the command
 	ctx, cancel := getContext()
 	defer cancel()
-	_, err := flipapps.Authenticate(ctx, &AuthenticateRequest{Password: "wrong"})
+	_, err := flipapps.Authenticate(ctx, &protos.AuthenticateRequest{Password: "wrong"})
 	// Check respose
 	if err == nil {
 		t.Fatal("Failed to detect failed password")
@@ -38,7 +38,7 @@ func TestAuthenticatePass(t *testing.T) {
 	// Run the command
 	ctx, cancel := getContext()
 	defer cancel()
-	response, err := flipapps.Authenticate(ctx, &AuthenticateRequest{Password: password})
+	response, err := flipapps.Authenticate(ctx, &protos.AuthenticateRequest{Password: password})
 	// Check response
 	if err != nil {
 		t.Fatal(err)
@@ -60,7 +60,7 @@ func TestGetInfo(t *testing.T) {
 	// Run the command
 	ctx, cancel := getContext()
 	defer cancel()
-	response, err := flipapps.GetInfo(ctx, &client.GetInfoRequest{})
+	response, err := flipapps.GetInfo(ctx, &protos.GetInfoRequest{})
 	// Assert the return values
 	if err != nil {
 		t.Fatal(err)
@@ -79,9 +79,9 @@ func TestSendMessage(t *testing.T) {
 	// Run the command
 	ctx, cancel := getContext()
 	defer cancel()
-	originalRequest := MessageRequest{
+	originalRequest := protos.MessageRequest{
 		From:    "briggySmalls",
-		Payload: &MessageRequest_Text{"test text"},
+		Payload: &protos.MessageRequest_Text{"test text"},
 	}
 	_, err := flipapps.SendMessage(ctx, &originalRequest)
 	// Assert the return values
@@ -100,25 +100,25 @@ func TestSendMessage(t *testing.T) {
 }
 
 // Helper function to set up the unit under test
-func createTestObjects(t *testing.T) (FlipAppsServer, chan MessageRequest, []*client.GetInfoResponse_SignInfo) {
+func createTestObjects(t *testing.T) (protos.FlipAppsServer, chan protos.MessageRequest, []*protos.GetInfoResponse_SignInfo) {
 	// Make some dummy signs
-	signs := []*client.GetInfoResponse_SignInfo{
-		&client.GetInfoResponse_SignInfo{
+	signs := []*protos.GetInfoResponse_SignInfo{
+		{
 			Name: "test1", Width: 10, Height: 2,
 		},
-		&client.GetInfoResponse_SignInfo{
+		{
 			Name: "test2", Width: 10, Height: 2,
 		},
 	}
 	// Make a channel for sending messages
-	messageQueue := make(chan MessageRequest, 10)
+	messageQueue := make(chan protos.MessageRequest, 10)
 	// Create object under test
 	server := NewServer("secret", "password", messageQueue, signs)
 	return server, messageQueue, signs
 }
 
 // Helper function to check that no messages were queued by the server
-func checkNoMessages(t *testing.T, queue chan MessageRequest) {
+func checkNoMessages(t *testing.T, queue chan protos.MessageRequest) {
 	// Check no messages were sent
 	select {
 	case message := <-queue:
