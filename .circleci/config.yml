@@ -44,12 +44,15 @@ jobs:
           command: |
             sudo apt-get update &&
             sudo apt-get install -yq protobuf-compiler
-      - run:
-          name: Install protobuf & mock go packages
-          command: |
-            go get github.com/golang/mock/gomock &&
-            go get -u github.com/golang/protobuf/protoc-gen-go
       - checkout
+      - run:
+          name: Build (gets dependencies)
+          command: go build
+      - run:
+          name: Install protoc-gen-go & mockgen
+          command: |
+            go install github.com/golang/protobuf/protoc-gen-go
+            go install github.com/golang/mock/mockgen
       - run:
           name: Run tests
           command: make test
