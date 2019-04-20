@@ -7,6 +7,8 @@ import { mock, instance, when, anything, verify } from 'ts-mockito';
 import { CombinedVueInstance, Vue } from 'vue/types/vue';
 import { grpc } from '@improbable-eng/grpc-web';
 import { StateSchema, EventObject } from 'xstate';
+import { createLocalVue } from '@vue/test-utils';
+import BootstrapVue from 'bootstrap-vue';
 
 describe('Message.vue', () => {
     let mockedClient: Client;
@@ -18,6 +20,10 @@ describe('Message.vue', () => {
     let wrapper: Wrapper<CombinedVueInstance<Message, object, object, object, Record<never, any>>>;
 
     beforeEach(() => {
+        // create an extended `Vue` constructor
+        const localVue = createLocalVue();
+        // install plugins as normal
+        localVue.use(BootstrapVue);
         // Create a mock client
         mockedClient = mock(Client);
         client = instance(mockedClient);
@@ -26,6 +32,7 @@ describe('Message.vue', () => {
         fsm = instance(mockedFsm);
         // Create object under test
         wrapper = shallowMount(Message, {
+            localVue,
             propsData: {
                 client,
                 fsm,
