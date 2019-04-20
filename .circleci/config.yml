@@ -37,6 +37,7 @@ jobs:
   test-app:
     docker:
       - image: circleci/golang:stretch
+    working_directory: ~/app
     steps:
       - run:
           name: Install protobuf compiler
