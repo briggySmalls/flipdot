@@ -65,7 +65,7 @@ jobs:
       - run: docker login -u $DOCKER_USER -p $DOCKER_PASS
       - checkout
       # build the application image
-      - run: docker build -t briggysmalls/flipapp:latest -t briggysmalls/flipapp:$CIRCLE_SHA1 -f ./app/Dockerfile .
+      - run: docker build -t briggysmalls/flipapp:latest -t briggysmalls/flipapp:$CIRCLE_SHA1 -f ./app/build/Dockerfile .
       # deploy the image
       - run: |
           docker push briggysmalls/flipapp:$CIRCLE_SHA1 &&
