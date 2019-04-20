@@ -46,7 +46,7 @@ jobs:
       - checkout
       - run:
           name: Build (gets dependencies)
-          command: go build ./...
+          command: go get ./...
           working_directory: app
       - run:
           name: Install protoc-gen-go & mockgen
