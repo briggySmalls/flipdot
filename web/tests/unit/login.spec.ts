@@ -1,4 +1,4 @@
-import { shallowMount, Wrapper } from '@vue/test-utils';
+import { mount, Wrapper } from '@vue/test-utils';
 import { expect } from 'chai';
 import Login from '@/components/Login.vue';
 import { Client } from '@/ts/client';
@@ -31,7 +31,7 @@ describe('Login.vue', () => {
     mockedFsm = mock(Interpreter);
     fsm = instance(mockedFsm);
     // Create object under test
-    wrapper = shallowMount(Login, {
+    wrapper = mount(Login, {
       localVue,
       propsData: {
         client,
@@ -50,30 +50,34 @@ describe('Login.vue', () => {
         },
     );
     // Send password
-    wrapper.find('form .login-password').setValue('password');
-    wrapper.find('form .login-submit').trigger('submit');
+    // wrapper.find('#password-field').setValue('password');
+    wrapper.find('form #password-field').setValue('password');
+    wrapper.find('form #login-submit').trigger('submit');
     // Set a password
     verify(mockedClient.authenticate('password', anything())).once();
     verify(mockedFsm.send('AUTH')).once();
   });
 
   it('displays error', () => {
-    // // Configure client
-    when(mockedClient.error).thenReturn(null);
+    // Configure client
+    let err: any = null;
+    when(mockedClient.error).thenReturn(() => {
+      return err;
+    });
     when(mockedClient.authenticate('password', anything())).thenCall(
       (password: string, callback: (response: any) => void) => {
         // Indicate an error occurred
-        when(mockedClient.error).thenReturn({
+        err = {
           code: grpc.Code.Unauthenticated,
           message: 'Failed to login',
-        });
+        };
         // Execute callback
         callback(null);
       },
     );
     // Send password
-    wrapper.find('form .login-password').setValue('password');
-    wrapper.find('form .login-submit').trigger('submit');
+    wrapper.find('form #password-field').setValue('password');
+    wrapper.find('form #login-submit').trigger('submit');
     // Set a password
     verify(mockedClient.authenticate('password', anything())).once();
     verify(mockedFsm.send(anything())).never();

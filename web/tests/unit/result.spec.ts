@@ -1,4 +1,4 @@
-import { shallowMount, Wrapper } from '@vue/test-utils';
+import { mount, Wrapper } from '@vue/test-utils';
 import { expect } from 'chai';
 import Result from '@/components/Result.vue';
 import { Client } from '@/ts/client';
@@ -31,7 +31,7 @@ describe('Result.vue', () => {
         mockedFsm = mock(Interpreter);
         fsm = instance(mockedFsm);
         // Create object under test
-        wrapper = shallowMount(Result, {
+        wrapper = mount(Result, {
             localVue,
             propsData: {
                 client,

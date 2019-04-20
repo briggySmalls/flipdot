@@ -1,4 +1,4 @@
-import { shallowMount, Wrapper } from '@vue/test-utils';
+import { mount, Wrapper } from '@vue/test-utils';
 import { expect } from 'chai';
 import Message from '@/components/Message.vue';
 import { Client } from '@/ts/client';
@@ -31,7 +31,7 @@ describe('Message.vue', () => {
         mockedFsm = mock(Interpreter);
         fsm = instance(mockedFsm);
         // Create object under test
-        wrapper = shallowMount(Message, {
+        wrapper = mount(Message, {
             localVue,
             propsData: {
                 client,
@@ -52,9 +52,9 @@ describe('Message.vue', () => {
             },
         );
         // Send message
-        wrapper.find('form .message-sender').setValue(sender);
-        wrapper.find('form .message-text').setValue(text);
-        wrapper.find('form .message-submit').trigger('submit');
+        wrapper.find('form #sender-field').setValue(sender);
+        wrapper.find('form #text-field').setValue(text);
+        wrapper.find('form #message-submit').trigger('submit');
         // Set a password
         verify(mockedClient.sendTextMessage(sender, text, anything())).once();
         verify(mockedFsm.send('SENT')).once();
@@ -77,9 +77,9 @@ describe('Message.vue', () => {
             },
         );
         // Send message
-        wrapper.find('form .message-sender').setValue(sender);
-        wrapper.find('form .message-text').setValue(text);
-        wrapper.find('form .message-submit').trigger('submit');
+        wrapper.find('form #sender-field').setValue(sender);
+        wrapper.find('form #text-field').setValue(text);
+        wrapper.find('form #message-submit').trigger('submit');
         // Assert state machine
         verify(mockedFsm.send('REAUTH')).once();
     });
@@ -101,9 +101,9 @@ describe('Message.vue', () => {
             },
         );
         // Send message
-        wrapper.find('form .message-sender').setValue(sender);
-        wrapper.find('form .message-text').setValue(text);
-        wrapper.find('form .message-submit').trigger('submit');
+        wrapper.find('form #sender-field').setValue(sender);
+        wrapper.find('form #text-field').setValue(text);
+        wrapper.find('form #message-submit').trigger('submit');
         // Assert state machine
         verify(mockedFsm.send('SENT')).once();
     });
