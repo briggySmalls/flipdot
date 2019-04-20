@@ -36,8 +36,7 @@ jobs:
   # Build and test the app
   test-app:
     docker:
-      - image: circleci/golang:1.9-stretch
-    working_directory: /go/src/github.com/briggySmalls/flipdot
+      - image: circleci/golang:stretch
     steps:
       - run:
           name: Install protobuf compiler
@@ -47,7 +46,7 @@ jobs:
       - checkout
       - run:
           name: Build (gets dependencies)
-          command: go build
+          command: go build ./...
           working_directory: app
       - run:
           name: Install protoc-gen-go & mockgen
