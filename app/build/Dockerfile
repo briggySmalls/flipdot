@@ -3,11 +3,15 @@ FROM golang:alpine AS builder
 # Install git for fetching the dependencies
 RUN apk update && apk add --no-cache git make protobuf
 
-# Get the protobuf source generator (do this prior to copy)
-RUN go get -u github.com/golang/protobuf/protoc-gen-go
 # Copy the source
-COPY . $GOPATH/src/github.com/briggySmalls/flipdot
-WORKDIR $GOPATH/src/github.com/briggySmalls/flipdot/app
+COPY . /src/flipdot
+WORKDIR /src/flipdot/app
+
+# Fetch dependencies
+RUN go build ./...
+
+# Get the protobuf source generator (do this prior to copy)
+RUN go install github.com/golang/protobuf/protoc-gen-go
 
 # Build the binary
 RUN make build IS_PI=TRUE
