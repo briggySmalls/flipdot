@@ -1,7 +1,7 @@
 <template>
   <div>
-    <div class="prewrap alert" v-bind:class="messageClass">{{ message }}</div>
-    <button v-on:click="newMessage" class="btn btn-primary">Send a message</button>
+    <b-alert class="prewrap" v-bind:variant="alertVariant" show>{{ message }}</b-alert>
+    <b-button v-on:click="newMessage" variant="primary" block>Send a message</b-button>
   </div>
 </template>
 
@@ -24,13 +24,13 @@ export default class Result extends Vue {
     this.fsm.send('NEW');
   }
 
-  get messageClass(): string {
+  get alertVariant(): string {
     // If there is no error, we have succeeded
     if (this.client.error === null) {
-        return 'alert-success';
+        return 'success';
     }
     // If there is an error, we have failed
-    return 'alert-danger';
+    return 'danger';
   }
 
   // Computed property for error message
@@ -46,7 +46,4 @@ export default class Result extends Vue {
 </script>
 
 <style>
-#message {
-    white-space: pre-wrap;
-}
 </style>

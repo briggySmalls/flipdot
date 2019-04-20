@@ -1,15 +1,34 @@
 <template>
-  <form v-on:submit.prevent="sendMessage">
-    <div class="form-group row">
-        <label for="text" class="col-sm-2 col-form-label">Sender:</label>
-        <input v-model="sender" type="text" class="col-sm-10 form-control message-sender" required>
-    </div>
-    <div class="form-group row">
-        <label for="text" class="col-sm-2 col-form-label">Message:</label>
-        <input v-model="message" type="text" class="col-sm-10 form-control message-text" required>
-    </div>
-    <button type="submit" class="btn btn-primary message-submit">Send</button>
-  </form>
+  <b-form v-on:submit.prevent="sendMessage">
+    <b-form-group
+      label="Sender:"
+      label-for="sender-field">
+      <b-form-input
+        id="sender-field"
+        v-model="sender"
+        placeholder="Your name"
+        type="text"
+        :state="sender.length > 0"
+        trim
+        required>
+      </b-form-input>
+    </b-form-group>
+    <b-form-group
+      label="Message:"
+      label-for="text-field">
+      <b-form-textarea
+        id="text-field"
+        v-model="message"
+        :state="message.length > 0"
+        placeholder="Your message here, try to keep it short!"
+        rows="3"
+        max-rows="4"
+        trim
+        required>
+      </b-form-textarea>
+    </b-form-group>
+    <b-button id="message-submit" type="submit" variant="primary" block>Send</b-button>
+  </b-form>
 </template>
 
 <script lang="ts">
@@ -33,6 +52,8 @@ export default class Message extends Vue {
   public sendMessage() {
     // Send message to the server
     this.client.sendTextMessage(this.sender, this.message, (response) => {
+      // Clear the form
+      this.reset();
       if (this.client.error && this.client.error.code === grpc.Code.Unauthenticated) {
         // Token has expired or something weirder: go back to login
         this.fsm.send('REAUTH');
@@ -42,9 +63,13 @@ export default class Message extends Vue {
       this.fsm.send('SENT');
     });
   }
+
+  private reset() {
+    this.sender = '';
+    this.message = '';
+  }
 }
 </script>
 
 <style>
-
 </style>

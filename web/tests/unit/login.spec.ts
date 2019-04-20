@@ -1,4 +1,4 @@
-import { shallowMount, Wrapper } from '@vue/test-utils';
+import { mount, Wrapper } from '@vue/test-utils';
 import { expect } from 'chai';
 import Login from '@/components/Login.vue';
 import { Client } from '@/ts/client';
@@ -7,6 +7,8 @@ import { mock, instance, when, anything, verify } from 'ts-mockito';
 import { CombinedVueInstance, Vue } from 'vue/types/vue';
 import { grpc } from '@improbable-eng/grpc-web';
 import { StateSchema, EventObject } from 'xstate';
+import { createLocalVue } from '@vue/test-utils';
+import BootstrapVue from 'bootstrap-vue';
 
 describe('Login.vue', () => {
   let mockedClient: Client;
@@ -18,6 +20,10 @@ describe('Login.vue', () => {
   let wrapper: Wrapper<CombinedVueInstance<Login, object, object, object, Record<never, any>>>;
 
   beforeEach(() => {
+    // create an extended `Vue` constructor
+    const localVue = createLocalVue();
+    // install plugins as normal
+    localVue.use(BootstrapVue);
     // Create a mock client
     mockedClient = mock(Client);
     client = instance(mockedClient);
@@ -25,7 +31,8 @@ describe('Login.vue', () => {
     mockedFsm = mock(Interpreter);
     fsm = instance(mockedFsm);
     // Create object under test
-    wrapper = shallowMount(Login, {
+    wrapper = mount(Login, {
+      localVue,
       propsData: {
         client,
         fsm,
@@ -43,30 +50,34 @@ describe('Login.vue', () => {
         },
     );
     // Send password
-    wrapper.find('form .login-password').setValue('password');
-    wrapper.find('form .login-submit').trigger('submit');
+    // wrapper.find('#password-field').setValue('password');
+    wrapper.find('form #password-field').setValue('password');
+    wrapper.find('form #login-submit').trigger('submit');
     // Set a password
     verify(mockedClient.authenticate('password', anything())).once();
     verify(mockedFsm.send('AUTH')).once();
   });
 
   it('displays error', () => {
-    // // Configure client
-    when(mockedClient.error).thenReturn(null);
+    // Configure client
+    let err: any = null;
+    when(mockedClient.error).thenReturn(() => {
+      return err;
+    });
     when(mockedClient.authenticate('password', anything())).thenCall(
       (password: string, callback: (response: any) => void) => {
         // Indicate an error occurred
-        when(mockedClient.error).thenReturn({
+        err = {
           code: grpc.Code.Unauthenticated,
           message: 'Failed to login',
-        });
+        };
         // Execute callback
         callback(null);
       },
     );
     // Send password
-    wrapper.find('form .login-password').setValue('password');
-    wrapper.find('form .login-submit').trigger('submit');
+    wrapper.find('form #password-field').setValue('password');
+    wrapper.find('form #login-submit').trigger('submit');
     // Set a password
     verify(mockedClient.authenticate('password', anything())).once();
     verify(mockedFsm.send(anything())).never();

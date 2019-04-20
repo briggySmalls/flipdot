@@ -1,7 +1,7 @@
 <template>
   <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png">
-    <div class="container">
+    <h1 id="site-title">jims-magic-sign</h1>
+    <div id="main" class="container">
       <Login id="login" v-show="state == 'login'" v-bind:client="client"  v-bind:fsm="fsm"/>
       <Message id="message" v-show="state == 'message'" v-bind:client="client" v-bind:fsm="fsm"/>
       <Result id="result" v-show="state == 'result'" v-bind:client="client" v-bind:fsm="fsm"/>
@@ -22,6 +22,7 @@ import 'bootstrap-vue/dist/bootstrap-vue.css';
 
 // Use Bootstrap
 Vue.use(BootstrapVue);
+
 
 @Component({
   components: {
@@ -58,12 +59,21 @@ export default class App extends Vue {
 </script>
 
 <style lang="scss">
+@import '~@/assets/common.scss';
+@import '~@/assets/fonts.scss';
+
 #app {
   font-family: 'Avenir', Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  text-align: center;
   color: #2c3e50;
   margin-top: 60px;
+}
+#site-title {
+  font-family: smirnof, monospace;
+  text-align: center;
+}
+#main {
+  max-width: 700px;
 }
 </style>
