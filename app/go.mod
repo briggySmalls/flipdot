@@ -5,7 +5,7 @@ require (
 	github.com/gizak/termui/v3 v3.0.0
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	github.com/golang/mock v1.2.0
-	github.com/golang/protobuf v1.3.1
+	github.com/golang/protobuf v1.3.1 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/mattn/go-runewidth v0.0.3 // indirect
@@ -13,7 +13,7 @@ require (
 	github.com/spf13/afero v1.2.1 // indirect
 	github.com/spf13/cobra v0.0.3
 	github.com/spf13/viper v1.3.2
-	github.com/stianeikeland/go-rpio v4.2.0+incompatible
+	github.com/stianeikeland/go-rpio/v4 v4.4.0
 	github.com/stretchr/testify v1.3.0 // indirect
 	golang.org/x/exp v0.0.0-20190417140011-e40e924fdd3f
 	golang.org/x/image v0.0.0-20190417020941-4e30a6eb7d9a
