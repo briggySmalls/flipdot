@@ -14,13 +14,9 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-const (
-	tokenDuration = time.Hour // Duration before JWT expiry
-)
-
-func NewRpcServer(secret, password string, messageQueue chan protos.MessageRequest, signsInfo []*protos.GetInfoResponse_SignInfo) (grpcServer *grpc.Server) {
+func NewRpcServer(secret, password string, tokenExpiry time.Duration, messageQueue chan protos.MessageRequest, signsInfo []*protos.GetInfoResponse_SignInfo) (grpcServer *grpc.Server) {
 	// Create a flipdot server
-	server := NewServer(secret, password, messageQueue, signsInfo)
+	server := NewServer(secret, password, tokenExpiry, messageQueue, signsInfo)
 	// create a gRPC server object
 	grpcServer = grpc.NewServer(grpc.UnaryInterceptor(server.(*flipappsServer).unaryAuthInterceptor))
 	// attach the FlipApps service to the server
@@ -29,11 +25,12 @@ func NewRpcServer(secret, password string, messageQueue chan protos.MessageReque
 }
 
 // Create a new server
-func NewServer(secret, password string, messageQueue chan protos.MessageRequest, signsInfo []*protos.GetInfoResponse_SignInfo) protos.FlipAppsServer {
+func NewServer(secret, password string, tokenExpiry time.Duration, messageQueue chan protos.MessageRequest, signsInfo []*protos.GetInfoResponse_SignInfo) protos.FlipAppsServer {
 	// Create a flipdot controller
 	server := &flipappsServer{
 		appSecret:    secret,
 		appPassword:  password,
+		tokenExpiry:  tokenExpiry,
 		messageQueue: messageQueue,
 		signsInfo:    signsInfo,
 	}
@@ -44,6 +41,8 @@ func NewServer(secret, password string, messageQueue chan protos.MessageRequest,
 type flipappsServer struct {
 	appSecret   string
 	appPassword string
+	// Time after which an authorisation token expires
+	tokenExpiry time.Duration
 	// Channel to which new messages are sent
 	messageQueue chan protos.MessageRequest
 	// Information on connected signs
@@ -58,7 +57,7 @@ func (f *flipappsServer) Authenticate(_ context.Context, request *protos.Authent
 	}
 	// Create a new token object, specifying signing method and claims
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"exp": time.Now().Add(tokenDuration).Unix(),
+		"exp": time.Now().Add(f.tokenExpiry).Unix(),
 	})
 	// Sign and get the complete encoded token as a string using the secret
 	tokenString, err := token.SignedString([]byte(f.appSecret))

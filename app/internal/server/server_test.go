@@ -113,7 +113,7 @@ func createTestObjects(t *testing.T) (protos.FlipAppsServer, chan protos.Message
 	// Make a channel for sending messages
 	messageQueue := make(chan protos.MessageRequest, 10)
 	// Create object under test
-	server := NewServer("secret", "password", messageQueue, signs)
+	server := NewServer("secret", "password", time.Hour, messageQueue, signs)
 	return server, messageQueue, signs
 }
 

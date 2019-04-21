@@ -6,20 +6,22 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/briggySmalls/flipdot/app/internal/imaging"
+	"github.com/briggySmalls/flipdot/app/internal/protos"
 	"github.com/briggySmalls/flipdot/app/internal/server"
 	"github.com/briggySmalls/flipdot/app/internal/text"
-	"github.com/briggySmalls/flipdot/app/internal/protos"
 	"golang.org/x/image/font"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
 
-func createServer(appSecret, appPassword string, messagesIn chan protos.MessageRequest, signsInfo []*protos.GetInfoResponse_SignInfo) (grpcServer *grpc.Server) {
+func createServer(appSecret, appPassword string, tokenExpiry time.Duration, messagesIn chan protos.MessageRequest, signsInfo []*protos.GetInfoResponse_SignInfo) (grpcServer *grpc.Server) {
 	grpcServer = server.NewRpcServer(
 		appSecret,
 		appPassword,
+		tokenExpiry,
 		messagesIn,
 		signsInfo,
 	)

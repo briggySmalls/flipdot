@@ -29,9 +29,9 @@ import (
 	"time"
 
 	"github.com/briggySmalls/flipdot/app/internal"
-	"github.com/briggySmalls/flipdot/app/internal/protos"
 	"github.com/briggySmalls/flipdot/app/internal/button"
 	"github.com/briggySmalls/flipdot/app/internal/client"
+	"github.com/briggySmalls/flipdot/app/internal/protos"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -54,6 +54,7 @@ type config struct {
 	buttonPin         uint8
 	ledPin            uint8
 	statusImage       string
+	tokenExpiry       time.Duration
 }
 
 // rootCmd represents the base command when called without any subcommands
@@ -87,6 +88,7 @@ func init() {
 	persistentFlags.String("app-secret", "", "secret used to sign JWTs with")
 	persistentFlags.String("app-password", "", "password required for authorisation")
 	persistentFlags.String("status-image", "", "image to indicate new message status")
+	persistentFlags.DurationP("token-expiry", "t", time.Hour, "duration after which a login token expires")
 
 	// Add all flags to config
 	viper.BindPFlags(persistentFlags)
@@ -129,6 +131,7 @@ func getCommonConfig() config {
 	appSecret := viper.GetString("app-secret")
 	appPassword := viper.GetString("app-password")
 	statusImage := viper.GetString("status-image")
+	tokenExpiry := viper.GetDuration("token-expiry")
 
 	if serverAddress == "" {
 		errorHandler(fmt.Errorf("server-address cannot be: %s", serverAddress))
@@ -148,6 +151,9 @@ func getCommonConfig() config {
 	if statusImage == "" {
 		errorHandler(fmt.Errorf("status-image cannot be: %s", statusImage))
 	}
+	if tokenExpiry == 0 {
+		errorHandler(fmt.Errorf("token-expiry cannot be: %d", tokenExpiry))
+	}
 
 	fmt.Println("")
 	fmt.Println("Starting server with the following configuration:")
@@ -156,6 +162,7 @@ func getCommonConfig() config {
 	fmt.Printf("font-size: %f\n", fontSize)
 	fmt.Printf("frame-duration: %d\n", frameDuration)
 	fmt.Printf("status-image: %s\n", statusImage)
+	fmt.Printf("token-expiry: %d\n", tokenExpiry)
 
 	return config{
 		serverAddress:     serverAddress,
@@ -165,6 +172,7 @@ func getCommonConfig() config {
 		appSecret:         appSecret,
 		appPassword:       appPassword,
 		statusImage:       statusImage,
+		tokenExpiry:       tokenExpiry,
 	}
 }
 
@@ -187,7 +195,7 @@ func runApp(clnt protos.FlipdotClient, bm button.ButtonManager, config config) {
 	app := internal.NewApplication(flippy, bm, imager)
 	go app.Run(time.Second)
 	// Create a flipapps server
-	server := createServer(config.appSecret, config.appPassword, app.GetMessagesChannel(), flippy.Signs())
+	server := createServer(config.appSecret, config.appPassword, config.tokenExpiry, app.GetMessagesChannel(), flippy.Signs())
 	// Run server
 	// Create a listener on TCP port
 	lis, err := net.Listen("tcp", fmt.Sprintf(config.serverAddress))
