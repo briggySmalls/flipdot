@@ -116,7 +116,7 @@ func (f *flipappsServer) unaryAuthInterceptor(ctx context.Context, req interface
 // Helper function to check a request's JWT token is valid
 func (f *flipappsServer) checkToken(t string) error {
 	// Parse JWT token
-	token, err := jwt.Parse(t, func(token *jwt.Token) (interface{}, error) {
+	_, err := jwt.Parse(t, func(token *jwt.Token) (interface{}, error) {
 		// Don't forget to validate the alg is what you expect:
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, status.Errorf(codes.InvalidArgument, "Unexpected signing method: %v", token.Header["alg"])
@@ -126,11 +126,7 @@ func (f *flipappsServer) checkToken(t string) error {
 	})
 	// Indicate if we are happy with the result
 	if err != nil {
-		return status.Errorf(codes.Unauthenticated, "Could not parse token: %s", t)
-	}
-	// Check claims are valid
-	if _, ok := token.Claims.(jwt.MapClaims); !ok || !token.Valid {
-		return status.Error(codes.Unauthenticated, "Invalid/expired token")
+		return status.Errorf(codes.Unauthenticated, "%s", err)
 	}
 	return nil
 }
