@@ -8,9 +8,9 @@ COPY . /src/flipdot
 WORKDIR /src/flipdot/app
 
 # Fetch dependencies
-RUN go build ./...
+RUN go mod download
 
-# Get the protobuf source generator (do this prior to copy)
+# Install the protobuf source generator binary
 RUN go install github.com/golang/protobuf/protoc-gen-go
 
 # Build the binary
@@ -20,7 +20,7 @@ RUN make build IS_PI=TRUE
 FROM scratch
 
 # Copy in executable
-COPY --from=builder /go/src/github.com/briggySmalls/flipdot/app/bin/flipapp /go/bin/flipapp
+COPY --from=builder /src/flipdot/app/bin/flipapp /go/bin/flipapp
 # Copy in defaults for configuration
 COPY ./app/config/config.yaml /app/
 COPY ./app/assets/Smirnof.ttf /app/font.ttf

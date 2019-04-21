@@ -67,7 +67,7 @@ docker:
 ## PATTERN/SUB-RULES
 
 $(LOCAL_EXE): $(PROGRAM_SRCS)
-	$(ENVS) go build $(BUILD_ARGS) ./...
+	$(ENVS) go build $(BUILD_ARGS) ./cmd/flipapp
 
 $(PROTO_SRC_DIR)/%.pb.go: $(PROTO_DIR)/%.proto
 	mkdir -p $(PROTO_SRC_DIR)
