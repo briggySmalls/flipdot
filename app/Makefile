@@ -1,5 +1,5 @@
 # Build configuration
-BIN_DIR?=bin
+BIN_DIR?=./bin
 GO_CMD=go build
 EXE_FILENAME=flipapp
 LOCAL_EXE=$(BIN_DIR)/$(EXE_FILENAME)
@@ -67,7 +67,7 @@ docker:
 ## PATTERN/SUB-RULES
 
 $(LOCAL_EXE): $(PROGRAM_SRCS)
-	$(ENVS) go build $(BUILD_ARGS) ./cmd/flipapp
+	$(ENVS) go build $(BUILD_ARGS) .
 
 $(PROTO_SRC_DIR)/%.pb.go: $(PROTO_DIR)/%.proto
 	mkdir -p $(PROTO_SRC_DIR)
