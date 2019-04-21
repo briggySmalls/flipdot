@@ -5,7 +5,7 @@ require (
 	github.com/gizak/termui/v3 v3.0.0
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	github.com/golang/mock v1.2.0
-	github.com/golang/protobuf v1.3.1 // indirect
+	github.com/golang/protobuf v1.3.1
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/mattn/go-runewidth v0.0.3 // indirect

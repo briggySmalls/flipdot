@@ -12,7 +12,7 @@ import (
 	"github.com/briggySmalls/flipdot/app/internal/protos"
 	"github.com/gizak/termui/v3"
 	"github.com/gizak/termui/v3/widgets"
-	"github.com/stianeikeland/go-rpio/v4"
+	rpio "github.com/stianeikeland/go-rpio/v4"
 	"google.golang.org/grpc"
 )
 

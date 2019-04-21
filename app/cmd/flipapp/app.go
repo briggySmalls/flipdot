@@ -22,7 +22,7 @@ import (
 	"github.com/briggySmalls/flipdot/app/internal/protos"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/stianeikeland/go-rpio/v4"
+	rpio "github.com/stianeikeland/go-rpio/v4"
 	"google.golang.org/grpc"
 )
 

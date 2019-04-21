@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stianeikeland/go-rpio/v4"
+	rpio "github.com/stianeikeland/go-rpio/v4"
 
 	gomock "github.com/golang/mock/gomock"
 )

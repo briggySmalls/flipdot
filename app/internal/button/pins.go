@@ -1,6 +1,6 @@
 package button
 
-import "github.com/stianeikeland/go-rpio/v4"
+import rpio "github.com/stianeikeland/go-rpio/v4"
 
 type TriggerPin interface {
 	Read() rpio.State

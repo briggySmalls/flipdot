@@ -5,7 +5,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/stianeikeland/go-rpio/v4"
+	rpio "github.com/stianeikeland/go-rpio/v4"
 )
 
 type State uint8
