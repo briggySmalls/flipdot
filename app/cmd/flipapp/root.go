@@ -29,6 +29,7 @@ import (
 	"time"
 
 	"github.com/briggySmalls/flipdot/app/internal"
+	"github.com/briggySmalls/flipdot/app/internal/protos"
 	"github.com/briggySmalls/flipdot/app/internal/button"
 	"github.com/briggySmalls/flipdot/app/internal/client"
 	homedir "github.com/mitchellh/go-homedir"
@@ -168,7 +169,7 @@ func getCommonConfig() config {
 }
 
 // Create components and run application
-func runApp(clnt client.FlipdotClient, bm button.ButtonManager, config config) {
+func runApp(clnt protos.FlipdotClient, bm button.ButtonManager, config config) {
 	// Create a flipdot controller
 	flippy, err := client.NewFlipdot(
 		clnt,

@@ -2,5 +2,8 @@
 bin/
 
 # Generated files
+internal/protos/
 *.mock.go
-*.pb.go
+
+# Dependencies
+vendor/

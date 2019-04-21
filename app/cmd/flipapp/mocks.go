@@ -9,10 +9,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/briggySmalls/flipdot/app/internal/client"
-	"github.com/gizak/termui"
-	"github.com/gizak/termui/widgets"
-	"github.com/stianeikeland/go-rpio"
+	"github.com/briggySmalls/flipdot/app/internal/protos"
+	"github.com/gizak/termui/v3"
+	"github.com/gizak/termui/v3/widgets"
+	rpio "github.com/stianeikeland/go-rpio/v4"
 	"google.golang.org/grpc"
 )
 
@@ -66,13 +66,13 @@ func (p *mockInputPin) set(state bool) {
 
 // Mock flipdot
 type mockUI struct {
-	signConfig []*client.GetInfoResponse_SignInfo
+	signConfig []*protos.GetInfoResponse_SignInfo
 	uiSigns    []*widgets.Image
 	buttonPin  mockInputPin
 	ledPin     mockOutputPin
 }
 
-func newMockUI(signs []*client.GetInfoResponse_SignInfo) mockUI {
+func newMockUI(signs []*protos.GetInfoResponse_SignInfo) mockUI {
 	// Create an image widget for each sign
 	imageWidgets := []*widgets.Image{}
 	previousHeight := 0
@@ -104,15 +104,15 @@ func newMockUI(signs []*client.GetInfoResponse_SignInfo) mockUI {
 }
 
 // Mock the GetInfo response
-func (m *mockUI) GetInfo(ctx context.Context, in *client.GetInfoRequest, opts ...grpc.CallOption) (*client.GetInfoResponse, error) {
+func (m *mockUI) GetInfo(ctx context.Context, in *protos.GetInfoRequest, opts ...grpc.CallOption) (*protos.GetInfoResponse, error) {
 	// Return the baked-in mocked signs
-	return &client.GetInfoResponse{
+	return &protos.GetInfoResponse{
 		Signs: m.signConfig,
 	}, nil
 }
 
 // Mock the Draw function
-func (m *mockUI) Draw(ctx context.Context, in *client.DrawRequest, opts ...grpc.CallOption) (*client.DrawResponse, error) {
+func (m *mockUI) Draw(ctx context.Context, in *protos.DrawRequest, opts ...grpc.CallOption) (*protos.DrawResponse, error) {
 	// Find the sign
 	for i, sign := range m.signConfig {
 		if sign.Name == in.Sign {
@@ -124,20 +124,20 @@ func (m *mockUI) Draw(ctx context.Context, in *client.DrawRequest, opts ...grpc.
 			termui.Render(m.uiSigns[i])
 		}
 	}
-	return &client.DrawResponse{}, nil
+	return &protos.DrawResponse{}, nil
 }
 
-func (m *mockUI) Test(ctx context.Context, in *client.TestRequest, opts ...grpc.CallOption) (*client.TestResponse, error) {
+func (m *mockUI) Test(ctx context.Context, in *protos.TestRequest, opts ...grpc.CallOption) (*protos.TestResponse, error) {
 	// Return and do nothing
-	return &client.TestResponse{}, nil
+	return &protos.TestResponse{}, nil
 }
 
-func (m *mockUI) Light(ctx context.Context, in *client.LightRequest, opts ...grpc.CallOption) (*client.LightResponse, error) {
+func (m *mockUI) Light(ctx context.Context, in *protos.LightRequest, opts ...grpc.CallOption) (*protos.LightResponse, error) {
 	// Return and do nothing
-	return &client.LightResponse{}, nil
+	return &protos.LightResponse{}, nil
 }
 
-func unslice(imgIn client.Image, width, height uint32) image.Image {
+func unslice(imgIn protos.Image, width, height uint32) image.Image {
 	// Create an image to hold the unpacked pixels
 	imgOut := image.NewGray(image.Rect(0, 0, int(width), int(height)))
 	// Iterate through the pixels
@@ -179,7 +179,7 @@ func (m *mockUI) ProcessEvents() {
 // Create a mock flipdot for use in the application
 func createMockUI() *mockUI {
 	// Mock the signs
-	signs := []*client.GetInfoResponse_SignInfo{
+	signs := []*protos.GetInfoResponse_SignInfo{
 		{
 			Name:   "top",
 			Width:  84,

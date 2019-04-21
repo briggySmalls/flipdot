@@ -1,5 +1,5 @@
 # Build configuration
-BIN_DIR?=bin
+BIN_DIR?=./bin
 GO_CMD=go build
 EXE_FILENAME=flipapp
 LOCAL_EXE=$(BIN_DIR)/$(EXE_FILENAME)
@@ -19,7 +19,8 @@ endif
 
 # Generated protobufs
 PROTO_DIR=../protos
-PROTO_SRCS=$(addprefix internal/,server/flipapps.pb.go client/flipdot.pb.go)
+PROTO_SRC_DIR=internal/protos
+PROTO_SRCS=$(addprefix $(PROTO_SRC_DIR)/,flipapps.pb.go flipdot.pb.go)
 PROTO_BUFS=$(addprefix $(PROTO_DIR)/,$(notdir $(PROTO_SRCS:.pb.go=.proto)))
 MOCK_SRCS=$(subst .go,.mock.go,$(PROTO_SRCS)) $(addprefix internal/,\
 	client/flipdot.mock.go \
@@ -66,13 +67,13 @@ docker:
 ## PATTERN/SUB-RULES
 
 $(LOCAL_EXE): $(PROGRAM_SRCS)
-	$(ENVS) go build $(BUILD_ARGS) ./main.go
+	$(ENVS) go build $(BUILD_ARGS) .
 
-$(PROTO_SRCS): $(PROTO_BUFS)
-	@echo Generating: $@
-	for proto in $^; do \
-		protoc $(addprefix -I , $(PROTO_DIR)) --go_out=plugins=grpc:$(GOPATH)/src $$proto; \
-	done
+$(PROTO_SRC_DIR)/%.pb.go: $(PROTO_DIR)/%.proto
+	mkdir -p $(PROTO_SRC_DIR)
+	protoc $(addprefix -I , $(PROTO_DIR)) \
+		--go_out=plugins=grpc,paths=source_relative:$(PROTO_SRC_DIR) \
+		$<;
 
 %.mock.go: %.go
 	mockgen -source $< -package $(lastword $(subst /, ,$(dir $<))) > $@
