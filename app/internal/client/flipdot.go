@@ -5,12 +5,13 @@ import (
 	fmt "fmt"
 	"time"
 
-	"github.com/briggySmalls/flipdot/app/internal/text"
 	"github.com/briggySmalls/flipdot/app/internal/protos"
+	"github.com/briggySmalls/flipdot/app/internal/text"
 )
 
 const (
 	contextTimeoutS = 10
+	minDrawWaitTime = 2 * time.Second
 )
 
 type Flipdot interface {
@@ -83,14 +84,19 @@ func (f *flipdot) Size() (width, height uint) {
 func (f *flipdot) Draw(images []*protos.Image, isWait bool) (err error) {
 	// Send any relevant images
 	images, err = f.sendFrame(images)
-	if err != nil || (len(images) == 0 && !isWait) {
-		// Either:
-		// 1) We've errored
-		// 2) We've sent all our images and we've not been asked to keep them visible
+	if err != nil {
+		// We've errored
 		return
 	}
-	// Create a ticker
-	ticker := time.NewTicker(f.frameTime)
+	// Create a ticker for sending frames
+	var ticker *time.Ticker
+	if !isWait && len(images) == 0 {
+		// We still must wait a minimum time to prevent collisions
+		ticker = time.NewTicker(minDrawWaitTime)
+	} else {
+		// Create ticker for sending staggered frames
+		ticker = time.NewTicker(f.frameTime)
+	}
 	defer ticker.Stop()
 	// Write images periodically
 	for {
