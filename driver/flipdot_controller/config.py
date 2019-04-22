@@ -78,7 +78,7 @@ class ConfigParser:
 
     @property
     def signs_config(self) -> Sequence[SignConfig]:
-        """Access sign configuratino
+        """Access sign configuration
 
         Returns:
             Sequence[SignConfig]: Sequence of sign information
