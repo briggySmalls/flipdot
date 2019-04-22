@@ -193,7 +193,7 @@ func runApp(clnt protos.FlipdotClient, bm button.ButtonManager, config config) {
 
 	// Create and start application
 	app := internal.NewApplication(flippy, bm, imager)
-	go app.Run(time.Second)
+	go app.Run(30 * time.Second)
 	// Create a flipapps server
 	server := createServer(config.appSecret, config.appPassword, config.tokenExpiry, app.GetMessagesChannel(), flippy.Signs())
 	// Run server
