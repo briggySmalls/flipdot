@@ -177,7 +177,7 @@ func getCommonConfig() config {
 }
 
 // Create components and run application
-func runApp(clnt protos.FlipdotClient, bm button.ButtonManager, config config) {
+func runApp(clnt protos.DriverClient, bm button.ButtonManager, config config) {
 	// Create a flipdot controller
 	flippy, err := client.NewFlipdot(
 		clnt,

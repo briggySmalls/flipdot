@@ -18,7 +18,7 @@ yarn grpc_tools_node_protoc \
     --plugin="protoc-gen-ts=$PROTOC_GEN_TS_PATH" \
     --js_out=import_style=commonjs,binary:$GEN_OUTPUT_DIR \
     --ts_out=service=true:$GEN_OUTPUT_DIR \
-    $GEN_OUTPUT_DIR/flipdot.proto $GEN_OUTPUT_DIR/flipapps.proto
+    $(find $GEN_OUTPUT_DIR -name '*.proto')
 
 # Remove protos
 rm $GEN_OUTPUT_DIR/*.proto

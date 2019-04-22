@@ -20,7 +20,7 @@ endif
 # Generated protobufs
 PROTO_DIR=../protos
 PROTO_SRC_DIR=internal/protos
-PROTO_SRCS=$(addprefix $(PROTO_SRC_DIR)/,flipapps.pb.go flipdot.pb.go)
+PROTO_SRCS=$(addprefix $(PROTO_SRC_DIR)/,app.pb.go driver.pb.go)
 PROTO_BUFS=$(addprefix $(PROTO_DIR)/,$(notdir $(PROTO_SRCS:.pb.go=.proto)))
 MOCK_SRCS=$(subst .go,.mock.go,$(PROTO_SRCS)) $(addprefix internal/,\
 	client/flipdot.mock.go \

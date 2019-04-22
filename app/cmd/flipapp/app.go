@@ -43,7 +43,7 @@ to quickly create a Cobra application.`,
 		connection, err := grpc.Dial(fmt.Sprintf(config.clientAddress), grpc.WithInsecure())
 		errorHandler(err)
 		// Create a flipdot client
-		client := protos.NewFlipdotClient(connection)
+		client := protos.NewDriverClient(connection)
 		// Activate RPi GPIO
 		err = rpio.Open()
 		errorHandler(err)

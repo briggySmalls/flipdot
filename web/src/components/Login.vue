@@ -22,7 +22,6 @@ import { Component, Prop, Vue } from 'vue-property-decorator';
 import { Client } from '../ts/client';
 import Page from './Page.vue';
 import { grpc } from '@improbable-eng/grpc-web';
-import {AuthenticateRequest} from '../generated/flipapps_pb';
 
 @Component({
   components: {

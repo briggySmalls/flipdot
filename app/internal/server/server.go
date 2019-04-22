@@ -18,16 +18,16 @@ func NewRpcServer(secret, password string, tokenExpiry time.Duration, messageQue
 	// Create a flipdot server
 	server := NewServer(secret, password, tokenExpiry, messageQueue, signsInfo)
 	// create a gRPC server object
-	grpcServer = grpc.NewServer(grpc.UnaryInterceptor(server.(*flipappsServer).unaryAuthInterceptor))
-	// attach the FlipApps service to the server
-	protos.RegisterFlipAppsServer(grpcServer, server)
+	grpcServer = grpc.NewServer(grpc.UnaryInterceptor(server.(*appServer).unaryAuthInterceptor))
+	// attach the App service to the server
+	protos.RegisterAppServer(grpcServer, server)
 	return grpcServer
 }
 
 // Create a new server
-func NewServer(secret, password string, tokenExpiry time.Duration, messageQueue chan protos.MessageRequest, signsInfo []*protos.GetInfoResponse_SignInfo) protos.FlipAppsServer {
+func NewServer(secret, password string, tokenExpiry time.Duration, messageQueue chan protos.MessageRequest, signsInfo []*protos.GetInfoResponse_SignInfo) protos.AppServer {
 	// Create a flipdot controller
-	server := &flipappsServer{
+	server := &appServer{
 		appSecret:    secret,
 		appPassword:  password,
 		tokenExpiry:  tokenExpiry,
@@ -38,7 +38,7 @@ func NewServer(secret, password string, tokenExpiry time.Duration, messageQueue 
 	return server
 }
 
-type flipappsServer struct {
+type appServer struct {
 	appSecret   string
 	appPassword string
 	// Time after which an authorisation token expires
@@ -50,7 +50,7 @@ type flipappsServer struct {
 }
 
 // Handler for client request to authenticate (obtain JWT token)
-func (f *flipappsServer) Authenticate(_ context.Context, request *protos.AuthenticateRequest) (*protos.AuthenticateResponse, error) {
+func (f *appServer) Authenticate(_ context.Context, request *protos.AuthenticateRequest) (*protos.AuthenticateResponse, error) {
 	// Confirm the password is correct
 	if request.Password != f.appPassword {
 		return nil, status.Error(codes.Unauthenticated, "Incorrect password")
@@ -68,7 +68,7 @@ func (f *flipappsServer) Authenticate(_ context.Context, request *protos.Authent
 }
 
 // Handler for client request of information on connected signs
-func (f *flipappsServer) GetInfo(_ context.Context, _ *protos.GetInfoRequest) (*protos.GetInfoResponse, error) {
+func (f *appServer) GetInfo(_ context.Context, _ *protos.GetInfoRequest) (*protos.GetInfoResponse, error) {
 	// Make a request to the controller
 	signs := f.signsInfo
 	response := protos.GetInfoResponse{Signs: signs}
@@ -76,7 +76,7 @@ func (f *flipappsServer) GetInfo(_ context.Context, _ *protos.GetInfoRequest) (*
 }
 
 // Handler for client request to display a message
-func (f *flipappsServer) SendMessage(ctx context.Context, request *protos.MessageRequest) (response *protos.MessageResponse, err error) {
+func (f *appServer) SendMessage(ctx context.Context, request *protos.MessageRequest) (response *protos.MessageResponse, err error) {
 	switch request.Payload.(type) {
 	case *protos.MessageRequest_Images, *protos.MessageRequest_Text:
 		// Enqueue message
@@ -89,7 +89,7 @@ func (f *flipappsServer) SendMessage(ctx context.Context, request *protos.Messag
 }
 
 // Interceptor that checks all RPC calls are authorized
-func (f *flipappsServer) unaryAuthInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+func (f *appServer) unaryAuthInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 	// First, check this isn't an auth call itself
 	if info.FullMethod == fmt.Sprintf("/flipapps.FlipApps/Authenticate") {
 		// We don't need to check for tokens here
@@ -114,7 +114,7 @@ func (f *flipappsServer) unaryAuthInterceptor(ctx context.Context, req interface
 }
 
 // Helper function to check a request's JWT token is valid
-func (f *flipappsServer) checkToken(t string) error {
+func (f *appServer) checkToken(t string) error {
 	// Parse JWT token
 	_, err := jwt.Parse(t, func(token *jwt.Token) (interface{}, error) {
 		// Don't forget to validate the alg is what you expect:
