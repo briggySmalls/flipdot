@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <Page v-bind:title="title" v-bind:text="text">
     <b-alert class="prewrap" variant="danger" v-bind:show="client.error !== null">{{ client.error }}</b-alert>
     <b-form v-on:submit.prevent="authenticate">
       <b-form-group
@@ -14,16 +14,21 @@
       </b-form-group>
       <b-button id="login-submit" type="submit" variant="primary" block>Authorize</b-button>
     </b-form>
-  </div>
+  </Page>
 </template>
 
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator';
 import { Client } from '../ts/client';
+import Page from './Page.vue';
 import { grpc } from '@improbable-eng/grpc-web';
 import {AuthenticateRequest} from '../generated/flipapps_pb';
 
-@Component
+@Component({
+  components: {
+    Page,
+  },
+})
 export default class Login extends Vue {
   // Password bound to the view
   public password: string = '';
@@ -53,6 +58,14 @@ export default class Login extends Vue {
     }
     // If there is an error, it must be to do with authentication
     return `Authentication Error\n${this.client.error.message}\nPlease log in again`;
+  }
+
+  // Page title
+  get title(): string { return 'Login'; }
+
+  // Page text
+  get text(): string {
+    return 'Provide the super secret password for the magic sign.';
   }
 }
 </script>

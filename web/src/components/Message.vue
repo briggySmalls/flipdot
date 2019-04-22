@@ -1,42 +1,49 @@
 <template>
-  <b-form v-on:submit.prevent="sendMessage">
-    <b-form-group
-      label="Sender:"
-      label-for="sender-field">
-      <b-form-input
-        id="sender-field"
-        v-model="sender"
-        placeholder="Your name"
-        type="text"
-        :state="sender.length > 0"
-        trim
-        required>
-      </b-form-input>
-    </b-form-group>
-    <b-form-group
-      label="Message:"
-      label-for="text-field">
-      <b-form-textarea
-        id="text-field"
-        v-model="message"
-        :state="message.length > 0"
-        placeholder="Your message here, try to keep it short!"
-        rows="3"
-        max-rows="4"
-        trim
-        required>
-      </b-form-textarea>
-    </b-form-group>
-    <b-button id="message-submit" type="submit" variant="primary" block>Send</b-button>
-  </b-form>
+  <Page v-bind:title="title" v-bind:text="text" id="message">
+    <b-form v-on:submit.prevent="sendMessage">
+      <b-form-group
+        label="Sender:"
+        label-for="sender-field">
+        <b-form-input
+          id="sender-field"
+          v-model="sender"
+          placeholder="Your name"
+          type="text"
+          :state="sender.length > 0"
+          trim
+          required>
+        </b-form-input>
+      </b-form-group>
+      <b-form-group
+        label="Message:"
+        label-for="text-field">
+        <b-form-textarea
+          id="text-field"
+          v-model="message"
+          :state="message.length > 0"
+          placeholder="Your message here, try to keep it short!"
+          rows="3"
+          max-rows="4"
+          trim
+          required>
+        </b-form-textarea>
+      </b-form-group>
+      <b-button id="message-submit" type="submit" variant="primary" block>Send</b-button>
+    </b-form>
+  </Page>
 </template>
 
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator';
 import { Client } from '../ts/client';
+import Page from './Page.vue';
 import { grpc } from '@improbable-eng/grpc-web';
 
-@Component
+@Component({
+  components: {
+    Page,
+  },
+})
 export default class Message extends Vue {
   // Name of sender
   public sender: string = '';
@@ -62,6 +69,14 @@ export default class Message extends Vue {
       // We have sent the message
       this.fsm.send('SENT');
     });
+  }
+
+  // Page title
+  get title(): string { return 'Send'; }
+
+  // Page text
+  get text(): string {
+    return 'Enter your name and your message to send to the magic signs.';
   }
 
   private reset() {
