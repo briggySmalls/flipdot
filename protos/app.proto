@@ -3,7 +3,7 @@ syntax = "proto3";
 package flipdot;
 option go_package = "github.com/briggySmalls/flipdot/app/internal/protos";
 
-import "flipdot.proto";
+import "driver.proto";
 
 service App {
     rpc Authenticate (AuthenticateRequest) returns (AuthenticateResponse);

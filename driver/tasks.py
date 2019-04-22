@@ -26,7 +26,7 @@ DOCS_INDEX = DOCS_BUILD_DIR.joinpath("index.html")
 PYTHON_DIRS = [str(d) for d in [SOURCE_DIR, TEST_DIR]]
 PROTO_DIR = ROOT_DIR.joinpath("../protos").absolute()
 PROTO_OUT_DIR = ROOT_DIR.joinpath("flipdot_controller/protos")
-PROTOBUF_SPEC = PROTO_DIR.joinpath("flipdot.proto")
+PROTOBUF_SPEC = PROTO_DIR.joinpath("driver.proto")
 DOCKER_IMAGE = "briggysmalls/flipdot_controller"
 
 

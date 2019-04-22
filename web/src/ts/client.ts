@@ -1,6 +1,6 @@
-import {MessageRequest, MessageResponse, AuthenticateRequest} from '../generated/flipapps_pb';
+import {MessageRequest, MessageResponse, AuthenticateRequest} from '../generated/app_pb';
 // import {GetInfoRequest, GetInfoResponse} from '../generated/flipdot_pb';
-import {FlipAppsClient} from '../generated/flipapps_pb_service';
+import {AppClient} from '../generated/app_pb_service';
 import {grpc} from '@improbable-eng/grpc-web';
 
 export class Client {
@@ -8,14 +8,14 @@ export class Client {
     private token: string | null = null;
 
     // gRPC client
-    private client: FlipAppsClient;
+    private client: AppClient;
 
     // Error returned by server
     private err: any = null;
 
     constructor(domain: string) {
         // Create a flipapps client
-        this.client = new FlipAppsClient(domain);
+        this.client = new AppClient(domain);
     }
 
     public authenticate(password: string, callback: (response: any) => void) {
