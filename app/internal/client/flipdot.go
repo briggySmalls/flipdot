@@ -26,7 +26,7 @@ type Flipdot interface {
 
 type flipdot struct {
 	// gRPC client to send command via
-	client protos.FlipdotClient
+	client protos.DriverClient
 	// Record of response from GetInfo request
 	signs []*protos.GetInfoResponse_SignInfo
 	// Names of signs from GetInfo request
@@ -37,7 +37,7 @@ type flipdot struct {
 	frameTime time.Duration
 }
 
-func NewFlipdot(client protos.FlipdotClient, frameTime time.Duration) (f Flipdot, err error) {
+func NewFlipdot(client protos.DriverClient, frameTime time.Duration) (f Flipdot, err error) {
 	flipdot := flipdot{
 		client:    client,
 		frameTime: frameTime,

@@ -1,11 +1,11 @@
 syntax = "proto3";
 
-package flipapps;
+package flipdot;
 option go_package = "github.com/briggySmalls/flipdot/app/internal/protos";
 
 import "flipdot.proto";
 
-service FlipApps {
+service App {
     rpc Authenticate (AuthenticateRequest) returns (AuthenticateResponse);
     rpc GetInfo (flipdot.GetInfoRequest) returns (flipdot.GetInfoResponse);
     rpc SendMessage (MessageRequest) returns (MessageResponse);

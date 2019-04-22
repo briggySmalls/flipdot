@@ -197,15 +197,15 @@ func TestDraw(t *testing.T) {
 }
 
 // Helper function to create a mock FlipdotClient
-func createMock(t *testing.T) (*gomock.Controller, *protos.MockFlipdotClient) {
+func createMock(t *testing.T) (*gomock.Controller, *protos.MockDriverClient) {
 	// Create a mock
 	ctrl := gomock.NewController(t)
-	mock := protos.NewMockFlipdotClient(ctrl)
+	mock := protos.NewMockDriverClient(ctrl)
 	return ctrl, mock
 }
 
 // Helper function to create a Flipdot and run a test function
-func runTest(fn func(f Flipdot) error, mock *protos.MockFlipdotClient, t *testing.T) {
+func runTest(fn func(f Flipdot) error, mock *protos.MockDriverClient, t *testing.T) {
 	// Create a flipdot
 	f, err := NewFlipdot(mock, frameDuration)
 	failOnError(err, t)

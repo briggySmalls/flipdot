@@ -48,7 +48,7 @@ func TestAuthenticatePass(t *testing.T) {
 		t.Error("Failed to return token")
 	}
 	// Assert we can roudtrip the token
-	if flipapps.(*flipappsServer).checkToken(response.Token) != nil {
+	if flipapps.(*appServer).checkToken(response.Token) != nil {
 		t.Error("Failed to check token")
 	}
 	// Check no messages were sent
@@ -100,7 +100,7 @@ func TestSendMessage(t *testing.T) {
 }
 
 // Helper function to set up the unit under test
-func createTestObjects(t *testing.T) (protos.FlipAppsServer, chan protos.MessageRequest, []*protos.GetInfoResponse_SignInfo) {
+func createTestObjects(t *testing.T) (protos.AppServer, chan protos.MessageRequest, []*protos.GetInfoResponse_SignInfo) {
 	// Make some dummy signs
 	signs := []*protos.GetInfoResponse_SignInfo{
 		{
