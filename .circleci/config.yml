@@ -114,18 +114,6 @@ jobs:
       - persist_to_workspace:
           root: ./web
           paths: dist
-  deploy-web:
-    docker:
-      - image: node:11-stretch
-    steps:
-      # Install netlify cli
-      - run: npm install netlify-cli -g
-      # Fetch built web app
-      - attach_workspace:
-          at: /tmp/dist
-      # Deploy
-      - run: netlify deploy --dir /tmp/dist --prod --site $NETLIFY_SITE_ID
-
 workflows:
   version: 2
   app:
@@ -146,9 +134,3 @@ workflows:
     jobs:
       - test-web
       - build-web
-      - deploy-web:
-          requires:
-            - build-web
-          filters:
-            branches:
-              only: master
