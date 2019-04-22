@@ -3,7 +3,7 @@ syntax = "proto3";
 package flipdot;
 option go_package = "github.com/briggySmalls/flipdot/app/internal/protos";
 
-service Flipdot {
+service Driver {
     rpc GetInfo (GetInfoRequest) returns (GetInfoResponse);
     rpc Draw (DrawRequest) returns (DrawResponse);
     rpc Test (TestRequest) returns (TestResponse);

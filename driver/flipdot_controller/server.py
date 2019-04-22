@@ -13,7 +13,7 @@ from flipdot_controller.protos.flipdot_pb2 import (DESCRIPTOR, DrawResponse,
                                                    LightRequest, LightResponse,
                                                    TestRequest, TestResponse)
 from flipdot_controller.protos.flipdot_pb2_grpc import (
-    FlipdotServicer, add_FlipdotServicer_to_server)
+    DriverServicer, add_DriverServicer_to_server)
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +35,7 @@ class Server:
         # Create gRPC server
         self.server = grpc.server(
             futures.ThreadPoolExecutor(max_workers=max_workers))
-        add_FlipdotServicer_to_server(self.servicer, self.server)
+        add_DriverServicer_to_server(self.servicer, self.server)
         # the reflection service will be aware of "Flipdot" and
         # "ServerReflection" services.
         service_names = (
@@ -61,8 +61,8 @@ class Server:
         self.server.stop(grace)
 
 
-class Servicer(FlipdotServicer):
-    """Servicers for the Flipdot service
+class Servicer(DriverServicer):
+    """Servicers for the Driver service
     Generally just forwards on calls to the controller, and creates appropriate
     error codes
 
