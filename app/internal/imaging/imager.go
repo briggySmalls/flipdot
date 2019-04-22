@@ -62,7 +62,7 @@ func (i *imager) Message(sender, message string) (images []*protos.Image, err er
 
 func (i *imager) Clock(time time.Time, isMessagesAvailable bool) (images []*protos.Image, err error) {
 	// Get images that represent the time
-	srcImages, err := i.builder.Images(time.Format("Mon 1 Jan\n3:04 pm"), true)
+	srcImages, err := i.builder.Images(time.Format("Mon 2 Jan\n3:04 pm"), true)
 	shared.ErrorHandler(err)
 	// Add status if necessary
 	if isMessagesAvailable {
