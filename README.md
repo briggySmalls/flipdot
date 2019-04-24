@@ -5,6 +5,8 @@
 
 A collection of applications that work together to make a smart flipdot display
 
+![](https://imgur.com/hQYodeh)
+
 ## Architecture
 
 The following deployment diagram illustrates the different components of the flipdot project, and how they are deployed. Beware, this diagram is probably trying to say too much!
