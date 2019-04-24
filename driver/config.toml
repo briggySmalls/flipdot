@@ -5,15 +5,16 @@ grpc_port=5001
 sign=40
 light=38
 
-[signs]
-[signs.top]
-address=1
-width=84
-height=7
-flip=false
-
-[signs.bottom]
+[[signs]]
+name="top"
 address=2
 width=84
 height=7
 flip=true
+
+[[signs]]
+name="bottom"
+address=1
+width=84
+height=7
+flip=false
