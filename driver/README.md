@@ -63,6 +63,8 @@ docker run \
     --config path/to/custom/config.toml
 ```
 
+The built version of this container can be found on dockerhub as `briggysmalls/flipdot_controller`.
+
 Credits
 -------
 
