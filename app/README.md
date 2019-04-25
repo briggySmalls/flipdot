@@ -35,6 +35,13 @@ A docker container can be built using the following:
 make docker
 ```
 
+The built version of this container can be found on dockerhub as `briggysmalls/flipapp`.
+
 ## Usage
 
-The application binary has two subcommands: `flipapp app` and `flipapp mock`.
+The application binary has two subcommands: `app` and `mock`.
+
+The `app` subcommand is the main software, expecting to connect to a gRPC driver service and raspberry Pi hardware.
+
+The `mock` subcommand is a version of the application that mocks away the gRPC driver service, instead simulating the signs on the console.
+This command is useful for quick development of the build of the application, as well as providing a stubbed backend for the [web](../web) project.
