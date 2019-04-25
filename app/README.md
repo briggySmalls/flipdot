@@ -1,6 +1,6 @@
 # jim's-magic-sign ~ app
 
-Business logic for the smart flipdot display
+Business logic for the smart flipdot display, written in Go.
 
 ## Features
 

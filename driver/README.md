@@ -1,6 +1,6 @@
 # Jim's-magic-sign ~ driver
 
-Driver 'service' for controlling flipdot signs connected to a raspberry pi
+Driver 'service' for controlling flipdot signs connected to a raspberry pi, written in Python.
 
 ## Features
 
