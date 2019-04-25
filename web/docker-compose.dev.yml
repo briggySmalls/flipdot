@@ -11,13 +11,14 @@ services:
     image: briggysmalls/flipapp:latest
     # Run mock instead of app
     command: mock --config /app/config.yaml
+    environment:
+      - APP_SECRET=secret
+      - APP_PASSWORD=password
     stdin_open: true
     tty: true
-    env_file:
-      - .env.dev
     expose:
       - "5002"
     volumes:
-      - ./app/config/config.yaml:/app/config.yaml
-      - ./app/assets/status.png:/app/status.png
-      - ./app/assets/Smirnof.ttf:/app/font.ttf
+      - ../app/config/config.yaml:/app/config.yaml
+      - ../app/assets/status.png:/app/status.png
+      - ../app/assets/Smirnof.ttf:/app/font.ttf

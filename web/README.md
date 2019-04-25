@@ -1,9 +1,11 @@
-# web
+# Jim's-magic-sign ~ web
 
-Web application that is a gRPC-web client for sending messages to a flipdot sign, built using:
+Client-side web application for sending messages to a flipdot sign, written in Typescript.
+
+## Features
 
 - Vue.js
-- [@improbable-eng/grpc-web](https://github.com/improbable-eng/grpc-web/tree/master/client/grpc-web)
+- Connects to [app](../app) gRPC server using [@improbable-eng/grpc-web](https://github.com/improbable-eng/grpc-web/tree/master/client/grpc-web)
 
 ## Project setup
 ```
@@ -12,13 +14,25 @@ yarn install
 
 ### Development
 
+First spin up a stubbed application:
+
+```bash
+docker-compose -f docker-compose.dev.yml up
+```
+
 Start a development server with:
 
 ```
 yarn run serve
 ```
 
-The existing `.env.development` configures the app to connect to a gRPC-web server at http://localhost:5002.
+The existing `.env.development` configures the web app to connect to the mocked gRPC-web server at http://localhost:5002.
+
+Connect to the mocked signs to observe changes initiated by the web app:
+
+```bash
+docker attach web_app_1
+```
 
 ### Production
 
@@ -33,11 +47,6 @@ Then build the application:
 
 ```
 yarn run build
-```
-
-### Run your tests
-```
-yarn run test
 ```
 
 ### Lints and fixes files

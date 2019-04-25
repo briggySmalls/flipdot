@@ -20,9 +20,6 @@ TEST_DIR = ROOT_DIR.joinpath("tests")
 SOURCE_DIR = ROOT_DIR.joinpath("flipdot_controller")
 COVERAGE_DIR = ROOT_DIR.joinpath("htmlcov")
 COVERAGE_REPORT = COVERAGE_DIR.joinpath("index.html")
-DOCS_DIR = ROOT_DIR.joinpath("docs")
-DOCS_BUILD_DIR = DOCS_DIR.joinpath("_build")
-DOCS_INDEX = DOCS_BUILD_DIR.joinpath("index.html")
 PYTHON_DIRS = [str(d) for d in [SOURCE_DIR, TEST_DIR]]
 PROTO_DIR = ROOT_DIR.joinpath("../protos").absolute()
 PROTO_OUT_DIR = ROOT_DIR.joinpath("flipdot_controller/protos")
@@ -83,23 +80,6 @@ def coverage(c, publish=False):
         # Build a local report
         c.run("coverage html")
         webbrowser.open(COVERAGE_REPORT.as_uri())
-
-
-@task
-def docs(c):
-    """
-    Generate documentation
-    """
-    c.run("sphinx-build -b html {} {}".format(DOCS_DIR, DOCS_BUILD_DIR))
-    webbrowser.open(DOCS_INDEX.as_uri())
-
-
-@task
-def clean_docs(c):
-    """
-    Clean up files from documentation builds
-    """
-    c.run("rm -fr {}".format(DOCS_BUILD_DIR))
 
 
 @task
