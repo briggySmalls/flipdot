@@ -5,7 +5,7 @@
 
 A collection of applications that work together to make a smart flipdot display
 
-![](https://imgur.com/hQYodeh)
+![](https://imgur.com/hQYodeh.gif)
 
 ## Architecture
 
