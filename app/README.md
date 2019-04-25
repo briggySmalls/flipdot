@@ -6,7 +6,9 @@ Business logic for the smart flipdot display, written in Go.
 
 - Makes calls to [driver service](../driver) to display application
 - Defaults to displaying time/date
-- Exposes gRPC 'service' to enqueue messages
+- Exposes secure gRPC 'service' to enqueue messages
+  - Requires password authorisation
+  - Issues temporary JWTs
 - Flashes button when messages are in the queue
 - Listens for button press to display queued messages
 
