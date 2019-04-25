@@ -10,11 +10,27 @@ Driver 'service' for controlling flipdot signs connected to a raspberry pi
 
 ## Installation
 
-If you only want to install the python package, this should be familiar:
+All development dependencies are tracked using pipenv, thus may be installed with:
 
 ```bash
-# In checked-out repo
-pip install .
+# Install development dependencies
+pipenv install --dev
+
+# Start a shell within virtual environment
+pipenv shell
+```
+
+To see what development tasks may be run, use invoke:
+
+```bash
+# From within pipenv virtual environment
+invoke --list
+```
+
+Before being able to run tests or install the driver, you will need to generate gRPC sources:
+
+```bash
+invoke proto
 ```
 
 You will now have the command line tool available:
@@ -45,25 +61,6 @@ docker run \
     --device /dev/gpiomem:/dev/mem \
     driver \
     --config path/to/custom/config.toml
-```
-
-## Development
-
-All development dependencies are tracked using pipenv, thus may be installed with:
-
-```bash
-# Install development dependencies
-pipenv install --dev
-
-# Start a shell within virtual environment
-pipenv shell
-```
-
-To see what development tasks may be run, use invoke:
-
-```bash
-# From within pipenv virtual environment
-invoke --list
 ```
 
 Credits
