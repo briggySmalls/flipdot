@@ -91,7 +91,7 @@ func (f *appServer) SendMessage(ctx context.Context, request *protos.MessageRequ
 // Interceptor that checks all RPC calls are authorized
 func (f *appServer) unaryAuthInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 	// First, check this isn't an auth call itself
-	if info.FullMethod == fmt.Sprintf("/flipapps.FlipApps/Authenticate") {
+	if info.FullMethod == fmt.Sprintf("/flipdot.App/Authenticate") {
 		// We don't need to check for tokens here
 		return handler(ctx, req)
 	}
