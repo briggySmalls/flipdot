@@ -8,8 +8,8 @@ import (
 	"github.com/briggySmalls/flipdot/app/internal/button"
 	"github.com/briggySmalls/flipdot/app/internal/client"
 	"github.com/briggySmalls/flipdot/app/internal/imaging"
-	"github.com/briggySmalls/flipdot/app/internal/shared"
 	"github.com/briggySmalls/flipdot/app/internal/protos"
+	"github.com/briggySmalls/flipdot/app/internal/shared"
 )
 
 const (
@@ -55,8 +55,13 @@ func (a *application) Run(tickPeriod time.Duration) {
 	pendingMessages := make([]protos.MessageRequest, 0)
 	// Get queue for button presses
 	buttonPressed := a.buttonManager.GetChannel()
+	// get the location
+	location, err := time.LoadLocation("Local")
+	if err != nil {
+		return
+	}
 	// Draw first clock
-	a.drawTime(time.Now(), false)
+	a.drawTime(time.Now().In(location), false)
 	// Run forever
 	for {
 		select {
@@ -73,7 +78,7 @@ func (a *application) Run(tickPeriod time.Duration) {
 			// We have at least one message, so activate button
 			a.buttonManager.SetState(button.Active)
 			// Update time with message status
-			a.drawTime(time.Now(), true)
+			a.drawTime(time.Now().In(location), true)
 		// Handle user signal to display message
 		case <-buttonPressed:
 			log.Println("Show message request")
