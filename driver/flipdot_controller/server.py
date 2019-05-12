@@ -39,7 +39,7 @@ class Server:
         # the reflection service will be aware of "Flipdot" and
         # "ServerReflection" services.
         service_names = (
-            DESCRIPTOR.services_by_name['Flipdot'].full_name,
+            DESCRIPTOR.services_by_name['Driver'].full_name,
             reflection.SERVICE_NAME,
         )
         reflection.enable_server_reflection(service_names, self.server)
