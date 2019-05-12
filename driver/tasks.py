@@ -123,7 +123,7 @@ def clean_proto(c):
     c.run("rm -fr {}".format(PROTO_OUT_DIR))
 
 
-@task(pre=[clean_build, clean_python, clean_tests, clean_docs, clean_proto])
+@task(pre=[clean_build, clean_python, clean_tests, clean_proto])
 def clean(c):
     """
     Runs all clean sub-tasks
