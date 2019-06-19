@@ -2,6 +2,7 @@ package text
 
 import (
 	"fmt"
+	"strings"
 	"image"
 	"image/color"
 	"image/draw"
@@ -45,8 +46,8 @@ type textBuilder struct {
 }
 
 func (tb *textBuilder) Images(text string, centre bool) ([]draw.Image, error) {
-	// Split the string up into lines
-	lines, err := tb.toLines(text)
+	// Split the string up into lines (convert to uppercase)
+	lines, err := tb.toLines(strings.ToUpper(text))
 	errorHandler(err)
 
 	// Create a drawer from the font
