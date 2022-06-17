@@ -10,7 +10,7 @@ requirements = [
     'pyflipdot~=0.2.0',
     'pyserial>=3.4',
     'grpcio>=1.9.0',
-    'numpy==1.9.3',
+    'numpy==1.21.0',
     'protobuf>=3.6.0',
     'toml>=0.10.0',
     'grpcio-reflection>=1.19.0',
